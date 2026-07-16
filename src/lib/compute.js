@@ -10,7 +10,7 @@ export function computeDerived(e) {
   const overallAccuracy = attempted > 0 ? right / attempted : null;
   const mcqAccuracy = e.attemptedMCQ > 0 ? e.rightMCQ / e.attemptedMCQ : null;
   const titaAccuracy = e.attemptedTITA > 0 ? e.rightTITA / e.attemptedTITA : null;
-  const attemptRate = e.totalQuestions > 0 ? attempted / e.totalQuestions : null;
+  const attemptRate = e.scoreEntryMode === "score-only" || e.totalQuestions <= 0 ? null : attempted / e.totalQuestions;
   const marksPerAttempt = attempted > 0 ? totalMarks / attempted : null;
   const negMarksLost = e.wrongMCQ * 1;
   const hardnessRatio = e.topperScore ? totalMarks / e.topperScore : null;
