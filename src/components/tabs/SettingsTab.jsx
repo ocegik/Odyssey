@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { CheckCircle2, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
+import { CheckCircle2, Download, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
 import { COLORS, TYPE, SHADOW } from "../../constants";
 import { FieldLabel, inputStyle } from "../ui/FieldLabel";
 import EmptyState from "../ui/EmptyState";
@@ -25,12 +25,17 @@ export default function SettingsTab({
   onUpdateScheduleEntry,
   onDeleteScheduleEntry,
   onImportScheduleEntries,
+  onExportData,
+  onImportData,
 }) {
   const fileInputRef = useRef(null);
+  const dataFileInputRef = useRef(null);
   const [scheduleForm, setScheduleForm] = useState(EMPTY_SCHEDULE_FORM);
   const [editingId, setEditingId] = useState(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [dataMessage, setDataMessage] = useState("");
+  const [dataError, setDataError] = useState("");
 
   const setProfileField = (field) => (ev) => {
     onUpdateProfile({ [field]: ev.target.value });
@@ -89,8 +94,63 @@ export default function SettingsTab({
     ev.target.value = "";
   };
 
+  const handleImportDataFile = (ev) => {
+    const file = ev.target.files?.[0];
+    ev.target.value = "";
+    if (!file) return;
+    if (!window.confirm("Import will replace all mocks and settings currently on this device with the backup file. This can't be undone. Continue?")) {
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const count = onImportData(reader.result);
+        setDataMessage(`Imported ${count} mock${count === 1 ? "" : "s"} and settings`);
+        setDataError("");
+      } catch (err) {
+        setDataError(err.message || "Could not import that backup JSON.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="flex flex-col gap-4">
+      <Panel
+        title="Data Backup"
+        action={
+          <div className="flex gap-2">
+            <input ref={dataFileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportDataFile} />
+            <button
+              type="button"
+              onClick={onExportData}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-black/[0.04]"
+              style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+            >
+              <Download size={14} />
+              Export data
+            </button>
+            <button
+              type="button"
+              onClick={() => dataFileInputRef.current?.click()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-black/[0.04]"
+              style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+            >
+              <Upload size={14} />
+              Import data
+            </button>
+          </div>
+        }
+      >
+        <p className="text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>
+          Export bundles every logged mock, analysis, and setting into one JSON file — useful as a manual backup
+          alongside cloud sync. Importing a backup <strong style={{ color: COLORS.ink }}>replaces</strong> all mocks
+          and settings currently on this device, it doesn't merge with them.
+        </p>
+        {dataError && <p className="text-sm" style={{ color: COLORS.danger }}>{dataError}</p>}
+        {dataMessage && !dataError && <p className="text-sm" style={{ color: COLORS.good }}>{dataMessage}</p>}
+      </Panel>
+
       <Panel title="Student Profile">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">

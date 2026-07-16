@@ -67,6 +67,7 @@ export default function AboutTab() {
           local storage. Local storage still keeps a fast on-device cache so the app loads instantly, but Supabase is
           now the durable copy — your data survives a cleared cache, private browsing, or opening the app on a
           different device. The app still migrates older saved local data into the current mock-first shape on load.
+          Export your data periodically as a backup.
         </p>
       </Panel>
 

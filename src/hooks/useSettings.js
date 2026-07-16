@@ -47,7 +47,7 @@ function normalizeScheduleEntry(item, idx = 0) {
   };
 }
 
-function normalizeSettings(raw) {
+export function normalizeSettings(raw) {
   const profile = raw && typeof raw === "object" ? raw : {};
   const rawSchedule = Array.isArray(profile.mockSchedule) ? profile.mockSchedule : [];
   return {
@@ -160,6 +160,13 @@ export function useSettings() {
     return incoming.length;
   }, []);
 
+  // Destructive replace (backup restore), not a merge — used by the combined
+  // data-export/import flow in App.jsx, distinct from importScheduleEntries above.
+  const replaceSettings = useCallback((raw) => {
+    const normalized = normalizeSettings(raw);
+    setSettings(normalized);
+  }, []);
+
   return {
     settings,
     updateProfile,
@@ -167,5 +174,6 @@ export function useSettings() {
     updateScheduleEntry,
     deleteScheduleEntry,
     importScheduleEntries,
+    replaceSettings,
   };
 }

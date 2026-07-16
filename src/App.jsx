@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { COLORS, FONT_IMPORT, THEME_COLORS } from "./constants";
 import { useMockEntries } from "./hooks/useMockEntries";
-import { useSettings } from "./hooks/useSettings";
+import { useSettings, normalizeSettings } from "./hooks/useSettings";
+import { normalizeStoredMocks } from "./lib/mockStorage";
 import Header from "./components/layout/Header";
 import TabNav from "./components/layout/TabNav";
 import Toast from "./components/ui/Toast";
@@ -60,6 +61,7 @@ export default function CATMockTracker() {
     marksSeries, attemptRateSeries,
     toast,
     addScoreOnlyAnalysis, attachAnalysis, loadSample, deleteMock,
+    importMocks, exportMocks,
   } = useMockEntries();
 
   const {
@@ -69,6 +71,7 @@ export default function CATMockTracker() {
     updateScheduleEntry,
     deleteScheduleEntry,
     importScheduleEntries,
+    replaceSettings,
   } = useSettings();
 
   useEffect(() => {
@@ -87,6 +90,38 @@ export default function CATMockTracker() {
   const handleOpenAnalysis = (mockId) => {
     setAnalysisMockId(mockId);
     setActiveTab("analysis");
+  };
+
+  const handleExportData = () => {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      mocks: exportMocks(),
+      settings,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `odyssey-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportData = (raw) => {
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error('Backup file must be a JSON object with a "mocks" field.');
+    }
+    if (!parsed.mocks) throw new Error('Backup JSON is missing "mocks".');
+
+    // Validate both pieces before committing either, so a bad settings
+    // block can't leave mocks replaced with the settings half untouched.
+    normalizeStoredMocks(parsed.mocks);
+    if (parsed.settings) normalizeSettings(parsed.settings);
+
+    const count = importMocks(parsed.mocks);
+    if (parsed.settings) replaceSettings(parsed.settings);
+    return count;
   };
 
   return (
@@ -172,6 +207,8 @@ export default function CATMockTracker() {
             onUpdateScheduleEntry={updateScheduleEntry}
             onDeleteScheduleEntry={deleteScheduleEntry}
             onImportScheduleEntries={importScheduleEntries}
+            onExportData={handleExportData}
+            onImportData={handleImportData}
           />
         )}
 

@@ -138,10 +138,23 @@ export function useMockEntries() {
     showToast("Mock deleted");
   }, [showToast]);
 
+  // Destructive replace (backup restore), not a merge — parses/validates
+  // fully before committing, mirroring toRaw()'s {version, mocks} shape.
+  const importMocks = useCallback((raw) => {
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const normalized = normalizeStoredMocks(parsed);
+    setMockRecords(normalized);
+    showToast(`Imported ${normalized.length} mock${normalized.length === 1 ? "" : "s"}`);
+    return normalized.length;
+  }, [showToast]);
+
+  const exportMocks = useCallback(() => toRaw(mockRecords), [mockRecords]);
+
   return {
     sectionStats, insights, mocks,
     marksSeries, attemptRateSeries,
     toast,
     addScoreOnlyAnalysis, attachAnalysis, loadSample, deleteMock,
+    importMocks, exportMocks,
   };
 }
