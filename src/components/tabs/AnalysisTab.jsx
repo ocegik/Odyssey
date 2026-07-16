@@ -278,7 +278,7 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
       )}
 
       {draft && (
-        <>
+        <div className="animate-fade-up flex flex-col gap-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <StatCard label="Questions" value={summary?.totalQuestions || 0} />
             <StatCard label="Accuracy" value={fmtPct(summary?.accuracy)} />
@@ -437,7 +437,7 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
               </Panel>
             );
           })}
-        </>
+        </div>
       )}
     </div>
   );

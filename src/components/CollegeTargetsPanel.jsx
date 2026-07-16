@@ -52,7 +52,7 @@ function CollegeRow({ college, currentPercentile, expanded, onToggle }) {
         </div>
       </button>
       {expanded && (
-        <div className="px-3 pb-3 pl-8 flex flex-col gap-1.5">
+        <div className="animate-fade-up px-3 pb-3 pl-8 flex flex-col gap-1.5">
           <span className="text-xs" style={{ color: COLORS.inkMuted }}>{college.tag}</span>
           <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>{college.info}</p>
           {hasSectionTargets && (

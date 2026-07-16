@@ -44,6 +44,7 @@ function themeVariableCSS(themeName, values) {
       --color-good: ${values.good};
       --color-danger: ${values.danger};
       --color-hover: ${values.hover};
+      --color-focus-ring: ${values.focusRing};
       --shadow-card: ${values.shadowCard};
       --shadow-floating: ${values.shadowFloating};
       color-scheme: ${themeName};
@@ -131,10 +132,15 @@ export default function CATMockTracker() {
         ${themeVariableCSS("light", THEME_COLORS.light)}
         ${themeVariableCSS("dark", THEME_COLORS.dark)}
         * { box-sizing: border-box; }
+        *, *::before, *::after { transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, box-shadow 200ms ease; }
         html, body, #root { background: ${COLORS.bg}; }
-        input:focus, select:focus, button:focus-visible { outline: 2px solid ${COLORS.ink}; outline-offset: 1px; }
-        button { cursor: pointer; transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, opacity 120ms ease; }
-        input, select, textarea { transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease; }
+        input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
+          outline: none;
+          box-shadow: 0 0 0 3px ${COLORS.bg}, 0 0 0 5px ${COLORS.focusRing};
+        }
+        button { cursor: pointer; transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, opacity 120ms ease, box-shadow 120ms ease, transform 100ms ease; }
+        input, select, textarea { transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease; }
+        .theme-hover { transition: background-color 120ms ease; }
         .theme-hover:hover { background: ${COLORS.hover} !important; }
         [data-theme="dark"] .hover\\:bg-black\\/5:hover,
         [data-theme="dark"] .hover\\:bg-black\\/\\[0\\.03\\]:hover,
@@ -156,69 +162,71 @@ export default function CATMockTracker() {
 
         <TabNav activeTab={activeTab} onChange={handleTabChange} />
 
-        {activeTab === "overview" && (
-          <OverviewTab
-            mocks={mocks}
-            insights={insights}
-            weakestAnalysis={weakestAnalysis}
-            settings={settings}
-          />
-        )}
+        <div key={activeTab} className="animate-fade-up flex flex-col gap-6">
+          {activeTab === "overview" && (
+            <OverviewTab
+              mocks={mocks}
+              insights={insights}
+              weakestAnalysis={weakestAnalysis}
+              settings={settings}
+            />
+          )}
 
-        {activeTab === "log" && (
-          <MockLogTab
-            mocks={mocks}
-            settings={settings}
-            onLoadSample={loadSample}
-            onOpenAnalysis={handleOpenAnalysis}
-            onCreateMock={addScoreOnlyAnalysis}
-            onDeleteMock={deleteMock}
-          />
-        )}
+          {activeTab === "log" && (
+            <MockLogTab
+              mocks={mocks}
+              settings={settings}
+              onLoadSample={loadSample}
+              onOpenAnalysis={handleOpenAnalysis}
+              onCreateMock={addScoreOnlyAnalysis}
+              onDeleteMock={deleteMock}
+            />
+          )}
 
-        {activeTab === "analysis" && (
-          <AnalysisTab
-            mocks={mocks}
-            selectedMockId={analysisMockId}
-            settings={settings}
-            onSelectMock={setAnalysisMockId}
-            onSaveAnalysis={attachAnalysis}
-          />
-        )}
+          {activeTab === "analysis" && (
+            <AnalysisTab
+              mocks={mocks}
+              selectedMockId={analysisMockId}
+              settings={settings}
+              onSelectMock={setAnalysisMockId}
+              onSaveAnalysis={attachAnalysis}
+            />
+          )}
 
-        {activeTab === "analysisInsights" && (
-          <AnalysisInsightsDataTab mocks={mocks} />
-        )}
+          {activeTab === "analysisInsights" && (
+            <AnalysisInsightsDataTab mocks={mocks} />
+          )}
 
-        {activeTab === "trends" && (
-          <TrendsTab
-            mocks={mocks}
-            entriesWithComputed={entriesWithComputed}
-            marksSeries={marksSeries}
-            attemptRateSeries={attemptRateSeries}
-            marksPerAttemptSeries={marksPerAttemptSeries}
-            negMarksLostSeries={negMarksLostSeries}
-            hardnessRatioSeries={hardnessRatioSeries}
-            sectionStats={sectionStats}
-            settings={settings}
-          />
-        )}
+          {activeTab === "trends" && (
+            <TrendsTab
+              mocks={mocks}
+              entriesWithComputed={entriesWithComputed}
+              marksSeries={marksSeries}
+              attemptRateSeries={attemptRateSeries}
+              marksPerAttemptSeries={marksPerAttemptSeries}
+              negMarksLostSeries={negMarksLostSeries}
+              hardnessRatioSeries={hardnessRatioSeries}
+              sectionStats={sectionStats}
+              settings={settings}
+            />
+          )}
 
-        {activeTab === "settings" && (
-          <SettingsTab
-            settings={settings}
-            mocks={mocks}
-            onUpdateProfile={updateProfile}
-            onAddScheduleEntry={addScheduleEntry}
-            onUpdateScheduleEntry={updateScheduleEntry}
-            onDeleteScheduleEntry={deleteScheduleEntry}
-            onImportScheduleEntries={importScheduleEntries}
-            onExportData={handleExportData}
-            onImportData={handleImportData}
-          />
-        )}
+          {activeTab === "settings" && (
+            <SettingsTab
+              settings={settings}
+              mocks={mocks}
+              onUpdateProfile={updateProfile}
+              onAddScheduleEntry={addScheduleEntry}
+              onUpdateScheduleEntry={updateScheduleEntry}
+              onDeleteScheduleEntry={deleteScheduleEntry}
+              onImportScheduleEntries={importScheduleEntries}
+              onExportData={handleExportData}
+              onImportData={handleImportData}
+            />
+          )}
 
-        {activeTab === "about" && <AboutTab />}
+          {activeTab === "about" && <AboutTab />}
+        </div>
       </div>
 
       <Toast toast={toast} />

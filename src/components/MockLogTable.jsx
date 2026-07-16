@@ -140,7 +140,9 @@ export default function MockLogTable({ mocks, settings, onOpenAnalysis, onDelete
                   {hasInsights && (
                     <tr style={{ borderBottom: `1px solid ${COLORS.border}`, background: i % 2 ? COLORS.surface : COLORS.surface2 }}>
                       <td colSpan={5} className="px-3 pb-3">
-                        <PerMockInsightsBlock mock={mock} settings={settings} priorMarks={priorMarks} compact />
+                        <div className="animate-fade-up">
+                          <PerMockInsightsBlock mock={mock} settings={settings} priorMarks={priorMarks} compact />
+                        </div>
                       </td>
                     </tr>
                   )}
