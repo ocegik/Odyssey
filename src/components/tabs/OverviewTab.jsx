@@ -4,6 +4,7 @@ import { COLORS, TYPE, SHADOW } from "../../constants";
 import { fmtDate, fmtNum } from "../../lib/format";
 import StatCard from "../ui/StatCard";
 import ChartFrame from "../charts/ChartFrame";
+import CollegeTargetsPanel from "../CollegeTargetsPanel";
 
 const MS_PER_DAY = 86400000;
 
@@ -147,6 +148,8 @@ export default function OverviewTab({ mocks, insights, settings }) {
       >
         <OverallMarksChart data={graphData} />
       </ChartFrame>
+
+      <CollegeTargetsPanel targetPercentile={settings?.overallTargetPercentile ?? null} />
     </div>
   );
 }
