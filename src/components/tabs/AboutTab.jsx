@@ -1,4 +1,4 @@
-import { Download, Info, ShieldCheck } from "lucide-react";
+import { Download, Info, ShieldCheck, Sparkles } from "lucide-react";
 import { COLORS, TYPE, SHADOW } from "../../constants";
 
 function Panel({ icon: Icon, title, children }) {
@@ -38,6 +38,14 @@ function FieldTable({ rows }) {
 export default function AboutTab() {
   return (
     <div className="flex flex-col gap-4">
+      <Panel icon={Sparkles} title="What's new">
+        <ul className="text-sm leading-relaxed flex flex-col gap-1.5 list-disc pl-4" style={{ color: COLORS.inkMuted }}>
+          <li>Named the project <strong style={{ color: COLORS.ink }}>Odyssey</strong>.</li>
+          <li>Data now syncs to a Supabase-backed cloud store in the background, so it's no longer at risk of being lost to a cleared browser cache or a switch of device/browser.</li>
+          <li>Mocks can now be deleted directly from Mock Log — useful for clearing out sample/test entries.</li>
+        </ul>
+      </Panel>
+
       <Panel icon={Info} title="Mock-first structure">
         <p className="text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>
           Each mock is saved as one parent record. It owns the exam name, date, section scores, section question structure,
@@ -53,10 +61,12 @@ export default function AboutTab() {
         />
       </Panel>
 
-      <Panel icon={ShieldCheck} title="Local storage">
+      <Panel icon={ShieldCheck} title="Cloud sync">
         <p className="text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>
-          Data is stored in this browser's local storage. The app still migrates older saved local data into the current
-          mock-first shape on load, but the active logging and analysis workflows are now fully in-app.
+          Every mock, analysis, and profile setting syncs to a Supabase-backed cloud store, not just this browser's
+          local storage. Local storage still keeps a fast on-device cache so the app loads instantly, but Supabase is
+          now the durable copy — your data survives a cleared cache, private browsing, or opening the app on a
+          different device. The app still migrates older saved local data into the current mock-first shape on load.
         </p>
       </Panel>
 
