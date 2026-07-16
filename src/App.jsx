@@ -57,8 +57,8 @@ export default function CATMockTracker() {
   const [theme, setTheme] = useState(loadThemePreference);
 
   const {
-    sectionStats, insights, mocks,
-    marksSeries, attemptRateSeries,
+    sectionStats, insights, weakestAnalysis, mocks, entriesWithComputed,
+    marksSeries, attemptRateSeries, marksPerAttemptSeries, negMarksLostSeries, hardnessRatioSeries,
     toast,
     addScoreOnlyAnalysis, attachAnalysis, loadSample, deleteMock,
     importMocks, exportMocks,
@@ -160,6 +160,7 @@ export default function CATMockTracker() {
           <OverviewTab
             mocks={mocks}
             insights={insights}
+            weakestAnalysis={weakestAnalysis}
             settings={settings}
           />
         )}
@@ -192,8 +193,12 @@ export default function CATMockTracker() {
         {activeTab === "trends" && (
           <TrendsTab
             mocks={mocks}
+            entriesWithComputed={entriesWithComputed}
             marksSeries={marksSeries}
             attemptRateSeries={attemptRateSeries}
+            marksPerAttemptSeries={marksPerAttemptSeries}
+            negMarksLostSeries={negMarksLostSeries}
+            hardnessRatioSeries={hardnessRatioSeries}
             sectionStats={sectionStats}
             settings={settings}
           />

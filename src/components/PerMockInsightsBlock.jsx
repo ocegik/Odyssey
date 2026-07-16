@@ -10,7 +10,7 @@ function toneColor(tone) {
 
 export default function PerMockInsightsBlock({ mock, settings, compact = false }) {
   const insights = buildPerMockInsights(mock, settings);
-  if (!mock?.analysis || insights.length === 0) return null;
+  if (insights.length === 0) return null;
 
   return (
     <div

@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { SECTIONS } from "../constants";
-import { computeDerived, byDateAsc, rollingSeries, buildMockPivot, buildSeries, generateInsights } from "../lib/compute";
+import { computeDerived, byDateAsc, rollingSeries, buildMockPivot, buildSeries, generateInsights, analyzeWeakest } from "../lib/compute";
 import { normalizeStoredMocks, toRaw } from "../lib/mockStorage";
 import { makeSampleData } from "../lib/sampleData";
 import { fetchRemoteValue, saveRemoteValue } from "../lib/cloudStore";
@@ -100,11 +100,21 @@ export function useMockEntries() {
   }, [entriesWithComputed]);
 
   const insights = useMemo(() => generateInsights(sectionStats), [sectionStats]);
+  const weakestAnalysis = useMemo(() => analyzeWeakest(entriesWithComputed), [entriesWithComputed]);
 
   const mocks = useMemo(() => buildMockPivot(mockViews), [mockViews]);
   const marksSeries = useMemo(() => buildSeries(mocks, (e) => e.totalMarks), [mocks]);
   const attemptRateSeries = useMemo(
     () => buildSeries(mocks, (e) => (e.attemptRate !== null ? +(e.attemptRate * 100).toFixed(1) : null)),
+    [mocks]
+  );
+  const marksPerAttemptSeries = useMemo(
+    () => buildSeries(mocks, (e) => (e.marksPerAttempt !== null ? +e.marksPerAttempt.toFixed(2) : null)),
+    [mocks]
+  );
+  const negMarksLostSeries = useMemo(() => buildSeries(mocks, (e) => e.negMarksLost ?? null), [mocks]);
+  const hardnessRatioSeries = useMemo(
+    () => buildSeries(mocks, (e) => (e.hardnessRatio !== null && e.hardnessRatio !== undefined ? +(e.hardnessRatio * 100).toFixed(1) : null)),
     [mocks]
   );
 
@@ -151,8 +161,8 @@ export function useMockEntries() {
   const exportMocks = useCallback(() => toRaw(mockRecords), [mockRecords]);
 
   return {
-    sectionStats, insights, mocks,
-    marksSeries, attemptRateSeries,
+    sectionStats, insights, weakestAnalysis, mocks, entriesWithComputed,
+    marksSeries, attemptRateSeries, marksPerAttemptSeries, negMarksLostSeries, hardnessRatioSeries,
     toast,
     addScoreOnlyAnalysis, attachAnalysis, loadSample, deleteMock,
     importMocks, exportMocks,

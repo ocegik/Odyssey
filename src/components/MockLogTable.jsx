@@ -1,7 +1,8 @@
 import { Fragment, useMemo } from "react";
 import { FileCheck2, FilePlus2, Layers3, Trash2 } from "lucide-react";
 import { COLORS, SECTIONS, TYPE, SHADOW } from "../constants";
-import { fmtDate, fmtNum } from "../lib/format";
+import { fmtDate, fmtNum, fmtPct } from "../lib/format";
+import { buildPerMockInsights } from "../lib/perMockInsights";
 import SectionBadge from "./ui/SectionBadge";
 import EmptyState from "./ui/EmptyState";
 import PerMockInsightsBlock from "./PerMockInsightsBlock";
@@ -17,6 +18,14 @@ function structureLabel(section) {
   const total = section.totalQuestions || 0;
   const sets = section.questionBlocks?.filter((block) => block.type === "set").length || section.questionSetCount || 0;
   return `${total} Q · ${sets} sets`;
+}
+
+function quickStatsLabel(section) {
+  if (!section) return "";
+  const parts = [];
+  if (section.overallAccuracy !== null && section.overallAccuracy !== undefined) parts.push(`${fmtPct(section.overallAccuracy)} acc`);
+  if (section.attemptRate !== null && section.attemptRate !== undefined) parts.push(`${fmtPct(section.attemptRate)} att`);
+  return parts.join(" · ");
 }
 
 export default function MockLogTable({ mocks, settings, onOpenAnalysis, onDeleteMock }) {
@@ -53,6 +62,7 @@ export default function MockLogTable({ mocks, settings, onOpenAnalysis, onDelete
               const totalMarks = mock.manualTotalMarks ?? sectionMarks;
               const hasAnalysis = Boolean(mock.analysis);
               const Icon = hasAnalysis ? FileCheck2 : FilePlus2;
+              const hasInsights = buildPerMockInsights(mock, settings).length > 0;
 
               const handleDelete = () => {
                 if (window.confirm(`Delete "${mock.source}" (${fmtDate(mock.date)})? This can't be undone.`)) {
@@ -62,7 +72,7 @@ export default function MockLogTable({ mocks, settings, onOpenAnalysis, onDelete
 
               return (
                 <Fragment key={mock.id}>
-                  <tr className="hover:bg-black/[0.025]" style={{ borderBottom: hasAnalysis ? "none" : `1px solid ${COLORS.border}`, background: i % 2 ? COLORS.surface : COLORS.surface2 }}>
+                  <tr className="hover:bg-black/[0.025]" style={{ borderBottom: hasInsights ? "none" : `1px solid ${COLORS.border}`, background: i % 2 ? COLORS.surface : COLORS.surface2 }}>
                     <td className="px-3 py-2.5">
                       <div className="flex flex-col">
                         <span style={{ fontWeight: 650 }}>{mock.source}</span>
@@ -70,11 +80,16 @@ export default function MockLogTable({ mocks, settings, onOpenAnalysis, onDelete
                       </div>
                     </td>
                   <td className="px-3 py-2.5">
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-2.5">
                       {sectionNames.map((section) => (
                         <span key={section} className="inline-flex items-center gap-1.5">
                           <SectionBadge section={section} size="sm" />
-                          <span className="text-xs" style={{ color: COLORS.inkMuted }}>{structureLabel(mock[section])}</span>
+                          <span className="flex flex-col leading-tight">
+                            <span className="text-xs" style={{ color: COLORS.inkMuted }}>{structureLabel(mock[section])}</span>
+                            {quickStatsLabel(mock[section]) && (
+                              <span className="text-xs" style={{ color: COLORS.inkMuted, fontFamily: "'JetBrains Mono', monospace" }}>{quickStatsLabel(mock[section])}</span>
+                            )}
+                          </span>
                         </span>
                       ))}
                     </div>
@@ -119,7 +134,7 @@ export default function MockLogTable({ mocks, settings, onOpenAnalysis, onDelete
                       </div>
                     </td>
                   </tr>
-                  {hasAnalysis && (
+                  {hasInsights && (
                     <tr style={{ borderBottom: `1px solid ${COLORS.border}`, background: i % 2 ? COLORS.surface : COLORS.surface2 }}>
                       <td colSpan={5} className="px-3 pb-3">
                         <PerMockInsightsBlock mock={mock} settings={settings} compact />

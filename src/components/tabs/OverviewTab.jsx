@@ -1,10 +1,12 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Lightbulb } from "lucide-react";
-import { COLORS, TYPE, SHADOW } from "../../constants";
+import { COLORS } from "../../constants";
 import { fmtDate, fmtNum } from "../../lib/format";
+import { computePacing } from "../../lib/compute";
 import StatCard from "../ui/StatCard";
 import ChartFrame from "../charts/ChartFrame";
 import CollegeTargetsPanel from "../CollegeTargetsPanel";
+import WeakestSectionCard from "../charts/WeakestSectionCard";
+import InsightCard from "../charts/InsightCard";
 
 const MS_PER_DAY = 86400000;
 
@@ -63,31 +65,10 @@ function buildOverallMarksData(mocks) {
   }));
 }
 
-function insightText(insights, mocks) {
-  if (insights?.[0]?.text) return insights[0].text;
+function emptyInsightText(mocks) {
   if (mocks.length === 0) return "Log a mock to start seeing prep signals here.";
   if (mocks.length < 3) return "A few more mocks will make the first meaningful trend easier to read.";
   return "No major swing stands out in the latest data. Keep logging mocks to sharpen the signal.";
-}
-
-function InsightTile({ text }) {
-  return (
-    <div
-      className="p-4 flex items-start gap-3"
-      style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}
-    >
-      <div
-        className="shrink-0 inline-flex items-center justify-center"
-        style={{ width: 34, height: 34, borderRadius: 8, background: COLORS.surface2, color: COLORS.ink }}
-      >
-        <Lightbulb size={17} />
-      </div>
-      <div className="flex flex-col gap-1">
-        <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>Recent insight</span>
-        <p className="text-sm leading-relaxed" style={{ color: COLORS.ink }}>{text}</p>
-      </div>
-    </div>
-  );
 }
 
 function OverallMarksChart({ data }) {
@@ -131,16 +112,17 @@ function OverallMarksChart({ data }) {
   );
 }
 
-export default function OverviewTab({ mocks, insights, settings }) {
+export default function OverviewTab({ mocks, insights, weakestAnalysis, settings }) {
   const nextMock = nextScheduledMock(settings?.mockSchedule);
   const catDaysLeft = daysUntil(settings?.catTargetDate);
   const graphData = buildOverallMarksData(mocks);
   const latestMock = mocks.length > 0 ? mocks[mocks.length - 1] : null;
   const currentPercentile = mockOverallPercentile(latestMock);
+  const pacing = computePacing(mocks, settings?.catTargetDate);
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard label="Mocks logged" value={mocks.length} />
         <StatCard
           label="Next mock exam"
@@ -152,9 +134,20 @@ export default function OverviewTab({ mocks, insights, settings }) {
           value={catDaysLeft === null || catDaysLeft < 0 ? "-" : catDaysLeft}
           sub={catDaysLeft === null ? "Set the CAT date in Settings" : catDaysLeft < 0 ? "Target date has passed" : settings.catTargetDate}
         />
+        <StatCard
+          label="Recent pace"
+          value={pacing ? `${fmtNum(pacing.recentPerWeek, 1)}/wk` : "-"}
+          sub={pacing ? pacing.note : "Set the CAT date in Settings to see a pacing read"}
+        />
       </div>
 
-      <InsightTile text={insightText(insights, mocks)} />
+      <ChartFrame title="Insights" note="Latest signals from your rolling stats" empty={insights.length === 0 ? emptyInsightText(mocks) : null}>
+        <div className="flex flex-col gap-2">
+          {insights.map((insight) => <InsightCard key={insight.id} insight={insight} />)}
+        </div>
+      </ChartFrame>
+
+      <WeakestSectionCard analysis={weakestAnalysis} />
 
       <ChartFrame
         title="Overall marks by mock"

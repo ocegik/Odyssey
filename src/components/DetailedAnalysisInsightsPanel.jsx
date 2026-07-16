@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { AlertTriangle, Clock3, Target } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { COLORS, SECTIONS, SECTION_META, TYPE } from "../constants";
-import { fmtNum, fmtPct } from "../lib/format";
+import { Bar, BarChart, ComposedChart, Line, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { COLORS, SECTION_META, TYPE } from "../constants";
+import { fmtDate, fmtNum, fmtPct } from "../lib/format";
 import { buildDetailedAnalysisInsights } from "../lib/detailedAnalysisInsights";
 import ChartFrame from "./charts/ChartFrame";
 import SectionBadge from "./ui/SectionBadge";
@@ -92,6 +92,65 @@ function TimingTable({ rows }) {
   );
 }
 
+function AnalysisTrendChart({ rows }) {
+  const data = rows.map((row) => ({
+    label: `${fmtDate(row.date)} - ${row.source}`,
+    Accuracy: row.accuracy !== null && row.accuracy !== undefined ? +(row.accuracy * 100).toFixed(1) : null,
+    Wrong: row.wrong,
+    Skipped: row.skipped,
+  }));
+  return (
+    <div style={{ width: "100%", height: 260 }}>
+      <ResponsiveContainer>
+        <ComposedChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+          <CartesianGrid stroke={COLORS.border} strokeDasharray="3 3" vertical={false} />
+          <XAxis dataKey="label" tick={{ fill: COLORS.inkMuted, fontSize: 11 }} axisLine={{ stroke: COLORS.border }} tickLine={false} interval="preserveStartEnd" />
+          <YAxis yAxisId="count" tick={{ fill: COLORS.inkMuted, fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+          <YAxis yAxisId="pct" orientation="right" tick={{ fill: COLORS.inkMuted, fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+          <Tooltip
+            cursor={{ fill: COLORS.hover }}
+            contentStyle={{ backgroundColor: COLORS.surface, color: COLORS.ink, fontFamily: "'Inter', sans-serif", fontSize: 12, borderRadius: 8, border: `1px solid ${COLORS.border}`, boxShadow: "var(--shadow-floating)" }}
+          />
+          <Legend wrapperStyle={{ fontFamily: "'Inter', sans-serif", fontSize: 12 }} />
+          <Bar yAxisId="count" dataKey="Wrong" fill={COLORS.danger} radius={[4, 4, 0, 0]} />
+          <Bar yAxisId="count" dataKey="Skipped" fill={COLORS.quant} radius={[4, 4, 0, 0]} />
+          <Line yAxisId="pct" type="monotone" dataKey="Accuracy" stroke={COLORS.ink} strokeWidth={2.25} dot={{ r: 3, strokeWidth: 0, fill: COLORS.ink }} />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function TopicAccuracyTable({ rows }) {
+  const tagged = rows.filter((row) => row.attempted > 0);
+  if (tagged.length === 0) {
+    return <p className="text-sm" style={{ color: COLORS.inkMuted }}>Tag topics in Mock Analysis to unlock a per-topic accuracy breakdown.</p>;
+  }
+  return (
+    <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
+      <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 560 }}>
+        <thead>
+          <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>
+            {["Section", "Topic", "Accuracy", "Correct/Attempted"].map((label) => (
+              <th key={label} className="text-left px-3 py-2" style={{ ...TYPE.label, color: COLORS.inkMuted }}>{label}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {tagged.map((row) => (
+            <tr key={`${row.section}-${row.topic}`} style={{ borderTop: `1px solid ${COLORS.border}` }}>
+              <td className="px-3 py-2"><SectionBadge section={row.section} size="sm" /></td>
+              <td className="px-3 py-2">{row.topic}</td>
+              <td className="px-3 py-2" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{fmtPct(row.accuracy)}</td>
+              <td className="px-3 py-2" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{row.correct}/{row.attempted}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function AnalysisBarChart({ rows }) {
   const data = rows.map((row) => ({
     section: row.section,
@@ -156,6 +215,14 @@ export default function DetailedAnalysisInsightsPanel({ mocks }) {
 
       <ChartFrame title="Timing by outcome" note="Average seconds per question" empty={empty}>
         <TimingTable rows={analysis.timingRows} />
+      </ChartFrame>
+
+      <ChartFrame title="Accuracy, wrong & skipped over time" note="Across analyzed mocks" empty={empty}>
+        <AnalysisTrendChart rows={analysis.mockTrendRows} />
+      </ChartFrame>
+
+      <ChartFrame title="Topic accuracy breakdown" note="Every tagged topic, weakest first" empty={empty}>
+        <TopicAccuracyTable rows={analysis.topicRows} />
       </ChartFrame>
     </div>
   );

@@ -293,6 +293,39 @@ export function buildRadarData(sectionStats) {
   ];
 }
 
+/* ------------------------------------------------------------------ */
+/*  Consistency (volatility) across a section's logged mocks           */
+/* ------------------------------------------------------------------ */
+
+const MIN_CONSISTENCY_SAMPLES = 3;
+
+function stdDev(values) {
+  if (values.length < 2) return null;
+  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+  const variance = values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / values.length;
+  return Math.sqrt(variance);
+}
+
+/**
+ * Rough "how swingy is this section" read: standard deviation of accuracy
+ * and total marks across every logged mock, not just the rolling window —
+ * a low spread means steady performance, a high one means volatile.
+ */
+export function buildConsistencyStats(sectionStats) {
+  return SECTIONS.map((section) => {
+    const list = sectionStats[section]?.list || [];
+    const accuracyValues = list.map((e) => e.overallAccuracy).filter((v) => v !== null && v !== undefined && !isNaN(v));
+    const marksValues = list.map((e) => e.totalMarks).filter((v) => v !== null && v !== undefined && !isNaN(v));
+    const sampleSize = list.length;
+    return {
+      section,
+      sampleSize,
+      accuracyStdDev: sampleSize >= MIN_CONSISTENCY_SAMPLES ? stdDev(accuracyValues) : null,
+      marksStdDev: sampleSize >= MIN_CONSISTENCY_SAMPLES ? stdDev(marksValues) : null,
+    };
+  });
+}
+
 /* "Last 2-3 weeks" window used for the recent-frequency pacing read. */
 const PACING_WINDOW_DAYS = 18;
 /* Rough, deliberately coarse thresholds — this is a pace nudge, not a plan. */

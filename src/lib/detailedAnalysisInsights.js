@@ -250,6 +250,21 @@ function buildReasonRows(sectionSummaries) {
   });
 }
 
+function buildTopicRows(sectionSummaries) {
+  return SECTIONS.flatMap((section) => {
+    const summary = sectionSummaries[section];
+    return Object.entries(summary.topicStats)
+      .map(([topic, stat]) => ({
+        section,
+        topic,
+        attempted: stat.attempted,
+        correct: stat.correct,
+        accuracy: stat.attempted > 0 ? stat.correct / stat.attempted : null,
+      }))
+      .sort((a, b) => (a.accuracy ?? 1) - (b.accuracy ?? 1));
+  });
+}
+
 function buildTimingRows(questions) {
   return SECTIONS.map((section) => {
     const sectionQuestions = questions.filter((question) => question.section === section);
@@ -303,6 +318,7 @@ export function buildDetailedAnalysisInsights(mocks) {
     reasonRows: buildReasonRows(sectionSummaries),
     timingRows: buildTimingRows(questions),
     mockTrendRows: buildMockTrendRows(mocks),
+    topicRows: buildTopicRows(sectionSummaries),
     insights,
   };
 }

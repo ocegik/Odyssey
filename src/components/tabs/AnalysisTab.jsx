@@ -112,6 +112,11 @@ function SectionSummary({ section, summary }) {
         <span>Wrong: <strong style={{ color: COLORS.ink }}>{summary.wrong}</strong></span>
         <span>Slow: <strong style={{ color: COLORS.ink }}>{summary.slowQuestions}</strong></span>
       </div>
+      <div className="grid grid-cols-3 gap-2 text-xs pt-1" style={{ color: COLORS.inkMuted, borderTop: `1px solid ${COLORS.border}` }}>
+        <span>Correct: <strong style={{ color: COLORS.ink }}>{summary.correct}</strong></span>
+        <span>MCQ: <strong style={{ color: COLORS.ink }}>{summary.questionTypeCounts.MCQ || 0}</strong></span>
+        <span>TITA: <strong style={{ color: COLORS.ink }}>{summary.questionTypeCounts.TITA || 0}</strong></span>
+      </div>
     </div>
   );
 }
@@ -258,6 +263,16 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
             <StatCard label="Accuracy" value={fmtPct(summary?.accuracy)} />
             <StatCard label="Wrong" value={summary?.wrong || 0} />
             <StatCard label="Skipped" value={summary?.skipped || 0} />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <StatCard label="Avg time/question" value={seconds(summary?.averageTime)} />
+            <StatCard label="Avg benchmark" value={seconds(summary?.averageBenchmarkTime)} />
+            <StatCard
+              label="Total time vs benchmark"
+              value={summary?.timeDelta === null || summary?.timeDelta === undefined ? "-" : `${summary.timeDelta >= 0 ? "+" : ""}${fmtNum(summary.timeDelta, 0)}s`}
+              accent={summary?.timeDelta > 0 ? COLORS.danger : summary?.timeDelta < 0 ? COLORS.good : undefined}
+            />
           </div>
 
           <Panel
