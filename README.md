@@ -1,4 +1,4 @@
-# cat-tracker-project
+# Odyssey
 # CAT Mock Score Tracker & Visualizer — Project Scope & Requirements
 
 **Purpose:** Track sectional CAT mock performance (VARC / DILR / Quant) across a 4-month prep window to identify which subject is lagging, and whether the gap is an accuracy problem or an attempt-rate problem, and whether it's specifically MCQ or TITA.
@@ -68,6 +68,8 @@
 - `scores.json` stores explicit parent mock records; each mock owns its VARC, DILR, and Quant section records instead of inferring the relationship from shared date/source values
 - Detailed analysis is optional and stored under the parent mock's `analysis` field when attached
 - Old entries without the optional fields (Percentile, Topper Score) must remain valid on import — schema is additive, never breaking
+
+**Update (post-launch):** the app now also syncs to a Supabase table (`app_storage`) in the background, so data survives browser storage being cleared and isn't limited to one device. localStorage remains as a fast local cache; export/import still work the same way as a manual backup path. See `supabase/schema.sql` and `src/lib/cloudStore.js`.
 
 ---
 

@@ -6,7 +6,10 @@ export default function Header({ theme, onToggleTheme }) {
   return (
     <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div className="flex flex-col gap-0.5">
-        <h1 style={TYPE.pageTitle}>CAT Mock Tracker</h1>
+        <div className="flex items-baseline gap-2">
+          <h1 style={TYPE.pageTitle}>Odyssey</h1>
+          <span className="text-xs" style={{ color: COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>CAT Mock Tracker</span>
+        </div>
         <p className="text-sm" style={{ color: COLORS.inkMuted }}>Sectional performance across VARC · DILR · Quant</p>
       </div>
       <div className="flex gap-2 flex-wrap">
