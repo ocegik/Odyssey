@@ -59,7 +59,7 @@ export default function CATMockTracker() {
     sectionStats, insights, mocks,
     marksSeries, attemptRateSeries,
     toast,
-    addScoreOnlyAnalysis, attachAnalysis, loadSample,
+    addScoreOnlyAnalysis, attachAnalysis, loadSample, deleteMock,
   } = useMockEntries();
 
   const {
@@ -136,6 +136,7 @@ export default function CATMockTracker() {
             onLoadSample={loadSample}
             onOpenAnalysis={handleOpenAnalysis}
             onCreateMock={addScoreOnlyAnalysis}
+            onDeleteMock={deleteMock}
           />
         )}
 

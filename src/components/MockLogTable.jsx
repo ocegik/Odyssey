@@ -1,5 +1,5 @@
 import { Fragment, useMemo } from "react";
-import { FileCheck2, FilePlus2, Layers3 } from "lucide-react";
+import { FileCheck2, FilePlus2, Layers3, Trash2 } from "lucide-react";
 import { COLORS, SECTIONS, TYPE, SHADOW } from "../constants";
 import { fmtDate, fmtNum } from "../lib/format";
 import SectionBadge from "./ui/SectionBadge";
@@ -19,7 +19,7 @@ function structureLabel(section) {
   return `${total} Q · ${sets} sets`;
 }
 
-export default function MockLogTable({ mocks, settings, onOpenAnalysis }) {
+export default function MockLogTable({ mocks, settings, onOpenAnalysis, onDeleteMock }) {
   const rows = useMemo(
     () => [...mocks].sort((a, b) => (a.date === b.date ? b.createdAt - a.createdAt : b.date.localeCompare(a.date))),
     [mocks]
@@ -53,6 +53,12 @@ export default function MockLogTable({ mocks, settings, onOpenAnalysis }) {
               const totalMarks = mock.manualTotalMarks ?? sectionMarks;
               const hasAnalysis = Boolean(mock.analysis);
               const Icon = hasAnalysis ? FileCheck2 : FilePlus2;
+
+              const handleDelete = () => {
+                if (window.confirm(`Delete "${mock.source}" (${fmtDate(mock.date)})? This can't be undone.`)) {
+                  onDeleteMock(mock.id);
+                }
+              };
 
               return (
                 <Fragment key={mock.id}>
@@ -93,7 +99,7 @@ export default function MockLogTable({ mocks, settings, onOpenAnalysis }) {
                       </span>
                     </td>
                     <td className="px-3 py-2.5">
-                      <div className="flex justify-end">
+                      <div className="flex justify-end gap-2">
                         <button
                           onClick={() => onOpenAnalysis(mock.id)}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs hover:bg-black/[0.04]"
@@ -101,6 +107,14 @@ export default function MockLogTable({ mocks, settings, onOpenAnalysis }) {
                         >
                           <Icon size={13} />
                           {hasAnalysis ? "Open analysis" : "Add analysis"}
+                        </button>
+                        <button
+                          onClick={handleDelete}
+                          aria-label={`Delete ${mock.source}`}
+                          className="theme-hover inline-flex items-center justify-center"
+                          style={{ width: 32, height: 32, border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.danger }}
+                        >
+                          <Trash2 size={13} />
                         </button>
                       </div>
                     </td>

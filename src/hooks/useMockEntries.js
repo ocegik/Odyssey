@@ -9,6 +9,7 @@ import {
   attachAnalysisToMocks,
   computeMockViews,
   flattenMockEntries,
+  removeMock,
 } from "../lib/mockModel";
 
 /* Local storage keeps explicit parent mock records. normalizeStoredMocks() still
@@ -132,10 +133,15 @@ export function useMockEntries() {
     showToast("Sample data loaded");
   }, [showToast]);
 
+  const deleteMock = useCallback((mockId) => {
+    setMockRecords((prev) => removeMock(prev, mockId));
+    showToast("Mock deleted");
+  }, [showToast]);
+
   return {
     sectionStats, insights, mocks,
     marksSeries, attemptRateSeries,
     toast,
-    addScoreOnlyAnalysis, attachAnalysis, loadSample,
+    addScoreOnlyAnalysis, attachAnalysis, loadSample, deleteMock,
   };
 }

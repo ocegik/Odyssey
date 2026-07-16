@@ -260,3 +260,7 @@ export function attachAnalysisToMocks(mocks, mockId, rawAnalysis) {
       : mock
   ));
 }
+
+export function removeMock(mocks, id) {
+  return mocks.filter((mock) => mock.id !== id);
+}

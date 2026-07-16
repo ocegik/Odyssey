@@ -105,6 +105,7 @@ export default function MockLogTab({
   onLoadSample,
   onOpenAnalysis,
   onCreateMock,
+  onDeleteMock,
 }) {
   const [mockForm, setMockForm] = useState(emptyMockForm);
   const [formErrors, setFormErrors] = useState([]);
@@ -306,7 +307,7 @@ export default function MockLogTab({
 
       <div className="flex flex-col gap-2">
         <h3 style={TYPE.chartTitle}>Mocks</h3>
-        <MockLogTable mocks={mocks} settings={settings} onOpenAnalysis={onOpenAnalysis} />
+        <MockLogTable mocks={mocks} settings={settings} onOpenAnalysis={onOpenAnalysis} onDeleteMock={onDeleteMock} />
       </div>
 
     </div>
