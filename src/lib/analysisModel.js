@@ -10,6 +10,11 @@ export const OUTCOME_REASONS = {
   Wrong: ["Concept Error", "Calculation Error", "Misread Question", "Trap Option", "Time Pressure"],
   Skipped: ["Didn't Know Concept", "Couldn't Find Approach", "Too Time Consuming", "Strategic Skip", "Ran Out of Time"],
 };
+export const TOPIC_OPTIONS = {
+  Quant: ["Arithmetic", "Algebra", "Geometry & Mensuration", "Number System", "Modern Math"],
+  DILR: ["Data Interpretation", "Data Sufficiency", "Puzzles & Arrangements", "Sets & Venn Diagrams", "Reasoning"],
+  VARC: ["Reading Comprehension", "Verbal Ability"],
+};
 
 const analysisId = () => uid().replace(/^e_/, "a_");
 const blockId = () => uid().replace(/^e_/, "b_");
@@ -41,7 +46,13 @@ function normalizeQuestionType(value) {
   return QUESTION_TYPES.find((type) => type.toUpperCase() === str.toUpperCase()) || str || "MCQ";
 }
 
-function normalizeQuestion(rawQuestion, idx) {
+function normalizeTopic(section, value) {
+  const options = TOPIC_OPTIONS[section] || [];
+  const str = asString(value).trim();
+  return options.find((topic) => topic.toLowerCase() === str.toLowerCase()) || "";
+}
+
+function normalizeQuestion(rawQuestion, idx, section) {
   const result = normalizeResult(rawQuestion.result);
   const reason = asString(rawQuestion.outcomeReason).trim();
   const allowedReasons = OUTCOME_REASONS[result] || [];
@@ -51,19 +62,20 @@ function normalizeQuestion(rawQuestion, idx) {
     result,
     outcomeReason: allowedReasons.includes(reason) ? reason : allowedReasons[0] || "",
     questionType: normalizeQuestionType(rawQuestion.questionType),
+    topic: normalizeTopic(section, rawQuestion.topic),
     timeTaken: asNumberOrNull(rawQuestion.timeTaken),
     averageTime: asNumberOrNull(rawQuestion.averageTime),
     notes: asString(rawQuestion.notes),
   };
 }
 
-function normalizeBlock(rawBlock, idx) {
+function normalizeBlock(rawBlock, idx, section) {
   const questions = Array.isArray(rawBlock.questions) ? rawBlock.questions : [];
   return {
     id: rawBlock.id || blockId(),
     type: asString(rawBlock.type) || "independent",
     name: asString(rawBlock.name),
-    questions: questions.map(normalizeQuestion),
+    questions: questions.map((question, questionIdx) => normalizeQuestion(question, questionIdx, section)),
   };
 }
 
@@ -76,7 +88,7 @@ function normalizeSection(rawSection, sectionName) {
     percentile: asNumberOrNull(rawSection.percentile),
     topperScore: asNumberOrNull(rawSection.topperScore),
     notes: asString(rawSection.notes),
-    blocks: blocks.map(normalizeBlock),
+    blocks: blocks.map((block, blockIdx) => normalizeBlock(block, blockIdx, sectionName)),
   };
 }
 
@@ -200,11 +212,13 @@ function sampleQuestion(section, questionNumber, idx) {
   const reasons = OUTCOME_REASONS[result];
   const averageTime = section === "VARC" ? 60 : section === "DILR" ? 150 : 120;
   const timeTaken = Math.max(25, averageTime + ((idx % 5) - 2) * 18 + (result === "Wrong" ? 22 : 0));
+  const topics = TOPIC_OPTIONS[section] || [];
   return {
     questionNumber,
     result,
     outcomeReason: reasons[idx % reasons.length],
     questionType: idx % 5 === 4 ? "TITA" : "MCQ",
+    topic: topics.length ? topics[idx % topics.length] : "",
     timeTaken,
     averageTime,
     notes: "",

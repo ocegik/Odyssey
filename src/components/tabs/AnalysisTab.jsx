@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Save, ClipboardList, Plus } from "lucide-react";
 import { COLORS, SECTIONS, TYPE, SHADOW } from "../../constants";
 import { fmtDate, fmtNum, fmtPct } from "../../lib/format";
-import { buildAnalysisSummary, OUTCOME_REASONS } from "../../lib/analysisModel";
+import { buildAnalysisSummary, OUTCOME_REASONS, TOPIC_OPTIONS } from "../../lib/analysisModel";
 import { validateAnalysisAgainstMock } from "../../lib/analysisValidation";
 import { inputStyle } from "../ui/FieldLabel";
 import EmptyState from "../ui/EmptyState";
@@ -36,6 +36,7 @@ function defaultQuestion(questionNumber) {
     result: "Skipped",
     outcomeReason: OUTCOME_REASONS.Skipped[0],
     questionType: "MCQ",
+    topic: "",
     timeTaken: null,
     averageTime: null,
     notes: "",
@@ -326,10 +327,10 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                         <span className="text-xs" style={{ color: COLORS.inkMuted }}>{block.questions.length} Qs</span>
                       </div>
                       <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
-                        <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 1240 }}>
+                        <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 1440 }}>
                           <thead>
                             <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>
-                              {["Q", "Result", "Outcome Reason", "Type", "Time", "Average Time", "Notes"].map((label) => (
+                              {["Q", "Result", "Outcome Reason", "Type", "Topic", "Time", "Average Time", "Notes"].map((label) => (
                                 <th key={label} className="text-left px-3 py-2.5" style={{ ...TYPE.label, color: COLORS.inkMuted }}>{label}</th>
                               ))}
                             </tr>
@@ -351,6 +352,12 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                                 <td className="px-3 py-2.5">
                                   <select value={question.questionType} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "questionType", ev.target.value)} style={{ ...inputStyle(false), minWidth: 110, height: 40, fontSize: 14 }}>
                                     {["MCQ", "TITA"].map((type) => <option key={type}>{type}</option>)}
+                                  </select>
+                                </td>
+                                <td className="px-3 py-2.5">
+                                  <select value={question.topic || ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "topic", ev.target.value)} style={{ ...inputStyle(false), minWidth: 200, height: 40, fontSize: 14 }}>
+                                    <option value="">-</option>
+                                    {(TOPIC_OPTIONS[section] || []).map((topic) => <option key={topic} value={topic}>{topic}</option>)}
                                   </select>
                                 </td>
                                 <td className="px-3 py-2.5">

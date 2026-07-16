@@ -4,6 +4,8 @@ import { fmtNum, fmtPct } from "./format";
 const MIN_RECURRING_REASON_COUNT = 3;
 const MIN_RECURRING_MOCK_COUNT = 2;
 const SLOW_DELTA_SECONDS = 15;
+const MIN_TOPIC_ATTEMPTS = 3;
+const WEAKEST_TOPIC_MAX_ACCURACY = 0.6;
 
 function inc(counter, key, by = 1) {
   const safeKey = key || "Unspecified";
@@ -75,7 +77,12 @@ function emptySectionSummary(section) {
     questionTypes: {},
     wrongByType: {},
     attemptedByType: {},
+    topicStats: {},
   };
+}
+
+function topicStat(summary, topic) {
+  return summary.topicStats[topic] || (summary.topicStats[topic] = { attempted: 0, correct: 0 });
 }
 
 function summarizeSection(section, questions) {
@@ -98,6 +105,12 @@ function summarizeSection(section, questions) {
     if (question.result === "Wrong") inc(summary.wrongReasons, question.outcomeReason);
     if (question.result === "Skipped") inc(summary.skippedReasons, question.outcomeReason);
     if (question.result === "Correct") inc(summary.correctReasons, question.outcomeReason);
+
+    if (question.topic) {
+      const stat = topicStat(summary, question.topic);
+      if (question.attempted) stat.attempted += 1;
+      if (question.result === "Correct") stat.correct += 1;
+    }
   });
 
   summary.accuracy = summary.attempted > 0 ? summary.correct / summary.attempted : null;
@@ -178,6 +191,23 @@ function generateSectionInsights(sectionSummaries, questions) {
         title: "Time pressure",
         text: `${section} has ${summary.slow} slow questions out of ${summary.total} (${fmtPct(summary.slowRate)}), so timing is likely part of the pattern, not just accuracy.`,
       });
+    }
+
+    const topicEntries = Object.entries(summary.topicStats)
+      .map(([topic, stat]) => ({ topic, ...stat, accuracy: stat.attempted > 0 ? stat.correct / stat.attempted : null }))
+      .filter((entry) => entry.attempted >= MIN_TOPIC_ATTEMPTS && entry.accuracy !== null);
+    if (topicEntries.length > 0) {
+      const weakestTopic = [...topicEntries].sort((a, b) => a.accuracy - b.accuracy)[0];
+      if (weakestTopic.accuracy <= WEAKEST_TOPIC_MAX_ACCURACY) {
+        insights.push({
+          id: `${section}-weakest-topic-${weakestTopic.topic}`,
+          section,
+          tone: "negative",
+          significance: 1 - weakestTopic.accuracy,
+          title: "Weakest topic",
+          text: `${section}'s softest topic is ${weakestTopic.topic}: ${weakestTopic.correct}/${weakestTopic.attempted} correct (${fmtPct(weakestTopic.accuracy)}).`,
+        });
+      }
     }
 
     const repeatedWrong = topWrong ? reasonMockSpread(questions, section, "Wrong", topWrong.label) : 0;
