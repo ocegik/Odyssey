@@ -163,7 +163,7 @@ export default function SettingsTab({
             <input id="studentName" value={settings.studentName} onChange={setProfileField("studentName")} style={inputStyle(false)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="catTargetDate">Actual CAT target date</FieldLabel>
+            <FieldLabel htmlFor="catTargetDate">CAT exam date</FieldLabel>
             <input id="catTargetDate" type="date" value={settings.catTargetDate} onChange={setProfileField("catTargetDate")} style={inputStyle(false)} />
           </div>
           <div className="flex flex-col gap-1.5">

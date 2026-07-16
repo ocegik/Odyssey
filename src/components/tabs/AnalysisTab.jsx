@@ -204,6 +204,12 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
 
   const regenerateDraft = () => {
     if (!selectedMock) return;
+    if (selectedMock.analysis) {
+      const confirmed = window.confirm(
+        "Regenerate will discard the attached analysis for this mock (all logged results, reasons, times, and notes) and rebuild a blank question list. This can't be undone. Continue?"
+      );
+      if (!confirmed) return;
+    }
     setDraft(buildAnalysisDraftFromMock(selectedMock));
     setAnalysisError("");
   };

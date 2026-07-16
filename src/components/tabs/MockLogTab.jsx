@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Sparkles, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Sparkles, Trash2 } from "lucide-react";
 import { COLORS, SECTIONS, TYPE, SHADOW } from "../../constants";
 import MockLogTable from "../MockLogTable";
 import SectionBadge from "../ui/SectionBadge";
@@ -90,6 +90,15 @@ function validateMockForm(form) {
   return errors;
 }
 
+function structureSummary(section) {
+  const sets = section.questionBlocks.filter((block) => block.type === "set").length;
+  const independent = section.questionBlocks.filter((block) => block.type === "independent").length;
+  const parts = [];
+  if (sets) parts.push(`${sets} set${sets === 1 ? "" : "s"}`);
+  if (independent) parts.push(`${independent} independent block${independent === 1 ? "" : "s"}`);
+  return parts.length ? parts.join(" · ") : "no blocks yet";
+}
+
 function Panel({ title, children }) {
   return (
     <div className="p-5 flex flex-col gap-4" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
@@ -109,6 +118,7 @@ export default function MockLogTab({
 }) {
   const [mockForm, setMockForm] = useState(emptyMockForm);
   const [formErrors, setFormErrors] = useState([]);
+  const [showStructure, setShowStructure] = useState(false);
 
   const setField = (field) => (ev) => {
     setMockForm((form) => ({ ...form, [field]: ev.target.value }));
@@ -178,7 +188,10 @@ export default function MockLogTab({
     ev.preventDefault();
     const errors = validateMockForm(mockForm);
     setFormErrors(errors);
-    if (errors.length > 0) return;
+    if (errors.length > 0) {
+      setShowStructure(true);
+      return;
+    }
 
     const sections = mockForm.sections.map((section) => ({
       section: section.section,
@@ -216,11 +229,26 @@ export default function MockLogTab({
             </div>
           </div>
 
+          <button
+            type="button"
+            onClick={() => setShowStructure((v) => !v)}
+            className="theme-hover self-start inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs -mb-1"
+            style={{ borderRadius: 8, color: COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}
+          >
+            {showStructure ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+            {showStructure ? "Hide question structure" : "Customize question structure (sets & ranges)"}
+          </button>
+
           <div className="flex flex-col gap-3">
             {mockForm.sections.map((section, sectionIdx) => (
               <div key={section.section} className="p-4 flex flex-col gap-3" style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10 }}>
                 <div className="flex flex-wrap items-end justify-between gap-3">
-                  <SectionBadge section={section.section} size="sm" />
+                  <div className="flex flex-col gap-1.5">
+                    <SectionBadge section={section.section} size="sm" />
+                    {!showStructure && (
+                      <span className="text-xs" style={{ color: COLORS.inkMuted }}>{structureSummary(section)}</span>
+                    )}
+                  </div>
                   <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
                     <div className="flex flex-col gap-1.5">
                       <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Score</label>
@@ -233,7 +261,8 @@ export default function MockLogTab({
                   </div>
                 </div>
 
-                <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
+                {showStructure && (
+                <div className="animate-fade-up overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
                   <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 860 }}>
                     <thead>
                       <tr style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}` }}>
@@ -270,8 +299,10 @@ export default function MockLogTab({
                     </tbody>
                   </table>
                 </div>
+                )}
 
-                <div className="flex flex-wrap gap-2">
+                {showStructure && (
+                <div className="animate-fade-up flex flex-wrap gap-2">
                   <button type="button" onClick={() => addBlock(sectionIdx, "set")} className="theme-hover inline-flex items-center gap-1.5 px-3 py-1.5 text-xs" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.ink }}>
                     <Plus size={13} /> Add set
                   </button>
@@ -279,6 +310,7 @@ export default function MockLogTab({
                     <Plus size={13} /> Add independent
                   </button>
                 </div>
+                )}
               </div>
             ))}
           </div>

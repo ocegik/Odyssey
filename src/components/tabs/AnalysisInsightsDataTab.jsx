@@ -6,6 +6,7 @@ import { fmtDate, fmtPct } from "../../lib/format";
 import DetailedAnalysisInsightsPanel from "../DetailedAnalysisInsightsPanel";
 import AdvancedInsightsPanel from "../AdvancedInsightsPanel";
 import EmptyState from "../ui/EmptyState";
+import GroupHeading from "../ui/GroupHeading";
 
 function Panel({ title, children, note }) {
   return (
@@ -151,9 +152,14 @@ export default function AnalysisInsightsDataTab({ mocks }) {
         </p>
       </Panel>
 
+      <GroupHeading>Recent activity</GroupHeading>
       <RecentHighlights mocks={mocks} />
+
+      <GroupHeading>Patterns across all analyzed mocks</GroupHeading>
       <SectionMistakeTrend analysis={analysis} />
       <DetailedAnalysisInsightsPanel mocks={mocks} />
+
+      <GroupHeading>Set & topic-level insights</GroupHeading>
       <AdvancedInsightsPanel mocks={mocks} />
     </div>
   );

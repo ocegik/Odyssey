@@ -128,6 +128,7 @@ export default function MockLogTable({ mocks, settings, onOpenAnalysis, onDelete
                         </button>
                         <button
                           onClick={handleDelete}
+                          title="Delete mock"
                           aria-label={`Delete ${mock.source}`}
                           className="theme-hover inline-flex items-center justify-center"
                           style={{ width: 32, height: 32, border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.danger }}

@@ -126,7 +126,7 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, settings
         <StatCard
           label="Days left until CAT"
           value={catDaysLeft === null || catDaysLeft < 0 ? "-" : catDaysLeft}
-          sub={catDaysLeft === null ? "Set the CAT date in Settings" : catDaysLeft < 0 ? "Target date has passed" : settings.catTargetDate}
+          sub={catDaysLeft === null ? "Set the CAT date in Settings" : catDaysLeft < 0 ? "Exam date has passed" : settings.catTargetDate}
         />
         <StatCard
           label="Recent pace"

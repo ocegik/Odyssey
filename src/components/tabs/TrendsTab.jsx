@@ -6,6 +6,7 @@ import SectionRadarChart from "../charts/SectionRadarChart";
 import HardnessChart from "../charts/HardnessChart";
 import SourceComparisonChart from "../charts/SourceComparisonChart";
 import StatCard from "../ui/StatCard";
+import GroupHeading from "../ui/GroupHeading";
 import { COLORS, SECTIONS } from "../../constants";
 import { buildRadarData, buildConsistencyStats } from "../../lib/compute";
 import { fmtNum } from "../../lib/format";
@@ -52,6 +53,7 @@ export default function TrendsTab({
 
   return (
     <div className="flex flex-col gap-4">
+      <GroupHeading>Score & accuracy</GroupHeading>
       <ChartFrame title="Section-wise trend — total marks" note={targetLines.length ? "Dashed line is the Settings target score" : "Primary view for spotting who's lagging"} empty={noData}>
         <MultiSectionLineChart data={marksSeries} referenceLines={targetLines} />
       </ChartFrame>
@@ -62,6 +64,7 @@ export default function TrendsTab({
 
       <SectionRadarChart data={radarData} empty={radarEmpty} />
 
+      <GroupHeading>Pacing & difficulty</GroupHeading>
       <ChartFrame title="Marks-per-attempt trend" note="Marks scored per question attempted" empty={noData}>
         <MultiSectionLineChart data={marksPerAttemptSeries} />
       </ChartFrame>
@@ -72,6 +75,7 @@ export default function TrendsTab({
 
       <HardnessChart data={hardnessRatioSeries} empty={!hardnessHasData ? "Log a topper score with a mock to see this indicator." : null} />
 
+      <GroupHeading>Consistency & sources</GroupHeading>
       <ConsistencyStats sectionStats={sectionStats} />
 
       <SourceComparisonChart entriesWithComputed={entriesWithComputed} />

@@ -93,7 +93,7 @@ export const TABS = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
   { key: "log", label: "Mock log", icon: ClipboardList },
   { key: "analysis", label: "Mock analysis", icon: FileSearch },
-  { key: "analysisInsights", label: "Analysis Insights & Data", icon: BarChart3 },
+  { key: "analysisInsights", label: "Insights", icon: BarChart3 },
   { key: "trends", label: "Trends", icon: LineChartIcon },
   { key: "settings", label: "Settings", icon: Settings },
   { key: "about", label: "About", icon: Info },
