@@ -321,7 +321,7 @@ export default function MockLogTab({
             </div>
           )}
 
-          <button type="submit" className="self-start inline-flex items-center gap-1.5 px-4 py-2 text-sm hover:opacity-90" style={{ background: COLORS.ink, color: COLORS.bg, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}>
+          <button type="submit" className="self-start inline-flex items-center gap-1.5 px-4 py-2 text-sm hover:opacity-90" style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}>
             <Plus size={14} /> Log mock
           </button>
         </form>

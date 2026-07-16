@@ -43,6 +43,9 @@ function themeVariableCSS(themeName, values) {
       --color-quant-soft: ${values.quantSoft};
       --color-good: ${values.good};
       --color-danger: ${values.danger};
+      --color-primary: ${values.primary};
+      --color-primary-hover: ${values.primaryHover};
+      --color-on-primary: ${values.onPrimary};
       --color-hover: ${values.hover};
       --color-focus-ring: ${values.focusRing};
       --shadow-card: ${values.shadowCard};

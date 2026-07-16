@@ -205,7 +205,7 @@ export default function SettingsTab({
           </div>
           <div className="flex gap-2">
             <button type="submit" className="inline-flex items-center gap-1.5 px-3 py-2 text-sm hover:opacity-90"
-              style={{ background: COLORS.ink, color: COLORS.bg, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}>
+              style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}>
               {editingId ? <CheckCircle2 size={14} /> : <Plus size={14} />}
               {editingId ? "Save" : "Add"}
             </button>

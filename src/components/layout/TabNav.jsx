@@ -9,7 +9,7 @@ export default function TabNav({ activeTab, onChange }) {
         return (
           <button key={t.key} onClick={() => onChange(t.key)}
             className={`flex items-center gap-1.5 px-3.5 py-2 text-sm ${active ? "" : "hover:bg-black/5"}`}
-            style={{ borderRadius: 8, background: active ? COLORS.ink : "transparent", color: active ? COLORS.bg : COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>
+            style={{ borderRadius: 8, background: active ? COLORS.primary : "transparent", color: active ? COLORS.onPrimary : COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>
             <Icon size={14} /> {t.label}
           </button>
         );

@@ -33,7 +33,7 @@ export default function AccuracyComparisonChart({ sectionStats }) {
           {["latest", "rolling"].map((m) => (
             <button key={m} onClick={() => setMode(m)}
               className={`px-2 py-1 text-xs ${mode === m ? "" : "hover:bg-black/5"}`}
-              style={{ borderRadius: 6, background: mode === m ? COLORS.ink : "transparent", color: mode === m ? COLORS.bg : COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>
+              style={{ borderRadius: 6, background: mode === m ? COLORS.primary : "transparent", color: mode === m ? COLORS.onPrimary : COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>
               {m === "latest" ? "Latest mock" : "Rolling avg (5)"}
             </button>
           ))}

@@ -253,7 +253,7 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
               type="button"
               onClick={regenerateDraft}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:opacity-90"
-              style={{ background: COLORS.ink, color: COLORS.bg, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+              style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
             >
               <Plus size={14} />
               {selectedMock?.analysis ? "Regenerate" : "Add Analysis"}
@@ -309,7 +309,7 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                 type="button"
                 onClick={saveDraft}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:opacity-90"
-                style={{ background: COLORS.ink, color: COLORS.bg, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+                style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
               >
                 <Save size={14} />
                 Save analysis
