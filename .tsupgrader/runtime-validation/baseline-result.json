@@ -1,0 +1,38 @@
+{
+  "planHash": "2f389d4871f04d9e1492fe909853c0218e0cbb1f0f6deef1d17d838f0d576a83",
+  "phase": "baseline",
+  "recordedAtUtc": "2026-07-16T13:40:17.8770690Z",
+  "retryCount": 0,
+  "resetBaseline": false,
+  "result": {
+    "setupSucceeded": true,
+    "setupDurationMs": 0,
+    "setupFailureOutput": null,
+    "assertions": [
+      {
+        "name": "build-pass",
+        "kind": "process",
+        "verificationMethod": "exit-code",
+        "passed": false,
+        "timedOut": false,
+        "skipped": false,
+        "skippedReason": null,
+        "exitCode": null,
+        "outputSample": "\u003Cspawn error: An error occurred trying to start process \u0027npm run build\u0027 with working directory \u0027/Users/mohitchoudhary/Downloads/JuliusTrack 2\u0027. No such file or directory\u003E\n",
+        "durationMs": 34
+      },
+      {
+        "name": "tests-pass",
+        "kind": "process",
+        "verificationMethod": "exit-code",
+        "passed": false,
+        "timedOut": false,
+        "skipped": false,
+        "skippedReason": null,
+        "exitCode": null,
+        "outputSample": "\u003Cspawn error: An error occurred trying to start process \u0027npm test\u0027 with working directory \u0027/Users/mohitchoudhary/Downloads/JuliusTrack 2\u0027. No such file or directory\u003E\n",
+        "durationMs": 1
+      }
+    ]
+  }
+}
