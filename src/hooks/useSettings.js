@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { uid } from "../lib/format";
+import { fetchRemoteValue, saveRemoteValue } from "../lib/cloudStore";
 
 const STORAGE_KEY = "cat-mock-tracker:settings";
+const REMOTE_KEY = "settings";
+const REMOTE_SAVE_DEBOUNCE_MS = 600;
 
 const EMPTY_SETTINGS = {
   studentName: "",
@@ -81,6 +84,8 @@ function parseScheduleImport(raw) {
 
 export function useSettings() {
   const [settings, setSettings] = useState(loadSettings);
+  const [remoteReady, setRemoteReady] = useState(false);
+  const remoteSaveTimer = useRef(null);
 
   useEffect(() => {
     try {
@@ -89,6 +94,30 @@ export function useSettings() {
       // Storage unavailable — settings just won't persist across reloads.
     }
   }, [settings]);
+
+  // Reconcile the local cache against Supabase on mount: remote wins if it
+  // exists; otherwise this is a first sync and local settings get pushed up.
+  useEffect(() => {
+    let cancelled = false;
+    fetchRemoteValue(REMOTE_KEY).then((remote) => {
+      if (cancelled) return;
+      if (remote) setSettings(normalizeSettings(remote));
+      setRemoteReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Debounced cloud sync so keystroke-driven profile edits collapse into one write.
+  useEffect(() => {
+    if (!remoteReady) return;
+    if (remoteSaveTimer.current) clearTimeout(remoteSaveTimer.current);
+    remoteSaveTimer.current = setTimeout(() => {
+      saveRemoteValue(REMOTE_KEY, settings);
+    }, REMOTE_SAVE_DEBOUNCE_MS);
+    return () => clearTimeout(remoteSaveTimer.current);
+  }, [settings, remoteReady]);
 
   const updateProfile = useCallback((patch) => {
     setSettings((prev) => ({

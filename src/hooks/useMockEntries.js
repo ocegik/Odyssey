@@ -3,6 +3,7 @@ import { SECTIONS } from "../constants";
 import { computeDerived, byDateAsc, rollingSeries, buildMockPivot, buildSeries, generateInsights } from "../lib/compute";
 import { normalizeStoredMocks, toRaw } from "../lib/mockStorage";
 import { makeSampleData } from "../lib/sampleData";
+import { fetchRemoteValue, saveRemoteValue } from "../lib/cloudStore";
 import {
   addScoreOnlyMock,
   attachAnalysisToMocks,
@@ -11,8 +12,11 @@ import {
 } from "../lib/mockModel";
 
 /* Local storage keeps explicit parent mock records. normalizeStoredMocks() still
-   migrates older saved datasets so existing local data keeps opening cleanly. */
+   migrates older saved datasets so existing local data keeps opening cleanly.
+   It's a fast local cache; Supabase (see cloudStore.js) is the durable copy. */
 const STORAGE_KEY = "cat-mock-tracker:entries";
+const REMOTE_KEY = "entries";
+const REMOTE_SAVE_DEBOUNCE_MS = 600;
 
 function loadStoredMocks() {
   try {
@@ -34,7 +38,9 @@ function loadStoredMocks() {
 export function useMockEntries() {
   const [mockRecords, setMockRecords] = useState(loadStoredMocks);
   const [toast, setToast] = useState(null);
+  const [remoteReady, setRemoteReady] = useState(false);
   const toastTimer = useRef(null);
+  const remoteSaveTimer = useRef(null);
 
   // Persist each mock/analysis update through the single parent mock dataset.
   useEffect(() => {
@@ -44,6 +50,35 @@ export function useMockEntries() {
       // Storage unavailable (quota, private mode, etc.) — don't block the UI.
     }
   }, [mockRecords]);
+
+  // On first mount, reconcile the local cache against Supabase: remote data
+  // (if any) wins; otherwise this is a first sync and local data gets pushed up.
+  useEffect(() => {
+    let cancelled = false;
+    fetchRemoteValue(REMOTE_KEY).then((remote) => {
+      if (cancelled) return;
+      if (remote) setMockRecords(normalizeStoredMocks(remote));
+      setRemoteReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Debounced cloud sync — waits for the initial remote reconcile above so a
+  // slow fetch can't clobber fresher remote data with a stale local cache,
+  // and coalesces rapid edits (e.g. typing) into a single write.
+  useEffect(() => {
+    if (!remoteReady) return;
+    if (remoteSaveTimer.current) clearTimeout(remoteSaveTimer.current);
+    remoteSaveTimer.current = setTimeout(() => {
+      saveRemoteValue(REMOTE_KEY, toRaw(mockRecords)).then((ok) => {
+        if (!ok) showToast("Couldn't sync to cloud — saved on this device only");
+      });
+    }, REMOTE_SAVE_DEBOUNCE_MS);
+    return () => clearTimeout(remoteSaveTimer.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mockRecords, remoteReady]);
 
   const showToast = useCallback((message, action) => {
     setToast({ message, action });
