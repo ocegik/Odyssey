@@ -1,5 +1,6 @@
 import { SECTIONS } from "../constants";
 import { fmtNum, fmtPct } from "./format";
+import { mockTotalMarks, computeAdaptiveTarget } from "./compute";
 
 function inc(counter, key) {
   const safeKey = key || "Unspecified";
@@ -9,14 +10,6 @@ function inc(counter, key) {
 function topEntry(counter) {
   const entry = Object.entries(counter || {}).sort((a, b) => b[1] - a[1])[0];
   return entry ? { label: entry[0], count: entry[1] } : null;
-}
-
-export function mockTotalMarks(mock) {
-  if (mock?.manualTotalMarks !== null && mock?.manualTotalMarks !== undefined) return mock.manualTotalMarks;
-  return SECTIONS.reduce((sum, section) => {
-    const marks = mock?.[section]?.totalMarks;
-    return Number.isFinite(marks) ? sum + marks : sum;
-  }, 0);
 }
 
 function analysisQuestions(mock) {
@@ -30,16 +23,7 @@ function analysisQuestions(mock) {
   });
 }
 
-function matchingScheduleTarget(settings, mock) {
-  const schedule = settings?.mockSchedule || [];
-  const exact = schedule.find((entry) =>
-    entry.date === mock.date && entry.examName.trim().toLowerCase() === mock.source.trim().toLowerCase()
-  );
-  const sameDate = schedule.find((entry) => entry.date === mock.date);
-  return exact?.targetMarks ?? sameDate?.targetMarks ?? settings?.overallTargetMarks ?? null;
-}
-
-export function buildPerMockInsights(mock, settings = {}) {
+export function buildPerMockInsights(mock, settings = {}, priorMarks = null) {
   if (!mock) return [];
 
   const questions = analysisQuestions(mock);
@@ -89,7 +73,7 @@ export function buildPerMockInsights(mock, settings = {}) {
     });
   }
 
-  const targetMarks = matchingScheduleTarget(settings, mock);
+  const targetMarks = computeAdaptiveTarget(priorMarks, settings?.overallTargetMarks);
   if (targetMarks !== null && targetMarks !== undefined) {
     const totalMarks = mockTotalMarks(mock);
     const delta = totalMarks - targetMarks;
@@ -98,7 +82,7 @@ export function buildPerMockInsights(mock, settings = {}) {
       label: "Target score comparison",
       value: delta >= 0 ? `+${fmtNum(delta, 0)}` : fmtNum(delta, 0),
       tone: delta >= 0 ? "positive" : "negative",
-      sub: `${fmtNum(totalMarks, 0)} scored vs ${fmtNum(targetMarks, 0)} target marks.`,
+      sub: `${fmtNum(totalMarks, 0)} scored vs ${fmtNum(targetMarks, 0)} adaptive target marks.`,
     });
   }
 

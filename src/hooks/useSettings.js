@@ -33,17 +33,14 @@ function percentileOrNull(value) {
 function normalizeScheduleEntry(item, idx = 0) {
   const date = typeof item?.date === "string" ? item.date : "";
   const examName = typeof item?.examName === "string" ? item.examName.trim() : "";
-  const targetMarks = numberOrNull(item?.targetMarks);
 
   if (!date) throw new Error(`Schedule entry ${idx + 1} is missing "date".`);
   if (!examName) throw new Error(`Schedule entry ${idx + 1} is missing "examName".`);
-  if (targetMarks === null || targetMarks < 0) throw new Error(`Schedule entry ${idx + 1} needs a valid "targetMarks".`);
 
   return {
     id: item.id || uid(),
     date,
     examName,
-      targetMarks,
   };
 }
 

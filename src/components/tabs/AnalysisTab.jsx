@@ -3,6 +3,7 @@ import { Save, ClipboardList, Plus } from "lucide-react";
 import { COLORS, SECTIONS, TYPE, SHADOW } from "../../constants";
 import { fmtDate, fmtNum, fmtPct } from "../../lib/format";
 import { buildAnalysisSummary, OUTCOME_REASONS, TOPIC_OPTIONS } from "../../lib/analysisModel";
+import { mockTotalMarks } from "../../lib/compute";
 import { validateAnalysisAgainstMock } from "../../lib/analysisValidation";
 import { inputStyle } from "../ui/FieldLabel";
 import EmptyState from "../ui/EmptyState";
@@ -215,6 +216,9 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
   }
 
   const mockForInsights = selectedMock && draft ? { ...selectedMock, analysis: { ...draft, summary } } : selectedMock;
+  // mocks is sorted oldest-first, so the entry right before the selected one is its prior mock.
+  const selectedMockIndex = mocks.findIndex((mock) => mock.id === selectedMock?.id);
+  const priorMarks = selectedMockIndex > 0 ? mockTotalMarks(mocks[selectedMockIndex - 1]) : null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -312,7 +316,7 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
               placeholder="Overall reflection"
               style={{ ...inputStyle(false), resize: "vertical", minHeight: 82 }}
             />
-            <PerMockInsightsBlock mock={mockForInsights} settings={settings} />
+            <PerMockInsightsBlock mock={mockForInsights} settings={settings} priorMarks={priorMarks} />
           </Panel>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

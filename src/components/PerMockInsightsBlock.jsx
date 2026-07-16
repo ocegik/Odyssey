@@ -8,8 +8,8 @@ function toneColor(tone) {
   return COLORS.ink;
 }
 
-export default function PerMockInsightsBlock({ mock, settings, compact = false }) {
-  const insights = buildPerMockInsights(mock, settings);
+export default function PerMockInsightsBlock({ mock, settings, priorMarks = null, compact = false }) {
+  const insights = buildPerMockInsights(mock, settings, priorMarks);
   if (insights.length === 0) return null;
 
   return (

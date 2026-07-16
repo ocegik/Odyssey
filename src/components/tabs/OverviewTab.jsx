@@ -1,7 +1,7 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { COLORS } from "../../constants";
 import { fmtDate, fmtNum } from "../../lib/format";
-import { computePacing } from "../../lib/compute";
+import { computePacing, mockTotalMarks, computeAdaptiveTarget } from "../../lib/compute";
 import StatCard from "../ui/StatCard";
 import ChartFrame from "../charts/ChartFrame";
 import CollegeTargetsPanel from "../CollegeTargetsPanel";
@@ -48,14 +48,6 @@ function mockOverallPercentile(mock) {
     .filter((value) => value !== null && value !== undefined);
   if (sectionPercentiles.length === 0) return null;
   return sectionPercentiles.reduce((sum, value) => sum + value, 0) / sectionPercentiles.length;
-}
-
-function mockTotalMarks(mock) {
-  if (mock.manualTotalMarks !== null && mock.manualTotalMarks !== undefined) return mock.manualTotalMarks;
-  return ["VARC", "DILR", "Quant"].reduce((sum, section) => {
-    const marks = mock[section]?.totalMarks;
-    return Number.isFinite(marks) ? sum + marks : sum;
-  }, 0);
 }
 
 function buildOverallMarksData(mocks) {
@@ -119,6 +111,8 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, settings
   const latestMock = mocks.length > 0 ? mocks[mocks.length - 1] : null;
   const currentPercentile = mockOverallPercentile(latestMock);
   const pacing = computePacing(mocks, settings?.catTargetDate);
+  const lastMarks = latestMock ? mockTotalMarks(latestMock) : null;
+  const nextTargetMarks = computeAdaptiveTarget(lastMarks, settings?.overallTargetMarks);
 
   return (
     <div className="flex flex-col gap-4">
@@ -127,7 +121,7 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, settings
         <StatCard
           label="Next mock exam"
           value={nextMock ? fmtDate(nextMock.date) : "-"}
-          sub={nextMock ? `${nextMock.examName} - target ${fmtNum(nextMock.targetMarks, 0)}` : "Add a mock schedule in Settings"}
+          sub={nextMock ? `${nextMock.examName} - target ${fmtNum(nextTargetMarks, 0)} (auto)` : "Add a mock schedule in Settings"}
         />
         <StatCard
           label="Days left until CAT"

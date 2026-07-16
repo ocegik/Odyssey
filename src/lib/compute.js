@@ -71,6 +71,34 @@ export function buildSeries(mocks, accessor) {
   }));
 }
 
+export function mockTotalMarks(mock) {
+  if (mock?.manualTotalMarks !== null && mock?.manualTotalMarks !== undefined) return mock.manualTotalMarks;
+  return SECTIONS.reduce((sum, section) => {
+    const marks = mock?.[section]?.totalMarks;
+    return Number.isFinite(marks) ? sum + marks : sum;
+  }, 0);
+}
+
+/* Flat step used to nudge the next target above the last logged score —
+   deliberately small and simple rather than a fraction of the remaining
+   gap, so the ask stays "realistic incremental improvement" every time. */
+const ADAPTIVE_TARGET_STEP = 5;
+
+/**
+ * Auto-generated target for the next mock: a small step up from the most
+ * recently logged score, capped at the long-term goal (`overallTargetMarks`)
+ * — unless that goal's already been hit, in which case we keep raising the
+ * bar past it rather than freezing the target at a goal already met.
+ */
+export function computeAdaptiveTarget(lastMarks, overallTargetMarks) {
+  if (lastMarks === null || lastMarks === undefined || !Number.isFinite(lastMarks)) {
+    return overallTargetMarks ?? null;
+  }
+  const stepped = lastMarks + ADAPTIVE_TARGET_STEP;
+  if (overallTargetMarks === null || overallTargetMarks === undefined) return stepped;
+  return lastMarks >= overallTargetMarks ? stepped : Math.min(stepped, overallTargetMarks);
+}
+
 export function analyzeWeakest(entriesWithComputed) {
   const perSection = {};
   SECTIONS.forEach((sec) => {

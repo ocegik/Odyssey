@@ -1,10 +1,12 @@
 import { useRef, useState } from "react";
 import { CheckCircle2, Download, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
 import { COLORS, TYPE, SHADOW } from "../../constants";
+import { fmtNum } from "../../lib/format";
+import { mockTotalMarks, computeAdaptiveTarget } from "../../lib/compute";
 import { FieldLabel, inputStyle } from "../ui/FieldLabel";
 import EmptyState from "../ui/EmptyState";
 
-const EMPTY_SCHEDULE_FORM = { date: "", examName: "", targetMarks: "" };
+const EMPTY_SCHEDULE_FORM = { date: "", examName: "" };
 
 function Panel({ title, children, action }) {
   return (
@@ -20,6 +22,7 @@ function Panel({ title, children, action }) {
 
 export default function SettingsTab({
   settings,
+  mocks,
   onUpdateProfile,
   onAddScheduleEntry,
   onUpdateScheduleEntry,
@@ -28,6 +31,9 @@ export default function SettingsTab({
   onExportData,
   onImportData,
 }) {
+  const latestMock = mocks && mocks.length > 0 ? mocks[mocks.length - 1] : null;
+  const lastMarks = latestMock ? mockTotalMarks(latestMock) : null;
+  const nextTargetMarks = computeAdaptiveTarget(lastMarks, settings.overallTargetMarks);
   const fileInputRef = useRef(null);
   const dataFileInputRef = useRef(null);
   const [scheduleForm, setScheduleForm] = useState(EMPTY_SCHEDULE_FORM);
@@ -72,7 +78,6 @@ export default function SettingsTab({
     setScheduleForm({
       date: entry.date,
       examName: entry.examName,
-      targetMarks: String(entry.targetMarks),
     });
     setError("");
   };
@@ -189,7 +194,7 @@ export default function SettingsTab({
           </>
         }
       >
-        <form onSubmit={submitSchedule} className="grid grid-cols-1 sm:grid-cols-[1fr_1.5fr_1fr_auto] gap-3 items-end">
+        <form onSubmit={submitSchedule} className="grid grid-cols-1 sm:grid-cols-[1fr_1.5fr_auto] gap-3 items-end">
           <div className="flex flex-col gap-1.5">
             <FieldLabel htmlFor="scheduleDate">Date</FieldLabel>
             <input id="scheduleDate" type="date" value={scheduleForm.date} onChange={setScheduleField("date")} style={inputStyle(false)} />
@@ -197,10 +202,6 @@ export default function SettingsTab({
           <div className="flex flex-col gap-1.5">
             <FieldLabel htmlFor="examName">Exam name</FieldLabel>
             <input id="examName" value={scheduleForm.examName} onChange={setScheduleField("examName")} placeholder="SIMCAT 6 / AIMCAT 2507" style={inputStyle(false)} />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="targetMarks">Target marks</FieldLabel>
-            <input id="targetMarks" type="number" min="0" value={scheduleForm.targetMarks} onChange={setScheduleField("targetMarks")} style={inputStyle(false)} />
           </div>
           <div className="flex gap-2">
             <button type="submit" className="inline-flex items-center gap-1.5 px-3 py-2 text-sm hover:opacity-90"
@@ -220,7 +221,7 @@ export default function SettingsTab({
 
         <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>
           JSON import accepts either an array like{" "}
-          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>[{"{\"date\":\"2026-07-20\",\"examName\":\"SIMCAT 6\",\"targetMarks\":72}"}]</code>{" "}
+          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>[{"{\"date\":\"2026-07-20\",\"examName\":\"SIMCAT 6\"}"}]</code>{" "}
           or an object with <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>mockSchedule</code>.
         </p>
 
@@ -230,36 +231,41 @@ export default function SettingsTab({
         {settings.mockSchedule.length === 0 ? (
           <EmptyState icon={Upload} title="No schedule yet" body="Add entries manually or import a JSON schedule." />
         ) : (
-          <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
-            <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>
-                  {["Date", "Exam", "Target marks", "Actions"].map((label, idx) => (
-                    <th key={label} className={`px-3 py-2 text-left ${idx === 3 ? "text-right" : ""}`} style={{ ...TYPE.label, color: COLORS.inkMuted }}>{label}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {settings.mockSchedule.map((entry, idx) => (
-                  <tr key={entry.id} style={{ borderTop: `1px solid ${COLORS.border}`, background: idx % 2 ? COLORS.surface : COLORS.surface2 }}>
-                    <td className="px-3 py-2" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{entry.date}</td>
-                    <td className="px-3 py-2">{entry.examName}</td>
-                    <td className="px-3 py-2" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{entry.targetMarks}</td>
-                    <td className="px-3 py-2">
-                      <div className="flex justify-end gap-1">
-                        <button type="button" onClick={() => startEdit(entry)} title="Edit" className="p-1.5 rounded-md hover:bg-black/[0.05]" style={{ color: COLORS.inkMuted }}>
-                          <Pencil size={14} />
-                        </button>
-                        <button type="button" onClick={() => onDeleteScheduleEntry(entry.id)} title="Delete" className="p-1.5 rounded-md hover:bg-black/[0.05]" style={{ color: COLORS.danger }}>
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
+          <>
+            <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>
+              Next target is auto-generated from your most recent logged score — a small step up, capped at your overall target marks — not something you set per entry.
+            </p>
+            <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
+              <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>
+                    {["Date", "Exam", "Next target (auto)", "Actions"].map((label, idx) => (
+                      <th key={label} className={`px-3 py-2 text-left ${idx === 3 ? "text-right" : ""}`} style={{ ...TYPE.label, color: COLORS.inkMuted }}>{label}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {settings.mockSchedule.map((entry, idx) => (
+                    <tr key={entry.id} style={{ borderTop: `1px solid ${COLORS.border}`, background: idx % 2 ? COLORS.surface : COLORS.surface2 }}>
+                      <td className="px-3 py-2" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{entry.date}</td>
+                      <td className="px-3 py-2">{entry.examName}</td>
+                      <td className="px-3 py-2" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{fmtNum(nextTargetMarks, 0)}</td>
+                      <td className="px-3 py-2">
+                        <div className="flex justify-end gap-1">
+                          <button type="button" onClick={() => startEdit(entry)} title="Edit" className="p-1.5 rounded-md hover:bg-black/[0.05]" style={{ color: COLORS.inkMuted }}>
+                            <Pencil size={14} />
+                          </button>
+                          <button type="button" onClick={() => onDeleteScheduleEntry(entry.id)} title="Delete" className="p-1.5 rounded-md hover:bg-black/[0.05]" style={{ color: COLORS.danger }}>
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </Panel>
     </div>

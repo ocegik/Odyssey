@@ -207,6 +207,7 @@ export default function CATMockTracker() {
         {activeTab === "settings" && (
           <SettingsTab
             settings={settings}
+            mocks={mocks}
             onUpdateProfile={updateProfile}
             onAddScheduleEntry={addScheduleEntry}
             onUpdateScheduleEntry={updateScheduleEntry}

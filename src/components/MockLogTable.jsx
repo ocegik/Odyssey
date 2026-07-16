@@ -2,6 +2,7 @@ import { Fragment, useMemo } from "react";
 import { FileCheck2, FilePlus2, Layers3, Trash2 } from "lucide-react";
 import { COLORS, SECTIONS, TYPE, SHADOW } from "../constants";
 import { fmtDate, fmtNum, fmtPct } from "../lib/format";
+import { mockTotalMarks } from "../lib/compute";
 import { buildPerMockInsights } from "../lib/perMockInsights";
 import SectionBadge from "./ui/SectionBadge";
 import EmptyState from "./ui/EmptyState";
@@ -62,7 +63,9 @@ export default function MockLogTable({ mocks, settings, onOpenAnalysis, onDelete
               const totalMarks = mock.manualTotalMarks ?? sectionMarks;
               const hasAnalysis = Boolean(mock.analysis);
               const Icon = hasAnalysis ? FileCheck2 : FilePlus2;
-              const hasInsights = buildPerMockInsights(mock, settings).length > 0;
+              // rows is sorted newest-first, so the mock right after this one is the prior (older) one.
+              const priorMarks = rows[i + 1] ? mockTotalMarks(rows[i + 1]) : null;
+              const hasInsights = buildPerMockInsights(mock, settings, priorMarks).length > 0;
 
               const handleDelete = () => {
                 if (window.confirm(`Delete "${mock.source}" (${fmtDate(mock.date)})? This can't be undone.`)) {
@@ -137,7 +140,7 @@ export default function MockLogTable({ mocks, settings, onOpenAnalysis, onDelete
                   {hasInsights && (
                     <tr style={{ borderBottom: `1px solid ${COLORS.border}`, background: i % 2 ? COLORS.surface : COLORS.surface2 }}>
                       <td colSpan={5} className="px-3 pb-3">
-                        <PerMockInsightsBlock mock={mock} settings={settings} compact />
+                        <PerMockInsightsBlock mock={mock} settings={settings} priorMarks={priorMarks} compact />
                       </td>
                     </tr>
                   )}
