@@ -4,6 +4,7 @@ import { COLORS, SHADOW, TYPE } from "../../constants";
 import { buildDetailedAnalysisInsights, flattenAnalysisQuestions } from "../../lib/detailedAnalysisInsights";
 import { fmtDate, fmtPct } from "../../lib/format";
 import DetailedAnalysisInsightsPanel from "../DetailedAnalysisInsightsPanel";
+import AdvancedInsightsPanel from "../AdvancedInsightsPanel";
 import EmptyState from "../ui/EmptyState";
 
 function Panel({ title, children, note }) {
@@ -153,6 +154,7 @@ export default function AnalysisInsightsDataTab({ mocks }) {
       <RecentHighlights mocks={mocks} />
       <SectionMistakeTrend analysis={analysis} />
       <DetailedAnalysisInsightsPanel mocks={mocks} />
+      <AdvancedInsightsPanel mocks={mocks} />
     </div>
   );
 }

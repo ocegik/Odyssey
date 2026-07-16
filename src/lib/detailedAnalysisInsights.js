@@ -47,6 +47,7 @@ export function flattenAnalysisQuestions(mocks) {
           mockSource: mock.source,
           mockLabel: mockLabel(mock),
           section,
+          blockId: block.id,
           blockType: block.type,
           blockName: block.name,
           topic: getEffectiveTopic(block, question),
