@@ -1,5 +1,6 @@
 import { SECTIONS } from "../constants";
 import { fmtNum, fmtPct } from "./format";
+import { getEffectiveTopic } from "./analysisModel";
 
 const MIN_RECURRING_REASON_COUNT = 3;
 const MIN_RECURRING_MOCK_COUNT = 2;
@@ -48,6 +49,7 @@ export function flattenAnalysisQuestions(mocks) {
           section,
           blockType: block.type,
           blockName: block.name,
+          topic: getEffectiveTopic(block, question),
           attempted: question.result !== "Skipped",
           timeDelta: question.timeTaken !== null && question.averageTime !== null ? question.timeTaken - question.averageTime : null,
           slow: question.timeTaken !== null && question.averageTime !== null ? question.timeTaken > question.averageTime + SLOW_DELTA_SECONDS : false,

@@ -52,6 +52,19 @@ function normalizeTopic(section, value) {
   return options.find((topic) => topic.toLowerCase() === str.toLowerCase()) || "";
 }
 
+/**
+ * The topic that actually applies to a question: a set assigns its topic
+ * once at the block level and every question in it inherits that, while an
+ * independent question keeps its own topic. Falls back to the question's own
+ * topic for older saved sets from before topics lived on the block, so
+ * existing tagged data isn't silently dropped.
+ */
+export function getEffectiveTopic(block, question) {
+  if (!block) return question?.topic || "";
+  if (block.type === "set") return block.topic || question?.topic || "";
+  return question?.topic || "";
+}
+
 function normalizeQuestion(rawQuestion, idx, section) {
   const result = normalizeResult(rawQuestion.result);
   const reason = asString(rawQuestion.outcomeReason).trim();
@@ -71,10 +84,12 @@ function normalizeQuestion(rawQuestion, idx, section) {
 
 function normalizeBlock(rawBlock, idx, section) {
   const questions = Array.isArray(rawBlock.questions) ? rawBlock.questions : [];
+  const type = asString(rawBlock.type) || "independent";
   return {
     id: rawBlock.id || blockId(),
-    type: asString(rawBlock.type) || "independent",
+    type,
     name: asString(rawBlock.name),
+    topic: type === "set" ? normalizeTopic(section, rawBlock.topic) : "",
     questions: questions.map((question, questionIdx) => normalizeQuestion(question, questionIdx, section)),
   };
 }
@@ -236,12 +251,14 @@ function sampleBlocksForSection(section, totalQuestions) {
   }
 
   const blockSize = section === "VARC" ? 5 : 4;
+  const topics = TOPIC_OPTIONS[section] || [];
   const blocks = [];
   for (let start = 1; start <= count; start += blockSize) {
     const end = Math.min(count, start + blockSize - 1);
     blocks.push({
       type: "set",
       name: `Set ${blocks.length + 1}`,
+      topic: topics.length ? topics[blocks.length % topics.length] : "",
       questions: Array.from({ length: end - start + 1 }, (_, idx) => sampleQuestion(section, start + idx, start + idx - 1)),
     });
   }

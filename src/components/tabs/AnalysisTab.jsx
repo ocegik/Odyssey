@@ -67,6 +67,7 @@ function buildAnalysisDraftFromMock(mock) {
         id: block.id || tempId("b"),
         type: block.type || "independent",
         name: block.name || `${block.type === "set" ? "Set" : "Independent"} ${idx + 1}`,
+        topic: "",
         questions: Array.from({ length: Math.max(0, end - start + 1) }, (_, questionIdx) => defaultQuestion(start + questionIdx)),
       };
     });
@@ -175,6 +176,22 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
           }),
         };
       });
+      return {
+        ...current,
+        sections: {
+          ...current.sections,
+          [section]: { ...current.sections[section], blocks },
+        },
+      };
+    });
+  };
+
+  const setBlockTopic = (section, blockIdx) => (ev) => {
+    const value = ev.target.value;
+    setDraft((current) => {
+      const blocks = current.sections[section].blocks.map((block, bIdx) => (
+        bIdx === blockIdx ? { ...block, topic: value } : block
+      ));
       return {
         ...current,
         sections: {
@@ -338,18 +355,36 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                   style={{ ...inputStyle(false), resize: "vertical" }}
                 />
                 <div className="flex flex-col gap-4">
-                  {sectionAnalysis.blocks.map((block, blockIdx) => (
+                  {sectionAnalysis.blocks.map((block, blockIdx) => {
+                    const isSet = block.type === "set";
+                    const headers = isSet
+                      ? ["Q", "Result", "Outcome Reason", "Type", "Time", "Average Time", "Notes"]
+                      : ["Q", "Result", "Outcome Reason", "Type", "Topic", "Time", "Average Time", "Notes"];
+                    return (
                     <div key={block.id} className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <SectionBadge section={section} size="sm" />
                         <span className="text-sm" style={{ fontWeight: 650 }}>{block.name || block.type}</span>
                         <span className="text-xs" style={{ color: COLORS.inkMuted }}>{block.questions.length} Qs</span>
+                        {isSet && (
+                          <div className="flex items-center gap-1.5 ml-auto">
+                            <span className="text-xs" style={{ color: COLORS.inkMuted }}>Set topic:</span>
+                            <select
+                              value={block.topic || ""}
+                              onChange={setBlockTopic(section, blockIdx)}
+                              style={{ ...inputStyle(false), minWidth: 200, height: 36, fontSize: 13 }}
+                            >
+                              <option value="">-</option>
+                              {(TOPIC_OPTIONS[section] || []).map((topic) => <option key={topic} value={topic}>{topic}</option>)}
+                            </select>
+                          </div>
+                        )}
                       </div>
                       <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
-                        <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 1440 }}>
+                        <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: isSet ? 1240 : 1440 }}>
                           <thead>
                             <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>
-                              {["Q", "Result", "Outcome Reason", "Type", "Topic", "Time", "Average Time", "Notes"].map((label) => (
+                              {headers.map((label) => (
                                 <th key={label} className="text-left px-3 py-2.5" style={{ ...TYPE.label, color: COLORS.inkMuted }}>{label}</th>
                               ))}
                             </tr>
@@ -373,12 +408,14 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                                     {["MCQ", "TITA"].map((type) => <option key={type}>{type}</option>)}
                                   </select>
                                 </td>
-                                <td className="px-3 py-2.5">
-                                  <select value={question.topic || ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "topic", ev.target.value)} style={{ ...inputStyle(false), minWidth: 200, height: 40, fontSize: 14 }}>
-                                    <option value="">-</option>
-                                    {(TOPIC_OPTIONS[section] || []).map((topic) => <option key={topic} value={topic}>{topic}</option>)}
-                                  </select>
-                                </td>
+                                {!isSet && (
+                                  <td className="px-3 py-2.5">
+                                    <select value={question.topic || ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "topic", ev.target.value)} style={{ ...inputStyle(false), minWidth: 200, height: 40, fontSize: 14 }}>
+                                      <option value="">-</option>
+                                      {(TOPIC_OPTIONS[section] || []).map((topic) => <option key={topic} value={topic}>{topic}</option>)}
+                                    </select>
+                                  </td>
+                                )}
                                 <td className="px-3 py-2.5">
                                   <input type="number" min="0" value={question.timeTaken ?? ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "timeTaken", ev.target.value === "" ? null : Number(ev.target.value))} title={seconds(question.timeTaken)} style={{ ...inputStyle(false), width: 120, height: 40, fontSize: 14 }} />
                                 </td>
@@ -394,7 +431,8 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                         </table>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </Panel>
             );
