@@ -56,14 +56,16 @@ export const COLLEGE_TYPE_META = {
 };
 
 /**
- * Reach status against a target percentile. `req` is sometimes a non-numeric
- * hard-filter string (e.g. eligibility restriction) rather than a cutoff.
+ * Reach status against the student's current standing. `req` is sometimes a
+ * non-numeric hard-filter string (e.g. eligibility restriction) rather than
+ * a cutoff. `currentPercentile` is the actual percentile to compare against
+ * (e.g. the most recent mock's percentile), not a static target.
  */
-export function reachStatus(req, targetPercentile) {
+export function reachStatus(req, currentPercentile) {
   const numericReq = Number(req);
   if (!Number.isFinite(numericReq)) return "filter";
-  if (targetPercentile === null || targetPercentile === undefined) return "unknown";
-  if (targetPercentile >= numericReq) return "reach";
-  if (targetPercentile >= numericReq - 1.5) return "stretch";
+  if (currentPercentile === null || currentPercentile === undefined) return "unknown";
+  if (currentPercentile >= numericReq) return "reach";
+  if (currentPercentile >= numericReq - 1.5) return "stretch";
   return "gap";
 }

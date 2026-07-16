@@ -14,8 +14,8 @@ const STATUS_META = {
 
 const COLLAPSED_COUNT = 6;
 
-function CollegeRow({ college, targetPercentile, expanded, onToggle }) {
-  const status = reachStatus(college.req, targetPercentile);
+function CollegeRow({ college, currentPercentile, expanded, onToggle }) {
+  const status = reachStatus(college.req, currentPercentile);
   const statusMeta = STATUS_META[status];
   const numericReq = Number(college.req);
   const reqIsNumeric = Number.isFinite(numericReq);
@@ -69,7 +69,7 @@ function CollegeRow({ college, targetPercentile, expanded, onToggle }) {
   );
 }
 
-export default function CollegeTargetsPanel({ targetPercentile }) {
+export default function CollegeTargetsPanel({ currentPercentile }) {
   const [expandedName, setExpandedName] = useState(null);
   const [showAll, setShowAll] = useState(false);
 
@@ -80,19 +80,19 @@ export default function CollegeTargetsPanel({ targetPercentile }) {
       const validA = Number.isFinite(reqA);
       const validB = Number.isFinite(reqB);
       if (validA && validB) {
-        return targetPercentile !== null && targetPercentile !== undefined
-          ? Math.abs(reqA - targetPercentile) - Math.abs(reqB - targetPercentile)
+        return currentPercentile !== null && currentPercentile !== undefined
+          ? Math.abs(reqA - currentPercentile) - Math.abs(reqB - currentPercentile)
           : reqA - reqB;
       }
       if (validA) return -1;
       if (validB) return 1;
       return 0;
     });
-  }, [targetPercentile]);
+  }, [currentPercentile]);
 
   const reachCount = useMemo(
-    () => sorted.filter((college) => reachStatus(college.req, targetPercentile) === "reach").length,
-    [sorted, targetPercentile]
+    () => sorted.filter((college) => reachStatus(college.req, currentPercentile) === "reach").length,
+    [sorted, currentPercentile]
   );
 
   const visible = showAll ? sorted : sorted.slice(0, COLLAPSED_COUNT);
@@ -105,9 +105,9 @@ export default function CollegeTargetsPanel({ targetPercentile }) {
           <h3 style={TYPE.chartTitle}>College targets</h3>
         </div>
         <span className="text-xs" style={{ color: COLORS.inkMuted }}>
-          {targetPercentile !== null && targetPercentile !== undefined
-            ? `${reachCount} of ${sorted.length} within reach at ${fmtNum(targetPercentile, 2)}%ile`
-            : "Set a target percentile in Settings to compare"}
+          {currentPercentile !== null && currentPercentile !== undefined
+            ? `${reachCount} of ${sorted.length} within reach at your latest ${fmtNum(currentPercentile, 2)}%ile`
+            : "Log a mock with a percentile to compare — showing required percentiles for now"}
         </span>
       </div>
 
@@ -116,7 +116,7 @@ export default function CollegeTargetsPanel({ targetPercentile }) {
           <CollegeRow
             key={college.name}
             college={college}
-            targetPercentile={targetPercentile}
+            currentPercentile={currentPercentile}
             expanded={expandedName === college.name}
             onToggle={() => setExpandedName((current) => (current === college.name ? null : college.name))}
           />

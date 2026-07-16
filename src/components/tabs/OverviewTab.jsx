@@ -36,6 +36,18 @@ function nextScheduledMock(schedule = []) {
     .sort((a, b) => a.date.localeCompare(b.date))[0] || null;
 }
 
+function mockOverallPercentile(mock) {
+  if (!mock) return null;
+  const analysisPercentile = mock.analysis?.overallPercentile;
+  if (analysisPercentile !== null && analysisPercentile !== undefined) return analysisPercentile;
+
+  const sectionPercentiles = ["VARC", "DILR", "Quant"]
+    .map((section) => mock[section]?.percentile)
+    .filter((value) => value !== null && value !== undefined);
+  if (sectionPercentiles.length === 0) return null;
+  return sectionPercentiles.reduce((sum, value) => sum + value, 0) / sectionPercentiles.length;
+}
+
 function mockTotalMarks(mock) {
   if (mock.manualTotalMarks !== null && mock.manualTotalMarks !== undefined) return mock.manualTotalMarks;
   return ["VARC", "DILR", "Quant"].reduce((sum, section) => {
@@ -123,6 +135,8 @@ export default function OverviewTab({ mocks, insights, settings }) {
   const nextMock = nextScheduledMock(settings?.mockSchedule);
   const catDaysLeft = daysUntil(settings?.catTargetDate);
   const graphData = buildOverallMarksData(mocks);
+  const latestMock = mocks.length > 0 ? mocks[mocks.length - 1] : null;
+  const currentPercentile = mockOverallPercentile(latestMock);
 
   return (
     <div className="flex flex-col gap-4">
@@ -149,7 +163,7 @@ export default function OverviewTab({ mocks, insights, settings }) {
         <OverallMarksChart data={graphData} />
       </ChartFrame>
 
-      <CollegeTargetsPanel targetPercentile={settings?.overallTargetPercentile ?? null} />
+      <CollegeTargetsPanel currentPercentile={currentPercentile} />
     </div>
   );
 }
