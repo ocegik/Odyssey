@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { ChevronDown, ChevronRight, Plus, Sparkles, Trash2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { ChevronDown, ChevronRight, Plus, Sparkles, Trash2, Upload } from "lucide-react";
 import { COLORS, SECTIONS, TYPE, SHADOW } from "../../constants";
+import { validateSectionBlockCoverage } from "../../lib/mockModel";
 import MockLogTable from "../MockLogTable";
 import SectionBadge from "../ui/SectionBadge";
 import { inputStyle } from "../ui/FieldLabel";
@@ -53,31 +54,6 @@ function emptyMockForm() {
   };
 }
 
-function validateBlocks(section) {
-  const totalQuestions = Number(section.totalQuestions);
-  if (!Number.isInteger(totalQuestions) || totalQuestions < 1) return [`${section.section}: enter total questions.`];
-
-  const seen = new Map();
-  const errors = [];
-  section.questionBlocks.forEach((block) => {
-    const start = Number(block.startQuestion);
-    const end = Number(block.endQuestion);
-    if (!Number.isInteger(start) || !Number.isInteger(end) || start < 1 || end < start || end > totalQuestions) {
-      errors.push(`${section.section}: ${block.name || "block"} has an invalid question range.`);
-      return;
-    }
-    for (let q = start; q <= end; q += 1) {
-      seen.set(q, (seen.get(q) || 0) + 1);
-    }
-  });
-
-  for (let q = 1; q <= totalQuestions; q += 1) {
-    if (!seen.has(q)) errors.push(`${section.section}: question ${q} is not covered by any set/independent block.`);
-    if (seen.get(q) > 1) errors.push(`${section.section}: question ${q} is covered more than once.`);
-  }
-  return errors;
-}
-
 function validateMockForm(form) {
   const errors = [];
   if (!form.date) errors.push("Enter the mock date.");
@@ -85,7 +61,7 @@ function validateMockForm(form) {
   form.sections.forEach((section) => {
     const score = Number(section.score);
     if (!Number.isFinite(score)) errors.push(`${section.section}: enter the logged score.`);
-    errors.push(...validateBlocks(section));
+    errors.push(...validateSectionBlockCoverage(section));
   });
   return errors;
 }
@@ -99,10 +75,13 @@ function structureSummary(section) {
   return parts.length ? parts.join(" · ") : "no blocks yet";
 }
 
-function Panel({ title, children }) {
+function Panel({ title, children, action }) {
   return (
     <div className="p-5 flex flex-col gap-4" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
-      <h2 style={TYPE.panelTitle}>{title}</h2>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h2 style={TYPE.panelTitle}>{title}</h2>
+        {action}
+      </div>
       {children}
     </div>
   );
@@ -115,10 +94,14 @@ export default function MockLogTab({
   onOpenAnalysis,
   onCreateMock,
   onDeleteMock,
+  onImportMocks,
 }) {
   const [mockForm, setMockForm] = useState(emptyMockForm);
   const [formErrors, setFormErrors] = useState([]);
   const [showStructure, setShowStructure] = useState(false);
+  const importFileInputRef = useRef(null);
+  const [importMessage, setImportMessage] = useState("");
+  const [importError, setImportError] = useState("");
 
   const setField = (field) => (ev) => {
     setMockForm((form) => ({ ...form, [field]: ev.target.value }));
@@ -184,6 +167,24 @@ export default function MockLogTab({
     }));
   };
 
+  const handleImportFile = (ev) => {
+    const file = ev.target.files?.[0];
+    ev.target.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const count = onImportMocks(reader.result);
+        setImportMessage(`Imported ${count} mock${count === 1 ? "" : "s"}`);
+        setImportError("");
+      } catch (err) {
+        setImportError(err.message || "Could not import that mock JSON.");
+        setImportMessage("");
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const submitMock = (ev) => {
     ev.preventDefault();
     const errors = validateMockForm(mockForm);
@@ -216,7 +217,38 @@ export default function MockLogTab({
 
   return (
     <div className="flex flex-col gap-4">
-      <Panel title="Log Mock Result">
+      <Panel
+        title="Log Mock Result"
+        action={
+          <div className="flex flex-col items-end gap-1">
+            <input ref={importFileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} />
+            <button
+              type="button"
+              onClick={() => importFileInputRef.current?.click()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-black/[0.04]"
+              style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+            >
+              <Upload size={14} />
+              Import JSON
+            </button>
+          </div>
+        }
+      >
+        <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>
+          Import adds mocks on top of what's already logged — it doesn't replace anything. Accepts one mock object, an array of
+          mocks, or {"{"}"mocks": [...]{"}"}, each like{" "}
+          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            {'{"date":"2026-07-20","source":"SIMCAT 6","sections":[{"section":"VARC","score":42,"totalQuestions":22}]}'}
+          </code>
+          . <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>questionBlocks</code>, <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>percentile</code>, and{" "}
+          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>topperScore</code> are optional per section.
+        </p>
+        {importError && (
+          <div className="p-3 text-sm" style={{ background: COLORS.dangerSoft, color: COLORS.danger, borderRadius: 8 }}>
+            {importError}
+          </div>
+        )}
+        {importMessage && !importError && <p className="text-sm" style={{ color: COLORS.good }}>{importMessage}</p>}
         <form onSubmit={submitMock} className="flex flex-col gap-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">

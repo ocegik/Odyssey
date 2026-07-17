@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { Save, ClipboardList, Plus } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Save, ClipboardList, Plus, Upload, Download, ChevronDown, ChevronRight } from "lucide-react";
 import { COLORS, SECTIONS, TYPE, SHADOW } from "../../constants";
 import { fmtDate, fmtNum, fmtPct } from "../../lib/format";
-import { buildAnalysisSummary, OUTCOME_REASONS, TOPIC_OPTIONS } from "../../lib/analysisModel";
+import { buildAnalysisSummary, makeSampleDetailedAnalysis, normalizeDetailedAnalysis, OUTCOME_REASONS, TOPIC_OPTIONS } from "../../lib/analysisModel";
 import { mockTotalMarks } from "../../lib/compute";
 import { validateAnalysisAgainstMock } from "../../lib/analysisValidation";
 import { inputStyle } from "../ui/FieldLabel";
@@ -130,6 +130,11 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
   );
   const [draft, setDraft] = useState(null);
   const [analysisError, setAnalysisError] = useState("");
+  const [importMessage, setImportMessage] = useState("");
+  const [importError, setImportError] = useState("");
+  const [showPasteImport, setShowPasteImport] = useState(false);
+  const [pasteValue, setPasteValue] = useState("");
+  const importFileInputRef = useRef(null);
 
   useEffect(() => {
     const selectedExists = mocks.some((mock) => mock.id === selectedMockId);
@@ -143,7 +148,48 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
     }
     setDraft(clone(selectedMock.analysis) || buildAnalysisDraftFromMock(selectedMock));
     setAnalysisError("");
+    setImportMessage("");
+    setImportError("");
   }, [selectedMock?.id, selectedMock?.analysis]);
+
+  const applyImportedAnalysis = (raw) => {
+    if (!selectedMock) return;
+    try {
+      const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+      setDraft(normalizeDetailedAnalysis(parsed, selectedMock.analysis));
+      setAnalysisError("");
+      setImportError("");
+      setImportMessage("Analysis JSON imported — review below, then save.");
+    } catch (err) {
+      setImportError(err.message || "Could not import that analysis JSON.");
+      setImportMessage("");
+    }
+  };
+
+  const handleImportFile = (ev) => {
+    const file = ev.target.files?.[0];
+    ev.target.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => applyImportedAnalysis(reader.result);
+    reader.readAsText(file);
+  };
+
+  const applyPastedJson = () => {
+    applyImportedAnalysis(pasteValue);
+  };
+
+  const downloadTemplate = () => {
+    if (!selectedMock) return;
+    const template = makeSampleDetailedAnalysis(selectedMock);
+    const blob = new Blob([JSON.stringify(template, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${selectedMock.source || "mock"}-analysis-template.json`.replace(/\s+/g, "-").toLowerCase();
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const setOverall = (field) => (ev) => {
     const value = ev.target.value;
@@ -249,6 +295,25 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
         title="Mock Analysis"
         action={
           <div className="flex flex-wrap gap-2 justify-end">
+            <input ref={importFileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} />
+            <button
+              type="button"
+              onClick={downloadTemplate}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-black/[0.04]"
+              style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+            >
+              <Download size={14} />
+              Download template
+            </button>
+            <button
+              type="button"
+              onClick={() => importFileInputRef.current?.click()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-black/[0.04]"
+              style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+            >
+              <Upload size={14} />
+              Import JSON
+            </button>
             <button
               type="button"
               onClick={regenerateDraft}
@@ -277,6 +342,50 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
             <span>{selectedMock?.analysis ? "Analysis attached" : "Generated from mock log, not saved yet"}</span>
           </div>
         </div>
+
+        <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>
+          Import replaces the draft below with the JSON's sections/questions — nothing is saved until you click "Save analysis",
+          which still checks the imported question count and score against this mock's logged data.
+          Download a template first to see the exact fields expected for this mock's structure.
+        </p>
+
+        <button
+          type="button"
+          onClick={() => setShowPasteImport((v) => !v)}
+          className="theme-hover self-start inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs -mt-1 -mb-1"
+          style={{ borderRadius: 8, color: COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}
+        >
+          {showPasteImport ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+          {showPasteImport ? "Hide paste JSON" : "Paste JSON instead of uploading a file"}
+        </button>
+
+        {showPasteImport && (
+          <div className="animate-fade-up flex flex-col gap-2">
+            <textarea
+              value={pasteValue}
+              onChange={(ev) => setPasteValue(ev.target.value)}
+              rows={6}
+              placeholder="Paste analysis JSON here"
+              style={{ ...inputStyle(false), resize: "vertical", fontFamily: "'JetBrains Mono', monospace", fontSize: 12.5 }}
+            />
+            <button
+              type="button"
+              onClick={applyPastedJson}
+              className="self-start inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:opacity-90"
+              style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+            >
+              <Upload size={14} />
+              Apply pasted JSON
+            </button>
+          </div>
+        )}
+
+        {importError && (
+          <div className="p-3 text-sm" style={{ background: COLORS.dangerSoft, color: COLORS.danger, borderRadius: 8 }}>
+            {importError}
+          </div>
+        )}
+        {importMessage && !importError && <p className="text-sm" style={{ color: COLORS.good }}>{importMessage}</p>}
       </Panel>
 
       {!draft && (

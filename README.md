@@ -71,6 +71,10 @@
 
 **Update (post-launch):** the app now also syncs to a Supabase table (`app_storage`) in the background, so data survives browser storage being cleared and isn't limited to one device. localStorage remains as a fast local cache; export/import still work the same way as a manual backup path. See `supabase/schema.sql` and `src/lib/cloudStore.js`.
 
+**JSON import comes in two flavors — don't confuse them:**
+- **Settings → Data Backup** (`onImportData` in `src/App.jsx`) is a **replace**: it wipes every mock and setting on this device and restores exactly what's in the backup file. This is the `scores.json` / full-export workflow above.
+- **Mock Log → Import JSON** and **Mock Analysis → Import JSON** (see §4.1) are **additive**: they add to what's already logged without touching existing mocks. These exist so the tedious parts of data entry — logging many past mocks at once, or filling in a full per-question analysis table — can be done by pasting/uploading JSON instead of clicking through the form.
+
 ---
 
 ## 4. Feature Scope
@@ -78,10 +82,28 @@
 ### 4.1 Entry & Data Management
 - **Mock Log:** fast score-entry workflow for date/source/section scores, plus a parent mock list showing analysis status
 - Form to add one row per section per mock (all required fields validated; optional fields clearly marked optional)
+- **Mock Log → Import JSON** (additive, appends to existing mocks — see the callout in §3): accepts one mock object, an array of mocks, or `{ "mocks": [...] }`. Each mock:
+  ```json
+  {
+    "date": "2026-07-20",
+    "source": "SIMCAT 6",
+    "sections": [
+      { "section": "VARC", "score": 42, "totalQuestions": 22, "percentile": 91.2, "topperScore": 58 },
+      { "section": "DILR", "score": 30, "totalQuestions": 20 },
+      { "section": "Quant", "score": 18, "totalQuestions": 22 }
+    ]
+  }
+  ```
+  - `sections` may also be an object keyed by section name instead of an array.
+  - `score` and `manualTotalMarks` are both accepted as the section score field.
+  - `questionBlocks` per section is optional — when omitted, one block spanning all questions is generated automatically (same fallback the manual form uses). When supplied, blocks must fully and exactly cover `1..totalQuestions` (same rule the manual "Customize question structure" editor enforces — both paths share one validator, `validateSectionBlockCoverage` in `src/lib/mockModel.js`).
+  - An optional per-mock `analysis` field (same shape as the Mock Analysis JSON below) attaches detailed analysis in the same import.
+  - Every mock in the file is validated before any of them are added — one bad entry reports an error and imports nothing, rather than partially importing.
 - Edit / delete existing score entries
-- Import / export `scores.json`
+- Import / export `scores.json` (full backup — see §3)
 - Sortable, filterable raw section-entry table is available as a maintenance view under Mock Log
 - **Mock Analysis:** separate optional workflow to select an existing mock and attach, edit, inspect, or delete detailed analysis JSON
+- **Mock Analysis → Import JSON** (upload a file or paste directly): accepts the same shape described in §1.3 / produced by `normalizeDetailedAnalysis` in `src/lib/analysisModel.js` — `sections` keyed by `VARC`/`DILR`/`Quant` (or `QA` as an alias for Quant), each with `blocks[]` (`type: "set" | "independent"`, optional `topic`), each block's `questions[]` (`result`, `outcomeReason`, `questionType`, `timeTaken`, `averageTime`, `notes`, `topic` for independent questions). Import only replaces the on-screen draft — nothing is saved until "Save analysis" is clicked, which still validates the imported question count and score against the mock's logged data. Use "Download template" on the Mock Analysis tab to get a ready-to-edit JSON file scaffolded from that mock's actual section/question-block structure.
 
 ### 4.2 Visualizations
 - **Overview:** high-level preparation readout: goals, pacing, weakest-section flag, score-level insights, and broad comparison charts

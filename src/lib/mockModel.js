@@ -264,3 +264,138 @@ export function attachAnalysisToMocks(mocks, mockId, rawAnalysis) {
 export function removeMock(mocks, id) {
   return mocks.filter((mock) => mock.id !== id);
 }
+
+/**
+ * Shared by the manual "Log mock" form (MockLogTab) and JSON import
+ * (parseScoreOnlyMockImport below) so both enforce the same question-range
+ * rules instead of two copies drifting apart.
+ */
+export function validateSectionBlockCoverage(section) {
+  const totalQuestions = Number(section.totalQuestions);
+  if (!Number.isInteger(totalQuestions) || totalQuestions < 1) return [`${section.section}: enter total questions.`];
+
+  const seen = new Map();
+  const errors = [];
+  (section.questionBlocks || []).forEach((block) => {
+    const start = Number(block.startQuestion);
+    const end = Number(block.endQuestion);
+    if (!Number.isInteger(start) || !Number.isInteger(end) || start < 1 || end < start || end > totalQuestions) {
+      errors.push(`${section.section}: ${block.name || "block"} has an invalid question range.`);
+      return;
+    }
+    for (let q = start; q <= end; q += 1) {
+      seen.set(q, (seen.get(q) || 0) + 1);
+    }
+  });
+
+  for (let q = 1; q <= totalQuestions; q += 1) {
+    if (!seen.has(q)) errors.push(`${section.section}: question ${q} is not covered by any set/independent block.`);
+    if (seen.get(q) > 1) errors.push(`${section.section}: question ${q} is covered more than once.`);
+  }
+  return errors;
+}
+
+function sectionListFromImport(sections) {
+  if (Array.isArray(sections)) return sections;
+  if (sections && typeof sections === "object") {
+    return Object.entries(sections).map(([key, value]) => ({ ...value, section: value?.section || key }));
+  }
+  return [];
+}
+
+function normalizeImportSection(raw, label) {
+  const section = raw?.section;
+  if (!SECTIONS.includes(section)) {
+    throw new Error(`${label}: invalid or missing section "${section ?? ""}" (must be one of ${SECTIONS.join(", ")}).`);
+  }
+
+  const scoreValue = raw.score !== undefined ? raw.score : raw.manualTotalMarks;
+  const score = Number(scoreValue);
+  if (!Number.isFinite(score)) {
+    throw new Error(`${label} ${section}: "score" (or "manualTotalMarks") must be a number.`);
+  }
+
+  const totalQuestions = Number(raw.totalQuestions || 0);
+  if (!Number.isInteger(totalQuestions) || totalQuestions < 1) {
+    throw new Error(`${label} ${section}: "totalQuestions" must be a positive whole number.`);
+  }
+
+  // questionBlocks is optional on import — when omitted, normalizeSectionPayload's
+  // normalizeQuestionBlocks() fallback builds one block spanning all questions,
+  // which is valid by construction, so coverage only needs checking when the
+  // caller supplied their own custom block structure.
+  const hasCustomBlocks = Array.isArray(raw.questionBlocks) && raw.questionBlocks.length > 0;
+  if (hasCustomBlocks) {
+    const coverageErrors = validateSectionBlockCoverage({ section, totalQuestions, questionBlocks: raw.questionBlocks });
+    if (coverageErrors.length > 0) throw new Error(`${label} ${coverageErrors.join(" ")}`);
+  }
+
+  return {
+    section,
+    manualTotalMarks: score,
+    totalQuestions,
+    questionBlocks: hasCustomBlocks ? raw.questionBlocks : undefined,
+    questionSetCount: raw.questionSetCount,
+    percentile: raw.percentile,
+    topperScore: raw.topperScore,
+    notes: raw.notes,
+  };
+}
+
+function normalizeImportMock(raw, idx) {
+  const label = `Mock ${idx + 1}`;
+  if (!raw || typeof raw !== "object") throw new Error(`${label}: must be a JSON object.`);
+  if (!raw.date) throw new Error(`${label}: missing "date".`);
+  if (!raw.source) throw new Error(`${label}: missing "source".`);
+
+  const sectionList = sectionListFromImport(raw.sections);
+  if (sectionList.length === 0) throw new Error(`${label} (${raw.date} ${raw.source}): "sections" must include at least one section.`);
+
+  const detailedLabel = `${label} (${raw.date} ${raw.source})`;
+  const sections = sectionList.map((section) => normalizeImportSection(section, detailedLabel));
+  const totalMarks = sections.reduce((sum, section) => sum + section.manualTotalMarks, 0);
+
+  return {
+    date: raw.date,
+    source: String(raw.source).trim(),
+    totalMarks,
+    sections,
+    analysis: raw.analysis || undefined,
+  };
+}
+
+/**
+ * Parses JSON for the Mock Log tab's "Import JSON" action: one mock object,
+ * an array of mocks, or { mocks: [...] }. Each mock accepts the same fields
+ * the manual score-only form submits (see MockLogTab.jsx submitMock). This
+ * is additive (new mocks get appended via addScoreOnlyMock) and distinct
+ * from the Settings > Data Backup restore, which replaces the whole dataset.
+ * Every mock is validated before any payload is returned, so a bad entry
+ * can't cause a partial import.
+ */
+export function parseScoreOnlyMockImport(raw) {
+  const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+  const list = Array.isArray(parsed)
+    ? parsed
+    : Array.isArray(parsed?.mocks)
+      ? parsed.mocks
+      : parsed && typeof parsed === "object"
+        ? [parsed]
+        : null;
+
+  if (!list) throw new Error('Mock JSON must be an object, an array of mocks, or { "mocks": [...] }.');
+  if (list.length === 0) throw new Error("Mock JSON contains no mocks.");
+
+  const errors = [];
+  const payloads = [];
+  list.forEach((item, idx) => {
+    try {
+      payloads.push(normalizeImportMock(item, idx));
+    } catch (err) {
+      errors.push(err.message);
+    }
+  });
+
+  if (errors.length > 0) throw new Error(errors.join(" "));
+  return payloads;
+}

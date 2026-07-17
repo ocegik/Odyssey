@@ -9,6 +9,7 @@ import {
   attachAnalysisToMocks,
   computeMockViews,
   flattenMockEntries,
+  parseScoreOnlyMockImport,
   removeMock,
 } from "../lib/mockModel";
 
@@ -148,6 +149,16 @@ export function useMockEntries() {
     showToast("Mock deleted");
   }, [showToast]);
 
+  // Additive JSON import for the Mock Log tab — appends parsed mocks on top
+  // of whatever's already logged (unlike importMocks below, which replaces
+  // the whole dataset for a backup restore).
+  const importScoreOnlyMocks = useCallback((raw) => {
+    const payloads = parseScoreOnlyMockImport(raw);
+    setMockRecords((prev) => payloads.reduce((acc, payload) => addScoreOnlyMock(acc, payload), prev));
+    showToast(`Imported ${payloads.length} mock${payloads.length === 1 ? "" : "s"}`);
+    return payloads.length;
+  }, [showToast]);
+
   // Destructive replace (backup restore), not a merge — parses/validates
   // fully before committing, mirroring toRaw()'s {version, mocks} shape.
   const importMocks = useCallback((raw) => {
@@ -165,6 +176,6 @@ export function useMockEntries() {
     marksSeries, attemptRateSeries, marksPerAttemptSeries, negMarksLostSeries, hardnessRatioSeries,
     toast,
     addScoreOnlyAnalysis, attachAnalysis, loadSample, deleteMock,
-    importMocks, exportMocks,
+    importMocks, exportMocks, importScoreOnlyMocks,
   };
 }
