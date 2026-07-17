@@ -1,23 +1,22 @@
 import { SECTIONS } from "../constants";
 import { fmtDate, fmtPct, fmtNum } from "./format";
-import { avg as avgOf, stdDev } from "./aggregate";
+import { avg as avgOf, stdDev, accuracyOf } from "./aggregate";
 
+/**
+ * Accuracy and attempt rate come straight off whatever `attempted`/`correct`
+ * were entered when the mock was logged — both optional, so this works before
+ * a full Analysis exists for the mock, not just after.
+ */
 export function computeDerived(e) {
-  const attempted = e.attemptedMCQ + e.attemptedTITA;
-  const right = e.rightMCQ + e.rightTITA;
-  const unattempted = e.totalQuestions - attempted;
-  const computedMarks = e.rightMCQ * 3 + e.rightTITA * 3 - e.wrongMCQ * 1 + e.wrongTITA * 0;
-  const totalMarks = e.manualTotalMarks !== null && e.manualTotalMarks !== undefined ? e.manualTotalMarks : computedMarks;
-  const overallAccuracy = attempted > 0 ? right / attempted : null;
-  const mcqAccuracy = e.attemptedMCQ > 0 ? e.rightMCQ / e.attemptedMCQ : null;
-  const titaAccuracy = e.attemptedTITA > 0 ? e.rightTITA / e.attemptedTITA : null;
-  const attemptRate = e.scoreEntryMode === "score-only" || e.totalQuestions <= 0 ? null : attempted / e.totalQuestions;
-  const marksPerAttempt = attempted > 0 ? totalMarks / attempted : null;
-  const negMarksLost = e.wrongMCQ * 1;
-  const hardnessRatio = e.topperScore ? totalMarks / e.topperScore : null;
+  const attempted = e.attempted ?? null;
+  const unattempted = attempted !== null && e.totalQuestions ? e.totalQuestions - attempted : null;
+  const totalMarks = e.manualTotalMarks ?? null;
+  const overallAccuracy = accuracyOf(e.correct, attempted);
+  const attemptRate = attempted !== null && e.totalQuestions > 0 ? attempted / e.totalQuestions : null;
+  const marksPerAttempt = attempted > 0 && totalMarks !== null ? totalMarks / attempted : null;
+  const hardnessRatio = e.topperScore && totalMarks !== null ? totalMarks / e.topperScore : null;
   return {
-    ...e, attempted, unattempted, totalMarks, overallAccuracy, mcqAccuracy,
-    titaAccuracy, attemptRate, marksPerAttempt, negMarksLost, hardnessRatio,
+    ...e, attempted, unattempted, totalMarks, overallAccuracy, attemptRate, marksPerAttempt, hardnessRatio,
   };
 }
 
@@ -34,8 +33,6 @@ export function rollingSeries(sortedEntries, window = 5) {
       ...e,
       rollAccuracy: avg("overallAccuracy"),
       rollAttemptRate: avg("attemptRate"),
-      rollMcqAccuracy: avg("mcqAccuracy"),
-      rollTitaAccuracy: avg("titaAccuracy"),
       rollMarks: avg("totalMarks"),
       rollMarksPerAttempt: avg("marksPerAttempt"),
     };
@@ -52,7 +49,6 @@ export function buildMockPivot(mockRecords) {
       createdAt: mock.createdAt,
       analysis: mock.analysis || null,
       manualTotalMarks: mock.manualTotalMarks ?? null,
-      scoreEntryMode: mock.scoreEntryMode || null,
     };
     SECTIONS.forEach((section) => {
       row[section] = mock.sections[section] || null;
@@ -113,7 +109,7 @@ export function analyzeWeakest(entriesWithComputed) {
     const l = perSection[s].latest;
     const acc = l.rollAccuracy ?? 0;
     const ar = l.rollAttemptRate ?? 0;
-    return { section: s, score: acc * ar, acc, ar, mcqAcc: l.rollMcqAccuracy, titaAcc: l.rollTitaAccuracy };
+    return { section: s, score: acc * ar, acc, ar };
   });
   const bySc = [...scored].sort((a, b) => a.score - b.score);
   const weakest = bySc[0];
@@ -125,26 +121,7 @@ export function analyzeWeakest(entriesWithComputed) {
   else if (lowestAcc.section === weakest.section) driver = "primarily an accuracy problem";
   else if (lowestAR.section === weakest.section) driver = "primarily an attempt-rate problem";
 
-  let subtype = null;
-  if (weakest.mcqAcc !== null && weakest.titaAcc !== null) subtype = weakest.mcqAcc <= weakest.titaAcc ? "MCQ" : "TITA";
-  else if (weakest.mcqAcc !== null) subtype = "MCQ";
-  else if (weakest.titaAcc !== null) subtype = "TITA";
-
-  let trendNote = "";
-  const list = perSection[weakest.section].list;
-  if (subtype && list.length >= 2) {
-    const key = subtype === "MCQ" ? "rollMcqAccuracy" : "rollTitaAccuracy";
-    const recent = list[list.length - 1][key];
-    const priorIdx = Math.max(0, list.length - 4);
-    const prior = list[priorIdx][key];
-    if (recent !== null && prior !== null && priorIdx !== list.length - 1) {
-      if (recent < prior - 0.03) trendNote = ` ${subtype} accuracy has slipped over the last few mocks (${fmtPct(prior)} → ${fmtPct(recent)}).`;
-      else if (recent > prior + 0.03) trendNote = ` ${subtype} accuracy is actually trending up (${fmtPct(prior)} → ${fmtPct(recent)}), even though it's still the softest spot.`;
-      else trendNote = ` ${subtype} accuracy has held steady around ${fmtPct(recent)}.`;
-    }
-  }
-
-  const note = `${weakest.section} is the weakest section right now — rolling accuracy of ${fmtPct(weakest.acc)} and attempt rate of ${fmtPct(weakest.ar)} suggest ${driver}${subtype ? `, with ${subtype} being the weaker half.` : "."}${trendNote}`;
+  const note = `${weakest.section} is the weakest section right now — rolling accuracy of ${fmtPct(weakest.acc)} and attempt rate of ${fmtPct(weakest.ar)} suggest ${driver}.`;
   return { weakestSection: weakest.section, scored, note };
 }
 
@@ -161,7 +138,6 @@ const INSIGHT_TREND_WINDOW = 5;
 const ACCURACY_TREND_MIN_DELTA = 0.04;
 const MPA_DEVIATION_MIN_RATIO = 0.15;
 const ATTEMPT_RATE_JUMP_MIN_DELTA = 0.12;
-const MCQ_TITA_GAP_WIDEN_MIN_DELTA = 0.08;
 const PERCENTILE_VS_MARKS_MIN_PCTL_DELTA = 3;
 const MAX_INSIGHTS = 4;
 
@@ -216,26 +192,6 @@ function attemptRateJumpInsight(section, list) {
   };
 }
 
-/** Is the MCQ/TITA accuracy split within a section pulling further apart over time? */
-function mcqTitaGapInsight(section, list) {
-  if (list.length < INSIGHT_MIN_TREND_MOCKS) return null;
-  const startIdx = Math.max(0, list.length - INSIGHT_TREND_WINDOW);
-  if (startIdx === list.length - 1) return null;
-  const latest = list[list.length - 1];
-  const prior = list[startIdx];
-  if ([latest.mcqAccuracy, latest.titaAccuracy, prior.mcqAccuracy, prior.titaAccuracy].some((v) => v === null || v === undefined)) return null;
-  const gapNow = latest.mcqAccuracy - latest.titaAccuracy;
-  const gapPrior = prior.mcqAccuracy - prior.titaAccuracy;
-  const widened = Math.abs(gapNow) - Math.abs(gapPrior);
-  if (widened < MCQ_TITA_GAP_WIDEN_MIN_DELTA) return null;
-  const weaker = gapNow < 0 ? "TITA" : "MCQ";
-  return {
-    id: `${section}-mcq-tita-gap`, section, tone: "negative",
-    significance: Math.min(1, widened / 0.25),
-    text: `${section}'s MCQ vs TITA accuracy gap is widening — ${weaker} is falling further behind, now ${fmtPct(Math.abs(gapNow))} apart.`,
-  };
-}
-
 /** Percentile moving opposite to marks between the last two logged-percentile mocks — implies the paper's difficulty shifted. */
 function percentileVsMarksInsight(section, list) {
   const withPercentile = list.filter((e) => e.percentile !== null && e.percentile !== undefined);
@@ -264,7 +220,7 @@ function percentileVsMarksInsight(section, list) {
  * rather than one section dominating every slot.
  */
 export function generateInsights(sectionStats) {
-  const generators = [accuracyTrendInsight, marksPerAttemptInsight, attemptRateJumpInsight, mcqTitaGapInsight, percentileVsMarksInsight];
+  const generators = [accuracyTrendInsight, marksPerAttemptInsight, attemptRateJumpInsight, percentileVsMarksInsight];
 
   const winners = generators
     .map((fn) => {

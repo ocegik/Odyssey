@@ -68,7 +68,7 @@ export default function CATMockTracker() {
 
   const {
     sectionStats, insights, weakestAnalysis, mocks, entriesWithComputed,
-    marksSeries, attemptRateSeries, marksPerAttemptSeries, negMarksLostSeries, hardnessRatioSeries,
+    marksSeries, attemptRateSeries, marksPerAttemptSeries, hardnessRatioSeries,
     toast,
     addScoreOnlyAnalysis, attachAnalysis, loadSample, deleteMock,
     importMocks, exportMocks, importScoreOnlyMocks,
@@ -228,7 +228,6 @@ export default function CATMockTracker() {
               marksSeries={marksSeries}
               attemptRateSeries={attemptRateSeries}
               marksPerAttemptSeries={marksPerAttemptSeries}
-              negMarksLostSeries={negMarksLostSeries}
               hardnessRatioSeries={hardnessRatioSeries}
               sectionStats={sectionStats}
               settings={settings}

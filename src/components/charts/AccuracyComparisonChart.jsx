@@ -7,20 +7,11 @@ export default function AccuracyComparisonChart({ sectionStats }) {
   const [mode, setMode] = useState("latest");
   const data = SECTIONS.map((sec) => {
     const latest = sectionStats[sec].latest;
-    if (!latest) return { section: sec, Overall: null, MCQ: null, TITA: null };
-    if (mode === "latest") {
-      return {
-        section: sec,
-        Overall: latest.overallAccuracy !== null ? +(latest.overallAccuracy * 100).toFixed(1) : null,
-        MCQ: latest.mcqAccuracy !== null ? +(latest.mcqAccuracy * 100).toFixed(1) : null,
-        TITA: latest.titaAccuracy !== null ? +(latest.titaAccuracy * 100).toFixed(1) : null,
-      };
-    }
+    if (!latest) return { section: sec, Overall: null };
+    const accuracy = mode === "latest" ? latest.overallAccuracy : latest.rollAccuracy;
     return {
       section: sec,
-      Overall: latest.rollAccuracy !== null ? +(latest.rollAccuracy * 100).toFixed(1) : null,
-      MCQ: latest.rollMcqAccuracy !== null ? +(latest.rollMcqAccuracy * 100).toFixed(1) : null,
-      TITA: latest.rollTitaAccuracy !== null ? +(latest.rollTitaAccuracy * 100).toFixed(1) : null,
+      Overall: accuracy !== null ? +(accuracy * 100).toFixed(1) : null,
     };
   });
   const hasAny = data.some((d) => d.Overall !== null);
@@ -54,8 +45,6 @@ export default function AccuracyComparisonChart({ sectionStats }) {
               labelStyle={{ fontWeight: 600, color: COLORS.ink, marginBottom: 2 }} />
             <Legend wrapperStyle={{ fontFamily: "'Inter', sans-serif", fontSize: 12 }} />
             <Bar dataKey="Overall" fill={COLORS.ink} radius={[4, 4, 0, 0]} maxBarSize={40} />
-            <Bar dataKey="MCQ" fill={COLORS.info} radius={[4, 4, 0, 0]} maxBarSize={40} />
-            <Bar dataKey="TITA" fill={COLORS.warn} radius={[4, 4, 0, 0]} maxBarSize={40} />
           </BarChart>
         </ResponsiveContainer>
       </div>

@@ -37,7 +37,6 @@ export default function TrendsTab({
   marksSeries,
   attemptRateSeries,
   marksPerAttemptSeries,
-  negMarksLostSeries,
   hardnessRatioSeries,
   sectionStats,
   settings,
@@ -74,10 +73,6 @@ export default function TrendsTab({
       <GroupHeading>Pacing & difficulty</GroupHeading>
       <ChartFrame title="Marks-per-attempt trend" note="Marks scored per question attempted" empty={noData}>
         <MultiSectionLineChart data={marksPerAttemptSeries} />
-      </ChartFrame>
-
-      <ChartFrame title="Marks lost to negative marking" note="Marks given up to wrong MCQ attempts, per mock" empty={noData}>
-        <MultiSectionLineChart data={negMarksLostSeries} />
       </ChartFrame>
 
       <HardnessChart data={hardnessRatioSeries} empty={!hardnessHasData ? "Log a topper score with a mock to see this indicator." : null} />

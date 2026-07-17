@@ -1,7 +1,7 @@
 import { SECTIONS } from "../constants";
 import { fmtNum, fmtPct } from "./format";
 import { getEffectiveTopic } from "./analysisModel";
-import { inc, topEntry, topEntries } from "./aggregate";
+import { inc, topEntry, topEntries, accuracyOf } from "./aggregate";
 
 const MIN_RECURRING_REASON_COUNT = 3;
 const MIN_RECURRING_MOCK_COUNT = 2;
@@ -103,7 +103,7 @@ function summarizeSection(section, questions) {
     }
   });
 
-  summary.accuracy = summary.attempted > 0 ? summary.correct / summary.attempted : null;
+  summary.accuracy = accuracyOf(summary.correct, summary.attempted);
   summary.avgTime = avg(summary.totalTime, summary.timed);
   summary.slowRate = summary.total > 0 ? summary.slow / summary.total : null;
   return summary;
@@ -184,7 +184,7 @@ function generateSectionInsights(sectionSummaries, questions) {
     }
 
     const topicEntries = Object.entries(summary.topicStats)
-      .map(([topic, stat]) => ({ topic, ...stat, accuracy: stat.attempted > 0 ? stat.correct / stat.attempted : null }))
+      .map(([topic, stat]) => ({ topic, ...stat, accuracy: accuracyOf(stat.correct, stat.attempted) }))
       .filter((entry) => entry.attempted >= MIN_TOPIC_ATTEMPTS && entry.accuracy !== null);
     if (topicEntries.length > 0) {
       const weakestTopic = [...topicEntries].sort((a, b) => a.accuracy - b.accuracy)[0];
@@ -249,7 +249,7 @@ function buildTopicRows(sectionSummaries) {
         topic,
         attempted: stat.attempted,
         correct: stat.correct,
-        accuracy: stat.attempted > 0 ? stat.correct / stat.attempted : null,
+        accuracy: accuracyOf(stat.correct, stat.attempted),
       }))
       .sort((a, b) => (a.accuracy ?? 1) - (b.accuracy ?? 1));
   });
@@ -293,17 +293,24 @@ export function buildDetailedAnalysisInsights(mocks) {
   const sectionSummaries = buildSectionSummaries(questions);
   const insights = generateSectionInsights(sectionSummaries, questions);
 
+  // Reuse the per-section totals sectionSummaries already computed instead of
+  // re-filtering the full question list a second time.
+  const totals = SECTIONS.reduce((acc, section) => {
+    const summary = sectionSummaries[section];
+    acc.attempted += summary.attempted;
+    acc.correct += summary.correct;
+    acc.wrong += summary.wrong;
+    acc.skipped += summary.skipped;
+    return acc;
+  }, { attempted: 0, correct: 0, wrong: 0, skipped: 0 });
+
   return {
     analyzedMockCount: analyzedMocks.length,
     questionCount: questions.length,
-    attempted: questions.filter((question) => question.attempted).length,
-    wrong: questions.filter((question) => question.result === "Wrong").length,
-    skipped: questions.filter((question) => question.result === "Skipped").length,
-    accuracy: (() => {
-      const attempted = questions.filter((question) => question.attempted).length;
-      const correct = questions.filter((question) => question.result === "Correct").length;
-      return attempted > 0 ? correct / attempted : null;
-    })(),
+    attempted: totals.attempted,
+    wrong: totals.wrong,
+    skipped: totals.skipped,
+    accuracy: accuracyOf(totals.correct, totals.attempted),
     sectionSummaries,
     reasonRows: buildReasonRows(sectionSummaries),
     timingRows: buildTimingRows(questions),

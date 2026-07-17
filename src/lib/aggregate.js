@@ -24,6 +24,15 @@ export function avg(values) {
   return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
 }
 
+/* The one "accuracy = correct/attempted" implementation, shared by both the
+   Mock Log path (compute.js) and every Analysis-question-based path
+   (analysisModel.js, detailedAnalysisInsights.js, advancedInsights.js) —
+   those two sides read different inputs, but the arithmetic is identical. */
+export function accuracyOf(correct, attempted) {
+  if (correct === null || correct === undefined || !attempted) return null;
+  return correct / attempted;
+}
+
 export function stdDev(values) {
   if (values.length < 2) return null;
   const mean = avg(values);

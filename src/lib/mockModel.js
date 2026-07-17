@@ -5,9 +5,8 @@ import { normalizeDetailedAnalysis } from "./analysisModel";
 export const DATASET_VERSION = 2;
 
 const SECTION_INPUT_FIELDS = [
-  "attemptedMCQ", "attemptedTITA", "rightMCQ", "rightTITA",
-  "wrongMCQ", "wrongTITA", "totalQuestions", "percentile", "topperScore", "notes",
-  "manualTotalMarks", "scoreEntryMode", "questionSetCount", "questionBlocks",
+  "attempted", "correct", "totalQuestions", "percentile", "topperScore", "notes",
+  "manualTotalMarks", "questionSetCount", "questionBlocks",
 ];
 
 const mockId = () => uid().replace(/^e_/, "m_");
@@ -48,8 +47,6 @@ function normalizeQuestionBlocks(rawBlocks, totalQuestions) {
 }
 
 function normalizeSectionPayload(item, idx, parentMockId) {
-  const hasManualMarks = item.manualTotalMarks !== undefined && item.manualTotalMarks !== null && item.manualTotalMarks !== "";
-  const isScoreOnly = item.scoreEntryMode === "score-only" || hasManualMarks;
   if (!SECTIONS.includes(item.section)) throw new Error(`Entry ${idx + 1} has an invalid section: "${item.section}".`);
 
   const totalQuestions = Number(item.totalQuestions || 0);
@@ -60,17 +57,14 @@ function normalizeSectionPayload(item, idx, parentMockId) {
     mockId: parentMockId || item.mockId || mockId(),
     createdAt: item.createdAt || Date.now() + idx,
     section: item.section,
-    attemptedMCQ: Number(item.attemptedMCQ || 0),
-    attemptedTITA: Number(item.attemptedTITA || 0),
-    rightMCQ: Number(item.rightMCQ || 0),
-    rightTITA: Number(item.rightTITA || 0),
-    wrongMCQ: Number(item.wrongMCQ || 0),
-    wrongTITA: Number(item.wrongTITA || 0),
+    // Both optional: entering them at log time (rather than waiting for a full
+    // Analysis) is what lets accuracy/attempt-rate compute immediately — see computeDerived.
+    attempted: numberOrNull(item.attempted),
+    correct: numberOrNull(item.correct),
     totalQuestions,
     percentile: numberOrNull(item.percentile),
     topperScore: numberOrNull(item.topperScore),
     manualTotalMarks: numberOrNull(item.manualTotalMarks),
-    scoreEntryMode: isScoreOnly ? "score-only" : item.scoreEntryMode || "detailed-score",
     questionSetCount: numberOrNull(item.questionSetCount) ?? questionBlocks.filter((block) => block.type === "set").length,
     questionBlocks,
     notes: item.notes ? String(item.notes) : "",
@@ -107,7 +101,6 @@ function normalizeMock(rawMock, idx) {
     createdAt: rawMock.createdAt || Math.min(...Object.values(sections).map((e) => e.createdAt), Date.now() + idx),
     date: rawMock.date,
     source: String(rawMock.source),
-    scoreEntryMode: rawMock.scoreEntryMode || null,
     manualTotalMarks: numberOrNull(rawMock.manualTotalMarks),
     sections,
     analysis: rawMock.analysis ? normalizeDetailedAnalysis(rawMock.analysis) : null,
@@ -188,7 +181,6 @@ export function toMockDataset(mocks) {
       createdAt: mock.createdAt,
       date: mock.date,
       source: mock.source,
-      scoreEntryMode: mock.scoreEntryMode || null,
       manualTotalMarks: mock.manualTotalMarks ?? null,
       analysis: mock.analysis || null,
       sections: SECTIONS.reduce((acc, section) => {
@@ -228,12 +220,13 @@ export function addScoreOnlyMock(mocks, payload) {
       createdAt: createdAt + idx,
       section: section.section,
       manualTotalMarks: section.manualTotalMarks,
+      attempted: section.attempted,
+      correct: section.correct,
       questionSetCount: section.questionSetCount,
       questionBlocks: section.questionBlocks,
       totalQuestions: section.totalQuestions || 0,
       percentile: section.percentile,
       topperScore: section.topperScore,
-      scoreEntryMode: "score-only",
       notes: section.notes || "",
     }, idx, id);
   });
@@ -245,7 +238,6 @@ export function addScoreOnlyMock(mocks, payload) {
       createdAt,
       date: payload.date,
       source: payload.source,
-      scoreEntryMode: "score-only",
       manualTotalMarks: numberOrNull(payload.totalMarks),
       sections,
       analysis: payload.analysis ? normalizeDetailedAnalysis(payload.analysis) : null,
@@ -330,10 +322,28 @@ function normalizeImportSection(raw, label) {
     if (coverageErrors.length > 0) throw new Error(`${label} ${coverageErrors.join(" ")}`);
   }
 
+  // Both optional — supplying them unlocks accuracy/attempt-rate immediately,
+  // same as the manual form (see MockLogTab.jsx submitMock).
+  const hasAttempted = raw.attempted !== undefined && raw.attempted !== null && raw.attempted !== "";
+  const attempted = hasAttempted ? Number(raw.attempted) : undefined;
+  const hasCorrect = raw.correct !== undefined && raw.correct !== null && raw.correct !== "";
+  const correct = hasCorrect ? Number(raw.correct) : undefined;
+  if (hasAttempted && (!Number.isInteger(attempted) || attempted < 0 || attempted > totalQuestions)) {
+    throw new Error(`${label} ${section}: "attempted" must be a whole number between 0 and totalQuestions.`);
+  }
+  if (hasCorrect && !hasAttempted) {
+    throw new Error(`${label} ${section}: "correct" requires "attempted" to also be set.`);
+  }
+  if (hasCorrect && (!Number.isInteger(correct) || correct < 0 || correct > attempted)) {
+    throw new Error(`${label} ${section}: "correct" must be a whole number between 0 and attempted.`);
+  }
+
   return {
     section,
     manualTotalMarks: score,
     totalQuestions,
+    attempted,
+    correct,
     questionBlocks: hasCustomBlocks ? raw.questionBlocks : undefined,
     questionSetCount: raw.questionSetCount,
     percentile: raw.percentile,

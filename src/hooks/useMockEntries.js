@@ -113,7 +113,6 @@ export function useMockEntries() {
     () => buildSeries(mocks, (e) => (e.marksPerAttempt !== null ? +e.marksPerAttempt.toFixed(2) : null)),
     [mocks]
   );
-  const negMarksLostSeries = useMemo(() => buildSeries(mocks, (e) => e.negMarksLost ?? null), [mocks]);
   const hardnessRatioSeries = useMemo(
     () => buildSeries(mocks, (e) => (e.hardnessRatio !== null && e.hardnessRatio !== undefined ? +(e.hardnessRatio * 100).toFixed(1) : null)),
     [mocks]
@@ -177,7 +176,7 @@ export function useMockEntries() {
 
   return {
     sectionStats, insights, weakestAnalysis, mocks, entriesWithComputed,
-    marksSeries, attemptRateSeries, marksPerAttemptSeries, negMarksLostSeries, hardnessRatioSeries,
+    marksSeries, attemptRateSeries, marksPerAttemptSeries, hardnessRatioSeries,
     toast,
     addScoreOnlyAnalysis, attachAnalysis, loadSample, deleteMock,
     importMocks, exportMocks, importScoreOnlyMocks,

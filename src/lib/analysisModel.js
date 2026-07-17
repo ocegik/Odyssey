@@ -1,5 +1,6 @@
 import { SECTIONS } from "../constants";
 import { uid } from "./format";
+import { accuracyOf } from "./aggregate";
 
 export const ANALYSIS_SCHEMA_VERSION = 1;
 
@@ -178,7 +179,7 @@ function summarizeQuestions(questions) {
     }
   });
 
-  summary.accuracy = summary.attempted > 0 ? summary.correct / summary.attempted : null;
+  summary.accuracy = accuracyOf(summary.correct, summary.attempted);
   summary.averageTime = summary.timedQuestions > 0 ? summary.totalTime / summary.timedQuestions : null;
   summary.averageBenchmarkTime = summary.timedQuestions > 0 ? summary.totalAverageTime / summary.timedQuestions : null;
   summary.timeDelta = summary.timedQuestions > 0 ? summary.totalTime - summary.totalAverageTime : null;

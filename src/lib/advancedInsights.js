@@ -1,6 +1,6 @@
 import { fmtNum, fmtPct } from "./format";
 import { flattenAnalysisQuestions } from "./detailedAnalysisInsights";
-import { avg, stdDev } from "./aggregate";
+import { avg, stdDev, accuracyOf } from "./aggregate";
 
 /* Every threshold below is a deliberately coarse "is this worth mentioning?"
    gate, not a statistical test — same philosophy as compute.js's insight
@@ -42,10 +42,10 @@ function groupBy(items, keyFn) {
 /*  set, not an independent question), with position and time splits.  */
 /* ------------------------------------------------------------------ */
 
-function accuracyOf(list) {
+function accuracyOfQuestions(list) {
   const attempted = list.filter((q) => q.attempted);
   const correct = attempted.filter((q) => q.result === "Correct");
-  return attempted.length > 0 ? correct.length / attempted.length : null;
+  return accuracyOf(correct.length, attempted.length);
 }
 
 export function buildSetRecords(questions) {
@@ -75,9 +75,9 @@ export function buildSetRecords(questions) {
       total: sorted.length,
       attempted: attemptedAll.length,
       correct: correctAll.length,
-      accuracy: attemptedAll.length > 0 ? correctAll.length / attemptedAll.length : null,
-      firstHalfAccuracy: accuracyOf(firstHalf),
-      secondHalfAccuracy: accuracyOf(secondHalf),
+      accuracy: accuracyOf(correctAll.length, attemptedAll.length),
+      firstHalfAccuracy: accuracyOfQuestions(firstHalf),
+      secondHalfAccuracy: accuracyOfQuestions(secondHalf),
       totalTime,
       totalBenchmark,
       timeDelta: timedPairs.length > 0 ? totalTime - totalBenchmark : null,
@@ -117,7 +117,7 @@ export function buildTopicRecords(questions) {
         mockId: mqs[0].mockId,
         date: mqs[0].mockDate,
         label: mqs[0].mockLabel,
-        accuracy: accuracyOf(mqs),
+        accuracy: accuracyOfQuestions(mqs),
       }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
@@ -129,7 +129,7 @@ export function buildTopicRecords(questions) {
       correct: correct.length,
       wrong: wrong.length,
       skipped: skipped.length,
-      accuracy: attempted.length ? correct.length / attempted.length : null,
+      accuracy: accuracyOf(correct.length, attempted.length),
       skipRate: qs.length ? skipped.length / qs.length : null,
       avgTime,
       avgBenchmark,

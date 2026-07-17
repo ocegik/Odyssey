@@ -14,6 +14,8 @@ const DEFAULT_SECTIONS = [
     section: "VARC",
     score: "",
     totalQuestions: "22",
+    attempted: "",
+    correct: "",
     questionBlocks: [
       { id: blockId(), type: "set", name: "Set 1", startQuestion: 1, endQuestion: 5 },
       { id: blockId(), type: "set", name: "Set 2", startQuestion: 6, endQuestion: 9 },
@@ -26,6 +28,8 @@ const DEFAULT_SECTIONS = [
     section: "DILR",
     score: "",
     totalQuestions: "20",
+    attempted: "",
+    correct: "",
     questionBlocks: [
       { id: blockId(), type: "set", name: "Set 1", startQuestion: 1, endQuestion: 5 },
       { id: blockId(), type: "set", name: "Set 2", startQuestion: 6, endQuestion: 10 },
@@ -37,6 +41,8 @@ const DEFAULT_SECTIONS = [
     section: "Quant",
     score: "",
     totalQuestions: "22",
+    attempted: "",
+    correct: "",
     questionBlocks: [
       { id: blockId(), type: "independent", name: "Independent Questions", startQuestion: 1, endQuestion: 22 },
     ],
@@ -61,6 +67,20 @@ function validateMockForm(form) {
   form.sections.forEach((section) => {
     const score = Number(section.score);
     if (!Number.isFinite(score)) errors.push(`${section.section}: enter the logged score.`);
+
+    const totalQuestions = Number(section.totalQuestions);
+    const attempted = section.attempted === "" ? null : Number(section.attempted);
+    const correct = section.correct === "" ? null : Number(section.correct);
+    if (attempted !== null) {
+      if (!Number.isInteger(attempted) || attempted < 0 || attempted > totalQuestions) {
+        errors.push(`${section.section}: attempted must be a whole number between 0 and total questions.`);
+      } else if (correct !== null && (!Number.isInteger(correct) || correct < 0 || correct > attempted)) {
+        errors.push(`${section.section}: correct must be a whole number between 0 and attempted.`);
+      }
+    } else if (correct !== null) {
+      errors.push(`${section.section}: enter attempted before correct.`);
+    }
+
     errors.push(...validateSectionBlockCoverage(section));
   });
   return errors;
@@ -198,6 +218,8 @@ export default function MockLogTab({
       section: section.section,
       manualTotalMarks: Number(section.score),
       totalQuestions: Number(section.totalQuestions),
+      attempted: section.attempted === "" ? undefined : Number(section.attempted),
+      correct: section.correct === "" ? undefined : Number(section.correct),
       questionSetCount: section.questionBlocks.filter((block) => block.type === "set").length,
       questionBlocks: section.questionBlocks.map((block) => ({
         ...block,
@@ -238,10 +260,11 @@ export default function MockLogTab({
           Import adds mocks on top of what's already logged — it doesn't replace anything. Accepts one mock object, an array of
           mocks, or {"{"}"mocks": [...]{"}"}, each like{" "}
           <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-            {'{"date":"2026-07-20","source":"SIMCAT 6","sections":[{"section":"VARC","score":42,"totalQuestions":22}]}'}
+            {'{"date":"2026-07-20","source":"SIMCAT 6","sections":[{"section":"VARC","score":42,"totalQuestions":22,"attempted":20,"correct":15}]}'}
           </code>
-          . <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>questionBlocks</code>, <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>percentile</code>, and{" "}
-          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>topperScore</code> are optional per section.
+          . <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>questionBlocks</code>, <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>percentile</code>,{" "}
+          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>topperScore</code>, <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>attempted</code>, and{" "}
+          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>correct</code> are optional per section — add attempted/correct to get accuracy and attempt rate right away, without needing a full Analysis first.
         </p>
         {importError && (
           <div className="p-3 text-sm" style={{ background: COLORS.dangerSoft, color: COLORS.danger, borderRadius: 8 }}>
@@ -281,14 +304,22 @@ export default function MockLogTab({
                       <span className="text-xs" style={{ color: COLORS.inkMuted }}>{structureSummary(section)}</span>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full sm:w-auto">
                     <div className="flex flex-col gap-1.5">
                       <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Score</label>
-                      <input type="number" value={section.score} onChange={setSectionField(sectionIdx, "score")} style={{ ...inputStyle(false), width: 120 }} />
+                      <input type="number" value={section.score} onChange={setSectionField(sectionIdx, "score")} style={{ ...inputStyle(false), width: 110 }} />
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Total questions</label>
-                      <input type="number" min="1" value={section.totalQuestions} onChange={setSectionField(sectionIdx, "totalQuestions")} style={{ ...inputStyle(false), width: 150 }} />
+                      <input type="number" min="1" value={section.totalQuestions} onChange={setSectionField(sectionIdx, "totalQuestions")} style={{ ...inputStyle(false), width: 110 }} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Attempted <span style={{ opacity: 0.6 }}>(optional)</span></label>
+                      <input type="number" min="0" placeholder="—" value={section.attempted} onChange={setSectionField(sectionIdx, "attempted")} style={{ ...inputStyle(false), width: 100 }} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Correct <span style={{ opacity: 0.6 }}>(optional)</span></label>
+                      <input type="number" min="0" placeholder="—" value={section.correct} onChange={setSectionField(sectionIdx, "correct")} style={{ ...inputStyle(false), width: 100 }} />
                     </div>
                   </div>
                 </div>
