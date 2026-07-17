@@ -3,7 +3,7 @@ import { Bar, BarChart, ComposedChart, Line, CartesianGrid, Legend, ResponsiveCo
 import { COLORS, TYPE } from "../constants";
 import { fmtDate, fmtNum, fmtPct } from "../lib/format";
 import ChartFrame from "./charts/ChartFrame";
-import InsightCard from "./charts/InsightCard";
+import InsightList from "./charts/InsightList";
 import SectionBadge from "./ui/SectionBadge";
 import StatCard from "./ui/StatCard";
 
@@ -184,13 +184,11 @@ export default function DetailedAnalysisInsightsPanel({ analysis }) {
       </div>
 
       <ChartFrame title="Detailed analysis insights" note="Outcome reasons, timing, and recurring patterns" empty={empty}>
-        <div className="flex flex-col gap-2">
-          {analysis.insights.length > 0 ? (
-            analysis.insights.map((insight) => <InsightCard key={insight.id} insight={insight} icon={detailedInsightIcon(insight)} />)
-          ) : (
-            <p className="text-sm" style={{ color: COLORS.inkMuted }}>Analysis is attached, but there is not enough repeated signal yet.</p>
-          )}
-        </div>
+        {analysis.insights.length > 0 ? (
+          <InsightList insights={analysis.insights} iconFor={detailedInsightIcon} />
+        ) : (
+          <p className="text-sm" style={{ color: COLORS.inkMuted }}>Analysis is attached, but there is not enough repeated signal yet.</p>
+        )}
       </ChartFrame>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

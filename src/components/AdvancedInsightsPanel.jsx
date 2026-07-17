@@ -3,7 +3,7 @@ import { Lightbulb } from "lucide-react";
 import { COLORS } from "../constants";
 import { buildAdvancedInsights } from "../lib/advancedInsights";
 import ChartFrame from "./charts/ChartFrame";
-import InsightCard from "./charts/InsightCard";
+import InsightList from "./charts/InsightList";
 import SectionBadge from "./ui/SectionBadge";
 import StatCard from "./ui/StatCard";
 
@@ -40,9 +40,7 @@ export default function AdvancedInsightsPanel({ mocks }) {
         note="Why a set went the way it did, not just the score"
         empty={!hasAnyData ? noDataMessage : analysis.setInsights.length === 0 ? "No strong set-level patterns yet — keep tagging set topics and logging mocks." : null}
       >
-        <div className="flex flex-col gap-2">
-          {analysis.setInsights.map((insight) => <InsightCard key={insight.id} insight={insight} />)}
-        </div>
+        <InsightList insights={analysis.setInsights} />
       </ChartFrame>
 
       <ChartFrame
@@ -50,9 +48,7 @@ export default function AdvancedInsightsPanel({ mocks }) {
         note="Accuracy, time, confidence, and trend by topic"
         empty={!hasAnyData ? noDataMessage : analysis.topicInsights.length === 0 ? "No strong topic patterns yet — tag more questions and log a few more mocks." : null}
       >
-        <div className="flex flex-col gap-2">
-          {analysis.topicInsights.map((insight) => <InsightCard key={insight.id} insight={insight} />)}
-        </div>
+        <InsightList insights={analysis.topicInsights} />
       </ChartFrame>
 
       <ChartFrame

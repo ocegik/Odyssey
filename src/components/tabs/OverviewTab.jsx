@@ -1,12 +1,13 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { COLORS } from "../../constants";
-import { fmtDate, fmtNum } from "../../lib/format";
+import { COLORS, SECTIONS, SHADOW, TYPE } from "../../constants";
+import { fmtDate, fmtNum, fmtPct } from "../../lib/format";
 import { computePacing, mockTotalMarks, computeAdaptiveTarget } from "../../lib/compute";
 import StatCard from "../ui/StatCard";
+import SectionBadge from "../ui/SectionBadge";
 import ChartFrame from "../charts/ChartFrame";
 import CollegeTargetsPanel from "../CollegeTargetsPanel";
 import WeakestSectionCard from "../charts/WeakestSectionCard";
-import InsightCard from "../charts/InsightCard";
+import InsightList from "../charts/InsightList";
 
 const MS_PER_DAY = 86400000;
 
@@ -104,6 +105,67 @@ function OverallMarksChart({ data }) {
   );
 }
 
+/* The one thing a user opening the app actually wants first: how did the
+   last mock go, and how does it compare to the one before it. Kept as its
+   own card, above the fold, ahead of the rolling-signal insights below. */
+function LatestMockSpotlight({ mocks }) {
+  if (mocks.length === 0) return null;
+  const latest = mocks[mocks.length - 1];
+  const prev = mocks.length > 1 ? mocks[mocks.length - 2] : null;
+  const marks = mockTotalMarks(latest);
+  const prevMarks = prev ? mockTotalMarks(prev) : null;
+  const delta = prevMarks !== null ? marks - prevMarks : null;
+  const percentile = mockOverallPercentile(latest);
+
+  return (
+    <div className="p-5 flex flex-col gap-4" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
+      <div className="flex items-baseline justify-between flex-wrap gap-2">
+        <h3 style={TYPE.chartTitle}>Latest mock</h3>
+        <span className="text-xs" style={{ color: COLORS.inkMuted }}>{fmtDate(latest.date)} · {latest.source}</span>
+      </div>
+
+      <div className="flex items-end gap-6 flex-wrap">
+        <div className="flex flex-col gap-1">
+          <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>Overall marks</span>
+          <div className="flex items-baseline gap-2">
+            <strong style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 34, color: COLORS.ink }}>{fmtNum(marks, 1)}</strong>
+            {delta !== null && (
+              <span className="text-sm" style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: delta >= 0 ? COLORS.good : COLORS.danger }}>
+                {delta >= 0 ? "▲" : "▼"} {fmtNum(Math.abs(delta), 1)} vs last
+              </span>
+            )}
+          </div>
+        </div>
+        {percentile !== null && (
+          <div className="flex flex-col gap-1">
+            <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>Percentile</span>
+            <strong style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 20, color: COLORS.ink }}>{fmtNum(percentile, 2)}%ile</strong>
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {SECTIONS.map((section) => {
+          const s = latest[section];
+          return (
+            <div key={section} className="flex flex-col gap-1.5 p-3" style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
+              <SectionBadge section={section} size="sm" />
+              {s ? (
+                <>
+                  <strong style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 16, color: COLORS.ink }}>{fmtNum(s.totalMarks, 1)} marks</strong>
+                  <span className="text-xs" style={{ color: COLORS.inkMuted }}>{fmtPct(s.overallAccuracy)} acc · {fmtPct(s.attemptRate)} attempt</span>
+                </>
+              ) : (
+                <span className="text-xs" style={{ color: COLORS.inkMuted }}>Not logged</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function OverviewTab({ mocks, insights, weakestAnalysis, settings }) {
   const nextMock = nextScheduledMock(settings?.mockSchedule);
   const catDaysLeft = daysUntil(settings?.catTargetDate);
@@ -135,13 +197,15 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, settings
         />
       </div>
 
-      <ChartFrame title="Insights" note="Latest signals from your rolling stats" empty={insights.length === 0 ? emptyInsightText(mocks) : null}>
-        <div className="flex flex-col gap-2">
-          {insights.map((insight) => <InsightCard key={insight.id} insight={insight} />)}
-        </div>
-      </ChartFrame>
+      <LatestMockSpotlight mocks={mocks} />
 
-      <WeakestSectionCard analysis={weakestAnalysis} />
+      <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4 items-start">
+        <ChartFrame title="Insights" note="Latest signals from your rolling stats" empty={insights.length === 0 ? emptyInsightText(mocks) : null}>
+          <InsightList insights={insights} />
+        </ChartFrame>
+
+        <WeakestSectionCard analysis={weakestAnalysis} />
+      </div>
 
       <ChartFrame
         title="Overall marks by mock"
