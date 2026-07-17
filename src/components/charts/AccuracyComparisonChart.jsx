@@ -54,8 +54,8 @@ export default function AccuracyComparisonChart({ sectionStats }) {
               labelStyle={{ fontWeight: 600, color: COLORS.ink, marginBottom: 2 }} />
             <Legend wrapperStyle={{ fontFamily: "'Inter', sans-serif", fontSize: 12 }} />
             <Bar dataKey="Overall" fill={COLORS.ink} radius={[4, 4, 0, 0]} maxBarSize={40} />
-            <Bar dataKey="MCQ" fill={COLORS.dilr} radius={[4, 4, 0, 0]} maxBarSize={40} />
-            <Bar dataKey="TITA" fill={COLORS.quant} radius={[4, 4, 0, 0]} maxBarSize={40} />
+            <Bar dataKey="MCQ" fill={COLORS.info} radius={[4, 4, 0, 0]} maxBarSize={40} />
+            <Bar dataKey="TITA" fill={COLORS.warn} radius={[4, 4, 0, 0]} maxBarSize={40} />
           </BarChart>
         </ResponsiveContainer>
       </div>

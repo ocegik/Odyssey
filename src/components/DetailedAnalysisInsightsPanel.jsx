@@ -103,7 +103,7 @@ function AnalysisTrendChart({ rows }) {
           />
           <Legend wrapperStyle={{ fontFamily: "'Inter', sans-serif", fontSize: 12 }} />
           <Bar yAxisId="count" dataKey="Wrong" fill={COLORS.danger} radius={[4, 4, 0, 0]} />
-          <Bar yAxisId="count" dataKey="Skipped" fill={COLORS.quant} radius={[4, 4, 0, 0]} />
+          <Bar yAxisId="count" dataKey="Skipped" fill={COLORS.warn} radius={[4, 4, 0, 0]} />
           <Line yAxisId="pct" type="monotone" dataKey="Accuracy" stroke={COLORS.ink} strokeWidth={2.25} dot={{ r: 3, strokeWidth: 0, fill: COLORS.ink }} />
         </ComposedChart>
       </ResponsiveContainer>
@@ -160,8 +160,8 @@ function AnalysisBarChart({ rows }) {
             contentStyle={{ backgroundColor: COLORS.surface, color: COLORS.ink, fontFamily: "'Inter', sans-serif", fontSize: 12, borderRadius: 8, border: `1px solid ${COLORS.border}`, boxShadow: "var(--shadow-floating)" }}
           />
           <Bar dataKey="Wrong" fill={COLORS.danger} radius={[4, 4, 0, 0]} />
-          <Bar dataKey="Skipped" fill={COLORS.quant} radius={[4, 4, 0, 0]} />
-          <Bar dataKey="Slow" fill={COLORS.dilr} radius={[4, 4, 0, 0]} />
+          <Bar dataKey="Skipped" fill={COLORS.warn} radius={[4, 4, 0, 0]} />
+          <Bar dataKey="Slow" fill={COLORS.info} radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

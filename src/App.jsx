@@ -43,6 +43,11 @@ function themeVariableCSS(themeName, values) {
       --color-quant-soft: ${values.quantSoft};
       --color-good: ${values.good};
       --color-danger: ${values.danger};
+      --color-danger-soft: ${values.dangerSoft};
+      --color-warn: ${values.warn};
+      --color-warn-soft: ${values.warnSoft};
+      --color-info: ${values.info};
+      --color-info-soft: ${values.infoSoft};
       --color-primary: ${values.primary};
       --color-primary-hover: ${values.primaryHover};
       --color-on-primary: ${values.onPrimary};

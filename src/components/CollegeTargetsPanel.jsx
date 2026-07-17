@@ -6,7 +6,7 @@ import { COLLEGE_CUTOFFS, COLLEGE_TYPE_META, reachStatus } from "../lib/collegeC
 
 const STATUS_META = {
   reach: { label: "Within reach", color: COLORS.good },
-  stretch: { label: "Close", color: COLORS.quant },
+  stretch: { label: "Close", color: COLORS.warn },
   gap: { label: null, color: COLORS.inkMuted },
   filter: { label: "Special criteria", color: COLORS.inkMuted },
   unknown: { label: null, color: COLORS.inkMuted },

@@ -316,7 +316,7 @@ export default function MockLogTab({
           </div>
 
           {formErrors.length > 0 && (
-            <div className="p-3 text-sm" style={{ background: COLORS.varcSoft, color: COLORS.danger, borderRadius: 8 }}>
+            <div className="p-3 text-sm" style={{ background: COLORS.dangerSoft, color: COLORS.danger, borderRadius: 8 }}>
               {formErrors.map((error) => <div key={error}>{error}</div>)}
             </div>
           )}

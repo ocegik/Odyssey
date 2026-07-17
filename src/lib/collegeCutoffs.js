@@ -47,10 +47,13 @@ export const COLLEGE_CUTOFFS = [
   { name: "DFS MBA Finance(Needs Math in +2)", req: 97.24, tag: "Department of Financial Studies", type: "DU", varc: null, dilr: null, qa: null, overall: null, info: "Elite portfolio analysis pipeline. Mandatory class 12 mathematical track parameters apply." },
 ];
 
+/* Institute type — a college-list categorization, unrelated to exam
+   sections, so it gets its own palette rather than borrowing VARC/DILR/Quant
+   and implying a section connection that isn't there. */
 export const COLLEGE_TYPE_META = {
-  IIM: { label: "IIM", color: "var(--color-dilr)" },
-  "New IIM": { label: "New IIM", color: "var(--color-quant)" },
-  IIT: { label: "IIT", color: "var(--color-varc)" },
+  IIM: { label: "IIM", color: "var(--color-primary)" },
+  "New IIM": { label: "New IIM", color: "var(--color-info)" },
+  IIT: { label: "IIT", color: "var(--color-warn)" },
   DU: { label: "DU", color: "var(--color-good)" },
   Other: { label: "Other", color: "var(--color-ink-muted)" },
 };

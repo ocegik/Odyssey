@@ -328,7 +328,7 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
               </div>
             </div>
             {analysisError && (
-              <div className="p-3 text-sm" style={{ background: COLORS.varcSoft, color: COLORS.danger, borderRadius: 8 }}>
+              <div className="p-3 text-sm" style={{ background: COLORS.dangerSoft, color: COLORS.danger, borderRadius: 8 }}>
                 {analysisError}
               </div>
             )}
