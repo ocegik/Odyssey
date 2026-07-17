@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { CheckCircle2, Download, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
 import { COLORS, SECTIONS, SECTION_META, TYPE, SHADOW } from "../../constants";
+import { LAYOUT_WIDTH_OPTIONS } from "../../hooks/useSettings";
 import { fmtNum } from "../../lib/format";
 import { mockTotalMarks, computeAdaptiveTarget } from "../../lib/compute";
 import { FieldLabel, inputStyle } from "../ui/FieldLabel";
@@ -155,6 +156,37 @@ export default function SettingsTab({
         </p>
         {dataError && <p className="text-sm" style={{ color: COLORS.danger }}>{dataError}</p>}
         {dataMessage && !dataError && <p className="text-sm" style={{ color: COLORS.good }}>{dataMessage}</p>}
+      </Panel>
+
+      <Panel title="Layout">
+        <div className="flex flex-col gap-2">
+          <FieldLabel htmlFor="layoutWidth">Page width</FieldLabel>
+          <input
+            id="layoutWidth"
+            type="range"
+            min="0"
+            max={LAYOUT_WIDTH_OPTIONS.length - 1}
+            step="1"
+            value={Math.max(0, LAYOUT_WIDTH_OPTIONS.findIndex((opt) => opt.key === settings.layoutWidth))}
+            onChange={(ev) => onUpdateProfile({ layoutWidth: LAYOUT_WIDTH_OPTIONS[Number(ev.target.value)].key })}
+            style={{ accentColor: COLORS.primary, width: "100%", maxWidth: 320 }}
+          />
+          <div className="flex gap-1" style={{ maxWidth: 320 }}>
+            {LAYOUT_WIDTH_OPTIONS.map((opt) => (
+              <span
+                key={opt.key}
+                className="text-xs flex-1"
+                style={{
+                  color: opt.key === settings.layoutWidth ? COLORS.ink : COLORS.inkMuted,
+                  fontWeight: opt.key === settings.layoutWidth ? 700 : 400,
+                  textAlign: opt.key === LAYOUT_WIDTH_OPTIONS[0].key ? "left" : opt.key === LAYOUT_WIDTH_OPTIONS[LAYOUT_WIDTH_OPTIONS.length - 1].key ? "right" : "center",
+                }}
+              >
+                {opt.label}
+              </span>
+            ))}
+          </div>
+        </div>
       </Panel>
 
       <Panel title="Student Profile">

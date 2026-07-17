@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { COLORS, FONT_IMPORT, THEME_COLORS } from "./constants";
 import { useMockEntries } from "./hooks/useMockEntries";
-import { useSettings, normalizeSettings } from "./hooks/useSettings";
+import { useSettings, normalizeSettings, LAYOUT_WIDTH_OPTIONS } from "./hooks/useSettings";
 import { normalizeStoredMocks } from "./lib/mockStorage";
 import Header from "./components/layout/Header";
 import TabNav from "./components/layout/TabNav";
@@ -165,7 +165,10 @@ export default function CATMockTracker() {
         ::-webkit-scrollbar-thumb { background: ${COLORS.border}; border-radius: 4px; }
       `}</style>
 
-      <div className="max-w-[1240px] mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
+      <div
+        className="mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6"
+        style={{ maxWidth: LAYOUT_WIDTH_OPTIONS.find((opt) => opt.key === settings.layoutWidth)?.px ?? LAYOUT_WIDTH_OPTIONS[1].px }}
+      >
         <Header
           theme={theme}
           onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}

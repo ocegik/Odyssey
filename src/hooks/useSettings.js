@@ -12,6 +12,15 @@ const EMPTY_SECTION_TARGETS = SECTIONS.reduce((acc, section) => {
   return acc;
 }, {});
 
+// Page-content width presets for the "Layout" slider in Settings — three
+// steps, matching the widths already tried while dialing this in by hand.
+export const LAYOUT_WIDTH_OPTIONS = [
+  { key: "cozy", label: "Cozy", px: 1024 },
+  { key: "comfortable", label: "Comfortable", px: 1240 },
+  { key: "wide", label: "Wide", px: 1440 },
+];
+const DEFAULT_LAYOUT_WIDTH = "comfortable";
+
 const EMPTY_SETTINGS = {
   studentName: "",
   catTargetDate: "",
@@ -19,6 +28,7 @@ const EMPTY_SETTINGS = {
   overallTargetPercentile: null,
   sectionTargetMarks: EMPTY_SECTION_TARGETS,
   mockSchedule: [],
+  layoutWidth: DEFAULT_LAYOUT_WIDTH,
 };
 
 function numberOrNull(value) {
@@ -69,6 +79,7 @@ export function normalizeSettings(raw) {
     overallTargetPercentile: percentileOrNull(profile.overallTargetPercentile),
     sectionTargetMarks: normalizeSectionTargets(profile.sectionTargetMarks),
     mockSchedule: rawSchedule.map(normalizeScheduleEntry).sort((a, b) => a.date.localeCompare(b.date)),
+    layoutWidth: LAYOUT_WIDTH_OPTIONS.some((opt) => opt.key === profile.layoutWidth) ? profile.layoutWidth : DEFAULT_LAYOUT_WIDTH,
   };
 }
 
