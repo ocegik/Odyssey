@@ -1,6 +1,7 @@
 import { SECTIONS } from "../constants";
 import { fmtNum, fmtPct } from "./format";
 import { getEffectiveTopic } from "./analysisModel";
+import { inc, topEntry, topEntries } from "./aggregate";
 
 const MIN_RECURRING_REASON_COUNT = 3;
 const MIN_RECURRING_MOCK_COUNT = 2;
@@ -8,23 +9,9 @@ const SLOW_DELTA_SECONDS = 15;
 const MIN_TOPIC_ATTEMPTS = 3;
 const WEAKEST_TOPIC_MAX_ACCURACY = 0.6;
 
-function inc(counter, key, by = 1) {
-  const safeKey = key || "Unspecified";
-  counter[safeKey] = (counter[safeKey] || 0) + by;
-}
-
-function topEntry(counter) {
-  const entries = Object.entries(counter || {}).sort((a, b) => b[1] - a[1]);
-  return entries[0] ? { label: entries[0][0], count: entries[0][1] } : null;
-}
-
-function topEntries(counter, limit = 4) {
-  return Object.entries(counter || {})
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, limit)
-    .map(([label, count]) => ({ label, count }));
-}
-
+/* Divides a running total by a count, distinct from aggregate.js's array-based
+   avg() — kept local since every caller here already has a (sum, count) pair
+   rather than the raw values array. */
 function avg(total, count) {
   return count > 0 ? total / count : null;
 }

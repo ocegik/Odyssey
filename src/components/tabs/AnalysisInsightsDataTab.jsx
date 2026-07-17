@@ -3,6 +3,7 @@ import { BarChart3 } from "lucide-react";
 import { COLORS, SHADOW, TYPE } from "../../constants";
 import { buildDetailedAnalysisInsights, flattenAnalysisQuestions } from "../../lib/detailedAnalysisInsights";
 import { fmtDate, fmtPct } from "../../lib/format";
+import { inc, topEntry } from "../../lib/aggregate";
 import DetailedAnalysisInsightsPanel from "../DetailedAnalysisInsightsPanel";
 import AdvancedInsightsPanel from "../AdvancedInsightsPanel";
 import EmptyState from "../ui/EmptyState";
@@ -18,16 +19,6 @@ function Panel({ title, children, note }) {
       {children}
     </div>
   );
-}
-
-function inc(counter, key) {
-  const safeKey = key || "Unspecified";
-  counter[safeKey] = (counter[safeKey] || 0) + 1;
-}
-
-function topEntry(counter) {
-  const entry = Object.entries(counter || {}).sort((a, b) => b[1] - a[1])[0];
-  return entry ? { label: entry[0], count: entry[1] } : null;
 }
 
 function analyzedRecentMocks(mocks, limit = 5) {

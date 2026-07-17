@@ -47,6 +47,13 @@ export default function TrendsTab({
   const targetLines = overallTargetMarks !== null && overallTargetMarks !== undefined
     ? [{ label: "Overall target", value: overallTargetMarks, color: COLORS.inkMuted }]
     : [];
+  const sectionTargets = settings?.sectionTargetMarks || {};
+  const hasSectionTargets = SECTIONS.some((s) => sectionTargets[s] !== null && sectionTargets[s] !== undefined);
+  const marksTrendNote = hasSectionTargets
+    ? "Dashed lines are per-section Settings targets"
+    : targetLines.length
+      ? "Dashed line is the Settings target score"
+      : "Primary view for spotting who's lagging";
   const radarData = useMemo(() => buildRadarData(sectionStats), [sectionStats]);
   const radarEmpty = SECTIONS.every((s) => !sectionStats[s]?.latest) ? "Log a few mocks to see section shape." : null;
   const hardnessHasData = hardnessRatioSeries.some((row) => SECTIONS.some((s) => row[s] !== null && row[s] !== undefined));
@@ -54,8 +61,8 @@ export default function TrendsTab({
   return (
     <div className="flex flex-col gap-4">
       <GroupHeading>Score & accuracy</GroupHeading>
-      <ChartFrame title="Section-wise trend — total marks" note={targetLines.length ? "Dashed line is the Settings target score" : "Primary view for spotting who's lagging"} empty={noData}>
-        <MultiSectionLineChart data={marksSeries} referenceLines={targetLines} />
+      <ChartFrame title="Section-wise trend — total marks" note={marksTrendNote} empty={noData}>
+        <MultiSectionLineChart data={marksSeries} referenceLines={targetLines} targets={sectionTargets} />
       </ChartFrame>
       <AccuracyComparisonChart sectionStats={sectionStats} />
       <ChartFrame title="Attempt-rate trend" note="% of section questions attempted" empty={noData}>

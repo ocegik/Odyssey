@@ -77,6 +77,7 @@ export default function CATMockTracker() {
   const {
     settings,
     updateProfile,
+    updateSectionTarget,
     addScheduleEntry,
     updateScheduleEntry,
     deleteScheduleEntry,
@@ -241,6 +242,7 @@ export default function CATMockTracker() {
               settings={settings}
               mocks={mocks}
               onUpdateProfile={updateProfile}
+              onUpdateSectionTarget={updateSectionTarget}
               onAddScheduleEntry={addScheduleEntry}
               onUpdateScheduleEntry={updateScheduleEntry}
               onDeleteScheduleEntry={deleteScheduleEntry}

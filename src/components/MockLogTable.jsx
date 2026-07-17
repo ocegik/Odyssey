@@ -1,12 +1,32 @@
 import { Fragment, useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, FileCheck2, FilePlus2, Layers3, MoreVertical, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, ChevronUp, FileCheck2, FilePlus2, Layers3, MoreVertical, Search, Trash2 } from "lucide-react";
 import { COLORS, SECTIONS, TYPE, SHADOW } from "../constants";
 import { fmtDate, fmtNum, fmtPct } from "../lib/format";
 import { mockTotalMarks } from "../lib/compute";
 import { buildPerMockInsights } from "../lib/perMockInsights";
+import { inputStyle } from "./ui/FieldLabel";
 import SectionBadge from "./ui/SectionBadge";
 import EmptyState from "./ui/EmptyState";
 import PerMockInsightsBlock from "./PerMockInsightsBlock";
+
+function SortIndicator({ active, dir }) {
+  if (!active) return null;
+  return dir === "asc" ? <ChevronUp size={12} /> : <ChevronDown size={12} />;
+}
+
+function SortableHeader({ label, active, dir, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="theme-hover inline-flex items-center gap-1"
+      style={{ background: "transparent", border: "none", padding: 0, color: "inherit", font: "inherit", cursor: "pointer" }}
+    >
+      {label}
+      <SortIndicator active={active} dir={dir} />
+    </button>
+  );
+}
 
 function analysisLabel(mock) {
   if (!mock.analysis) return "No analysis";
@@ -91,17 +111,46 @@ function RowActionsMenu({ mockSource, hasAnalysis, onOpenAnalysis, onDelete }) {
 }
 
 export default function MockLogTable({ mocks, settings, onOpenAnalysis, onDeleteMock }) {
-  const rows = useMemo(
-    () => [...mocks].sort((a, b) => (a.date === b.date ? b.createdAt - a.createdAt : b.date.localeCompare(a.date))),
+  const [expandedIds, setExpandedIds] = useState(() => new Set());
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortKey, setSortKey] = useState("date");
+  const [sortDir, setSortDir] = useState("desc");
+
+  // Chronological (oldest-first) regardless of the table's display sort, so
+  // "prior mock" for the target-score insight always means chronologically
+  // prior — not whatever's above it in the current sort/filter view.
+  const chronological = useMemo(
+    () => [...mocks].sort((a, b) => (a.date === b.date ? a.createdAt - b.createdAt : a.date.localeCompare(b.date))),
     [mocks]
   );
-  const [expandedIds, setExpandedIds] = useState(() => new Set());
+  const priorMarksByMockId = useMemo(() => {
+    const map = new Map();
+    chronological.forEach((mock, idx) => {
+      map.set(mock.id, idx > 0 ? mockTotalMarks(chronological[idx - 1]) : null);
+    });
+    return map;
+  }, [chronological]);
 
-  if (rows.length === 0) {
+  const filtered = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return mocks;
+    return mocks.filter((mock) => mock.source.toLowerCase().includes(query) || fmtDate(mock.date).toLowerCase().includes(query));
+  }, [mocks, searchQuery]);
+
+  const rows = useMemo(() => {
+    const dir = sortDir === "asc" ? 1 : -1;
+    return [...filtered].sort((a, b) => {
+      if (sortKey === "marks") return (mockTotalMarks(a) - mockTotalMarks(b)) * dir;
+      if (a.date === b.date) return (a.createdAt - b.createdAt) * dir;
+      return a.date.localeCompare(b.date) * dir;
+    });
+  }, [filtered, sortKey, sortDir]);
+
+  if (mocks.length === 0) {
     return <EmptyState icon={Layers3} title="No mocks yet" body="Log a full mock from Add Analysis; optional detailed analysis can attach to that same mock." />;
   }
 
-  const allExpanded = rows.every((mock) => expandedIds.has(mock.id));
+  const allExpanded = rows.length > 0 && rows.every((mock) => expandedIds.has(mock.id));
 
   const toggleRow = (id) => {
     setExpandedIds((prev) => {
@@ -116,36 +165,62 @@ export default function MockLogTable({ mocks, settings, onOpenAnalysis, onDelete
     setExpandedIds(allExpanded ? new Set() : new Set(rows.map((mock) => mock.id)));
   };
 
+  const toggleSort = (key) => {
+    if (sortKey === key) {
+      setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("desc");
+    }
+  };
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <span className="text-xs" style={{ color: COLORS.inkMuted }}>
-          {rows.length} mock{rows.length === 1 ? "" : "s"} logged — expand a row for insights &amp; structure
+          {searchQuery ? `${rows.length} of ${mocks.length} mocks match` : `${rows.length} mock${rows.length === 1 ? "" : "s"} logged`} — expand a row for insights &amp; structure
         </span>
-        <button
-          type="button"
-          onClick={toggleAll}
-          className="theme-hover inline-flex items-center gap-1.5 px-3 py-1.5 text-xs"
-          style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.ink, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}
-        >
-          {allExpanded ? <ChevronsDownUp size={13} /> : <ChevronsUpDown size={13} />}
-          {allExpanded ? "Collapse all" : "Expand all"}
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search size={13} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", color: COLORS.inkMuted, pointerEvents: "none" }} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(ev) => setSearchQuery(ev.target.value)}
+              placeholder="Filter by source or date"
+              style={{ ...inputStyle(false), height: 32, paddingLeft: 28, paddingTop: 6, paddingBottom: 6, fontSize: 12.5, width: 190 }}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={toggleAll}
+            className="theme-hover inline-flex items-center gap-1.5 px-3 py-1.5 text-xs"
+            style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.ink, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}
+          >
+            {allExpanded ? <ChevronsDownUp size={13} /> : <ChevronsUpDown size={13} />}
+            {allExpanded ? "Collapse all" : "Expand all"}
+          </button>
+        </div>
       </div>
 
+      {rows.length === 0 ? (
+        <div className="p-4 text-center text-sm" style={{ background: COLORS.surface2, border: `1px dashed ${COLORS.border}`, borderRadius: 12, color: COLORS.inkMuted }}>
+          No mocks match "{searchQuery}".
+        </div>
+      ) : (
       <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
         <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>
-              {["", "Mock", "Sections", "Marks", ""].map((label, idx) => (
-                <th
-                  key={idx}
-                  className={`px-3 py-2.5 ${idx === 4 ? "text-right" : "text-left"}`}
-                  style={{ ...TYPE.label, color: COLORS.inkMuted, width: idx === 0 || idx === 4 ? 1 : undefined }}
-                >
-                  {label}
-                </th>
-              ))}
+              <th className="px-3 py-2.5 text-left" style={{ ...TYPE.label, color: COLORS.inkMuted, width: 1 }} />
+              <th className="px-3 py-2.5 text-left" style={{ ...TYPE.label, color: COLORS.inkMuted }}>
+                <SortableHeader label="Mock" active={sortKey === "date"} dir={sortDir} onClick={() => toggleSort("date")} />
+              </th>
+              <th className="px-3 py-2.5 text-left" style={{ ...TYPE.label, color: COLORS.inkMuted }}>Sections</th>
+              <th className="px-3 py-2.5 text-left" style={{ ...TYPE.label, color: COLORS.inkMuted }}>
+                <SortableHeader label="Marks" active={sortKey === "marks"} dir={sortDir} onClick={() => toggleSort("marks")} />
+              </th>
+              <th className="px-3 py-2.5 text-right" style={{ ...TYPE.label, color: COLORS.inkMuted, width: 1 }} />
             </tr>
           </thead>
           <tbody>
@@ -154,8 +229,7 @@ export default function MockLogTable({ mocks, settings, onOpenAnalysis, onDelete
               const sectionMarks = sectionNames.reduce((sum, section) => sum + (mock[section]?.totalMarks || 0), 0);
               const totalMarks = mock.manualTotalMarks ?? sectionMarks;
               const hasAnalysis = Boolean(mock.analysis);
-              // rows is sorted newest-first, so the mock right after this one is the prior (older) one.
-              const priorMarks = rows[i + 1] ? mockTotalMarks(rows[i + 1]) : null;
+              const priorMarks = priorMarksByMockId.get(mock.id) ?? null;
               const insights = buildPerMockInsights(mock, settings, priorMarks);
               const expanded = expandedIds.has(mock.id);
               const rowBg = i % 2 ? COLORS.surface : COLORS.surface2;
@@ -249,6 +323,7 @@ export default function MockLogTable({ mocks, settings, onOpenAnalysis, onDelete
           </tbody>
         </table>
       </div>
+      )}
     </div>
   );
 }

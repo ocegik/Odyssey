@@ -1,5 +1,6 @@
 import { fmtNum, fmtPct } from "./format";
 import { flattenAnalysisQuestions } from "./detailedAnalysisInsights";
+import { avg, stdDev } from "./aggregate";
 
 /* Every threshold below is a deliberately coarse "is this worth mentioning?"
    gate, not a statistical test — same philosophy as compute.js's insight
@@ -25,16 +26,6 @@ const GUESS_REASONS = ["Intelligent Guess", "Lucky Guess"];
 const MAX_SET_INSIGHTS = 8;
 const MAX_TOPIC_INSIGHTS = 10;
 const MAX_RECOMMENDATIONS = 5;
-
-function avg(values) {
-  return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
-}
-
-function stdDev(values) {
-  if (values.length < 2) return null;
-  const mean = avg(values);
-  return Math.sqrt(avg(values.map((v) => (v - mean) ** 2)));
-}
 
 function groupBy(items, keyFn) {
   const map = new Map();

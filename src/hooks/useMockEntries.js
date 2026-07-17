@@ -145,9 +145,13 @@ export function useMockEntries() {
   }, [showToast]);
 
   const deleteMock = useCallback((mockId) => {
+    const removedMock = mockRecords.find((mock) => mock.id === mockId);
     setMockRecords((prev) => removeMock(prev, mockId));
-    showToast("Mock deleted");
-  }, [showToast]);
+    showToast("Mock deleted", removedMock ? {
+      label: "Undo",
+      onClick: () => setMockRecords((prev) => (prev.some((mock) => mock.id === mockId) ? prev : [...prev, removedMock])),
+    } : undefined);
+  }, [mockRecords, showToast]);
 
   // Additive JSON import for the Mock Log tab — appends parsed mocks on top
   // of whatever's already logged (unlike importMocks below, which replaces

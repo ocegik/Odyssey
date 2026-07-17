@@ -1,5 +1,6 @@
 import { SECTIONS } from "../constants";
 import { fmtDate, fmtPct, fmtNum } from "./format";
+import { avg as avgOf, stdDev } from "./aggregate";
 
 export function computeDerived(e) {
   const attempted = e.attemptedMCQ + e.attemptedTITA;
@@ -164,8 +165,6 @@ const MCQ_TITA_GAP_WIDEN_MIN_DELTA = 0.08;
 const PERCENTILE_VS_MARKS_MIN_PCTL_DELTA = 3;
 const MAX_INSIGHTS = 4;
 
-const avgOf = (arr) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null);
-
 /** Rolling accuracy now vs ~5 mocks back — is the section trending up or down? */
 function accuracyTrendInsight(section, list) {
   if (list.length < INSIGHT_MIN_TREND_MOCKS) return null;
@@ -326,13 +325,6 @@ export function buildRadarData(sectionStats) {
 /* ------------------------------------------------------------------ */
 
 const MIN_CONSISTENCY_SAMPLES = 3;
-
-function stdDev(values) {
-  if (values.length < 2) return null;
-  const mean = values.reduce((a, b) => a + b, 0) / values.length;
-  const variance = values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / values.length;
-  return Math.sqrt(variance);
-}
 
 /**
  * Rough "how swingy is this section" read: standard deviation of accuracy

@@ -1,16 +1,7 @@
 import { SECTIONS } from "../constants";
 import { fmtNum, fmtPct } from "./format";
 import { mockTotalMarks, computeAdaptiveTarget } from "./compute";
-
-function inc(counter, key) {
-  const safeKey = key || "Unspecified";
-  counter[safeKey] = (counter[safeKey] || 0) + 1;
-}
-
-function topEntry(counter) {
-  const entry = Object.entries(counter || {}).sort((a, b) => b[1] - a[1])[0];
-  return entry ? { label: entry[0], count: entry[1] } : null;
-}
+import { inc, topEntry } from "./aggregate";
 
 function analysisQuestions(mock) {
   if (!mock?.analysis?.sections) return [];

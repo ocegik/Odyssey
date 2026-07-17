@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { CheckCircle2, Download, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
-import { COLORS, TYPE, SHADOW } from "../../constants";
+import { COLORS, SECTIONS, SECTION_META, TYPE, SHADOW } from "../../constants";
 import { fmtNum } from "../../lib/format";
 import { mockTotalMarks, computeAdaptiveTarget } from "../../lib/compute";
 import { FieldLabel, inputStyle } from "../ui/FieldLabel";
@@ -24,6 +24,7 @@ export default function SettingsTab({
   settings,
   mocks,
   onUpdateProfile,
+  onUpdateSectionTarget,
   onAddScheduleEntry,
   onUpdateScheduleEntry,
   onDeleteScheduleEntry,
@@ -173,6 +174,29 @@ export default function SettingsTab({
           <div className="flex flex-col gap-1.5">
             <FieldLabel htmlFor="overallTargetPercentile" optional>Overall target percentile</FieldLabel>
             <input id="overallTargetPercentile" type="number" min="0" max="100" step="0.01" value={settings.overallTargetPercentile ?? ""} onChange={setProfileField("overallTargetPercentile")} style={inputStyle(false)} />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2 pt-1" style={{ borderTop: `1px solid ${COLORS.border}` }}>
+          <p className="text-xs leading-relaxed pt-3" style={{ color: COLORS.inkMuted }}>
+            Optional per-section target marks — when set, they show as dashed reference lines on the section-wise trend chart in Trends.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {SECTIONS.map((section) => (
+              <div key={section} className="flex flex-col gap-1.5">
+                <FieldLabel htmlFor={`sectionTarget-${section}`} optional>
+                  <span style={{ color: SECTION_META[section].color }}>{section}</span> target marks
+                </FieldLabel>
+                <input
+                  id={`sectionTarget-${section}`}
+                  type="number"
+                  min="0"
+                  value={settings.sectionTargetMarks?.[section] ?? ""}
+                  onChange={(ev) => onUpdateSectionTarget(section, ev.target.value)}
+                  style={inputStyle(false)}
+                />
+              </div>
+            ))}
           </div>
         </div>
       </Panel>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { SECTIONS } from "../constants";
 import { uid } from "../lib/format";
 import { fetchRemoteValue, saveRemoteValue } from "../lib/cloudStore";
 
@@ -6,11 +7,17 @@ const STORAGE_KEY = "cat-mock-tracker:settings";
 const REMOTE_KEY = "settings";
 const REMOTE_SAVE_DEBOUNCE_MS = 600;
 
+const EMPTY_SECTION_TARGETS = SECTIONS.reduce((acc, section) => {
+  acc[section] = null;
+  return acc;
+}, {});
+
 const EMPTY_SETTINGS = {
   studentName: "",
   catTargetDate: "",
   overallTargetMarks: null,
   overallTargetPercentile: null,
+  sectionTargetMarks: EMPTY_SECTION_TARGETS,
   mockSchedule: [],
 };
 
@@ -44,6 +51,14 @@ function normalizeScheduleEntry(item, idx = 0) {
   };
 }
 
+function normalizeSectionTargets(raw) {
+  const source = raw && typeof raw === "object" ? raw : {};
+  return SECTIONS.reduce((acc, section) => {
+    acc[section] = nonNegativeOrNull(source[section]);
+    return acc;
+  }, {});
+}
+
 export function normalizeSettings(raw) {
   const profile = raw && typeof raw === "object" ? raw : {};
   const rawSchedule = Array.isArray(profile.mockSchedule) ? profile.mockSchedule : [];
@@ -52,6 +67,7 @@ export function normalizeSettings(raw) {
     catTargetDate: typeof profile.catTargetDate === "string" ? profile.catTargetDate : "",
     overallTargetMarks: nonNegativeOrNull(profile.overallTargetMarks),
     overallTargetPercentile: percentileOrNull(profile.overallTargetPercentile),
+    sectionTargetMarks: normalizeSectionTargets(profile.sectionTargetMarks),
     mockSchedule: rawSchedule.map(normalizeScheduleEntry).sort((a, b) => a.date.localeCompare(b.date)),
   };
 }
@@ -125,6 +141,13 @@ export function useSettings() {
     }));
   }, []);
 
+  const updateSectionTarget = useCallback((section, value) => {
+    setSettings((prev) => ({
+      ...prev,
+      sectionTargetMarks: { ...prev.sectionTargetMarks, [section]: nonNegativeOrNull(value) },
+    }));
+  }, []);
+
   const addScheduleEntry = useCallback((entry) => {
     const normalized = normalizeScheduleEntry(entry);
     setSettings((prev) => ({
@@ -167,6 +190,7 @@ export function useSettings() {
   return {
     settings,
     updateProfile,
+    updateSectionTarget,
     addScheduleEntry,
     updateScheduleEntry,
     deleteScheduleEntry,
