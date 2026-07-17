@@ -1,8 +1,9 @@
 import { AlertTriangle, Clock3, Target } from "lucide-react";
 import { Bar, BarChart, ComposedChart, Line, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { COLORS, SECTION_META, TYPE } from "../constants";
+import { COLORS, TYPE } from "../constants";
 import { fmtDate, fmtNum, fmtPct } from "../lib/format";
 import ChartFrame from "./charts/ChartFrame";
+import InsightCard from "./charts/InsightCard";
 import SectionBadge from "./ui/SectionBadge";
 import StatCard from "./ui/StatCard";
 
@@ -19,19 +20,10 @@ function ReasonLabel({ entry, total }) {
   );
 }
 
-function DetailedInsightCard({ insight }) {
-  const meta = SECTION_META[insight.section];
-  const Icon = insight.title.includes("Time") ? Clock3 : insight.title.includes("Question") ? Target : AlertTriangle;
-  return (
-    <div className="p-3 flex flex-col gap-1.5" style={{ background: meta.soft, borderLeft: `3px solid ${meta.color}`, borderRadius: 8 }}>
-      <div className="flex items-center gap-2">
-        <Icon size={14} color={COLORS.danger} strokeWidth={2.25} />
-        <SectionBadge section={insight.section} size="sm" />
-        <span className="text-xs" style={{ ...TYPE.label, color: COLORS.inkMuted }}>{insight.title}</span>
-      </div>
-      <p className="text-sm" style={{ color: COLORS.ink, lineHeight: 1.45 }}>{insight.text}</p>
-    </div>
-  );
+function detailedInsightIcon(insight) {
+  if (insight.title.includes("Time")) return Clock3;
+  if (insight.title.includes("Question")) return Target;
+  return AlertTriangle;
 }
 
 function SectionReasonTable({ rows }) {
@@ -194,7 +186,7 @@ export default function DetailedAnalysisInsightsPanel({ analysis }) {
       <ChartFrame title="Detailed analysis insights" note="Outcome reasons, timing, and recurring patterns" empty={empty}>
         <div className="flex flex-col gap-2">
           {analysis.insights.length > 0 ? (
-            analysis.insights.map((insight) => <DetailedInsightCard key={insight.id} insight={insight} />)
+            analysis.insights.map((insight) => <InsightCard key={insight.id} insight={insight} icon={detailedInsightIcon(insight)} />)
           ) : (
             <p className="text-sm" style={{ color: COLORS.inkMuted }}>Analysis is attached, but there is not enough repeated signal yet.</p>
           )}

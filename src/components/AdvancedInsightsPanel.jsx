@@ -1,31 +1,11 @@
 import { useMemo } from "react";
-import { Info, Lightbulb, TrendingDown, TrendingUp } from "lucide-react";
-import { COLORS, SECTION_META, TYPE } from "../constants";
+import { Lightbulb } from "lucide-react";
+import { COLORS } from "../constants";
 import { buildAdvancedInsights } from "../lib/advancedInsights";
 import ChartFrame from "./charts/ChartFrame";
+import InsightCard from "./charts/InsightCard";
 import SectionBadge from "./ui/SectionBadge";
 import StatCard from "./ui/StatCard";
-
-function toneMeta(tone) {
-  if (tone === "positive") return { color: COLORS.good, Icon: TrendingUp };
-  if (tone === "negative") return { color: COLORS.danger, Icon: TrendingDown };
-  return { color: COLORS.inkMuted, Icon: Info };
-}
-
-function AdvancedInsightCard({ insight }) {
-  const meta = SECTION_META[insight.section];
-  const tone = toneMeta(insight.tone);
-  return (
-    <div className="p-3 flex flex-col gap-1.5" style={{ background: meta.soft, borderLeft: `3px solid ${meta.color}`, borderRadius: 8 }}>
-      <div className="flex items-center gap-2">
-        <tone.Icon size={14} color={tone.color} strokeWidth={2.25} />
-        <SectionBadge section={insight.section} size="sm" />
-        <span className="text-xs" style={{ ...TYPE.label, color: COLORS.inkMuted }}>{insight.title}</span>
-      </div>
-      <p className="text-sm" style={{ color: COLORS.ink, lineHeight: 1.45 }}>{insight.text}</p>
-    </div>
-  );
-}
 
 function RecommendationCard({ recommendation }) {
   return (
@@ -61,7 +41,7 @@ export default function AdvancedInsightsPanel({ mocks }) {
         empty={!hasAnyData ? noDataMessage : analysis.setInsights.length === 0 ? "No strong set-level patterns yet — keep tagging set topics and logging mocks." : null}
       >
         <div className="flex flex-col gap-2">
-          {analysis.setInsights.map((insight) => <AdvancedInsightCard key={insight.id} insight={insight} />)}
+          {analysis.setInsights.map((insight) => <InsightCard key={insight.id} insight={insight} />)}
         </div>
       </ChartFrame>
 
@@ -71,7 +51,7 @@ export default function AdvancedInsightsPanel({ mocks }) {
         empty={!hasAnyData ? noDataMessage : analysis.topicInsights.length === 0 ? "No strong topic patterns yet — tag more questions and log a few more mocks." : null}
       >
         <div className="flex flex-col gap-2">
-          {analysis.topicInsights.map((insight) => <AdvancedInsightCard key={insight.id} insight={insight} />)}
+          {analysis.topicInsights.map((insight) => <InsightCard key={insight.id} insight={insight} />)}
         </div>
       </ChartFrame>
 
