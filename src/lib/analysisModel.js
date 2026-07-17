@@ -5,10 +5,31 @@ export const ANALYSIS_SCHEMA_VERSION = 1;
 
 const RESULT_VALUES = ["Correct", "Wrong", "Skipped"];
 const QUESTION_TYPES = ["MCQ", "TITA"];
+/**
+ * Outcome reasons are tailored per section (max 5 per section/result pair) so
+ * they reflect how mistakes actually happen there, rather than one shared
+ * Quant-leaning list. Reasons that legitimately apply everywhere (e.g. "Time
+ * Pressure", "Strategic Skip") intentionally repeat with identical strings
+ * across sections — this keeps cross-section aggregation and the hardcoded
+ * "Concept Error" / "Strategic Skip" / guess-reason checks in
+ * advancedInsights.js working unchanged.
+ */
 export const OUTCOME_REASONS = {
-  Correct: ["Strong Understanding", "Logical Elimination", "Intelligent Guess", "Good Time Management", "Lucky Guess"],
-  Wrong: ["Concept Error", "Calculation Error", "Misread Question", "Trap Option", "Time Pressure"],
-  Skipped: ["Didn't Know Concept", "Couldn't Find Approach", "Too Time Consuming", "Strategic Skip", "Ran Out of Time"],
+  VARC: {
+    Correct: ["Strong Passage Understanding", "Logical Elimination", "Confirmed via Re-reading", "Intelligent Guess", "Lucky Guess"],
+    Wrong: ["Guessed Between Close Options", "Misread Tone/Inference", "Trap Option", "Vocabulary Gap", "Time Pressure"],
+    Skipped: ["Passage Too Dense/Confusing", "Couldn't Narrow Down Options", "Strategic Skip", "Ran Out of Time", "Lost Focus Mid-Passage"],
+  },
+  DILR: {
+    Correct: ["Correct Set Approach", "Logical Elimination", "Intelligent Guess", "Good Time Management", "Lucky Guess"],
+    Wrong: ["Concept Error", "Misread Data/Chart", "Calculation Error", "Trap Option", "Time Pressure"],
+    Skipped: ["Couldn't Crack the Set", "Set Too Time-Consuming", "Strategic Skip", "Ran Out of Time", "Misjudged Set Difficulty"],
+  },
+  Quant: {
+    Correct: ["Strong Understanding", "Logical Elimination", "Intelligent Guess", "Good Time Management", "Lucky Guess"],
+    Wrong: ["Concept Error", "Calculation Error", "Misread Question", "Trap Option", "Time Pressure"],
+    Skipped: ["Didn't Know Concept", "Couldn't Find Approach", "Too Time Consuming", "Strategic Skip", "Ran Out of Time"],
+  },
 };
 export const TOPIC_OPTIONS = {
   Quant: ["Arithmetic", "Algebra", "Geometry & Mensuration", "Number System", "Modern Math"],
@@ -68,7 +89,7 @@ export function getEffectiveTopic(block, question) {
 function normalizeQuestion(rawQuestion, idx, section) {
   const result = normalizeResult(rawQuestion.result);
   const reason = asString(rawQuestion.outcomeReason).trim();
-  const allowedReasons = OUTCOME_REASONS[result] || [];
+  const allowedReasons = OUTCOME_REASONS[section]?.[result] || [];
   return {
     id: rawQuestion.id || questionId(),
     questionNumber: Number(rawQuestion.questionNumber || idx + 1),
@@ -224,7 +245,7 @@ export function normalizeDetailedAnalysis(rawAnalysis, existing = null) {
 function sampleQuestion(section, questionNumber, idx) {
   const resultCycle = ["Wrong", "Skipped", "Correct", "Correct", "Wrong", "Correct", "Skipped"];
   const result = resultCycle[(idx + section.length) % resultCycle.length];
-  const reasons = OUTCOME_REASONS[result];
+  const reasons = OUTCOME_REASONS[section]?.[result] || [];
   const averageTime = section === "VARC" ? 60 : section === "DILR" ? 150 : 120;
   const timeTaken = Math.max(25, averageTime + ((idx % 5) - 2) * 18 + (result === "Wrong" ? 22 : 0));
   const topics = TOPIC_OPTIONS[section] || [];

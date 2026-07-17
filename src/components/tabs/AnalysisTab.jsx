@@ -30,12 +30,12 @@ function seconds(value) {
   return value === null || value === undefined ? "-" : `${fmtNum(value, 0)}s`;
 }
 
-function defaultQuestion(questionNumber) {
+function defaultQuestion(questionNumber, section) {
   return {
     id: tempId("q"),
     questionNumber,
     result: "Skipped",
-    outcomeReason: OUTCOME_REASONS.Skipped[0],
+    outcomeReason: OUTCOME_REASONS[section]?.Skipped?.[0] || "",
     questionType: "MCQ",
     topic: "",
     timeTaken: null,
@@ -68,7 +68,7 @@ function buildAnalysisDraftFromMock(mock) {
         type: block.type || "independent",
         name: block.name || `${block.type === "set" ? "Set" : "Independent"} ${idx + 1}`,
         topic: "",
-        questions: Array.from({ length: Math.max(0, end - start + 1) }, (_, questionIdx) => defaultQuestion(start + questionIdx)),
+        questions: Array.from({ length: Math.max(0, end - start + 1) }, (_, questionIdx) => defaultQuestion(start + questionIdx, sectionName)),
       };
     });
     sections[sectionName] = {
@@ -170,7 +170,7 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
           questions: block.questions.map((question, qIdx) => {
             if (qIdx !== questionIdx) return question;
             if (field === "result") {
-              return { ...question, result: value, outcomeReason: OUTCOME_REASONS[value]?.[0] || "" };
+              return { ...question, result: value, outcomeReason: OUTCOME_REASONS[section]?.[value]?.[0] || "" };
             }
             return { ...question, [field]: value };
           }),
@@ -406,7 +406,7 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                                 </td>
                                 <td className="px-3 py-2.5">
                                   <select value={question.outcomeReason} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "outcomeReason", ev.target.value)} style={{ ...inputStyle(false), minWidth: 240, height: 40, fontSize: 14 }}>
-                                    {(OUTCOME_REASONS[question.result] || []).map((reason) => <option key={reason} value={reason}>{reason}</option>)}
+                                    {(OUTCOME_REASONS[section]?.[question.result] || []).map((reason) => <option key={reason} value={reason}>{reason}</option>)}
                                   </select>
                                 </td>
                                 <td className="px-3 py-2.5">
