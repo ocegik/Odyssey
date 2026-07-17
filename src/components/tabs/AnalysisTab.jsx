@@ -402,12 +402,13 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <StatCard label="Avg time/question" value={seconds(summary?.averageTime)} />
-            <StatCard label="Avg benchmark" value={seconds(summary?.averageBenchmarkTime)} />
+            <StatCard label="Avg time/question" value={seconds(summary?.averageTime)} sub={!summary?.timedQuestions ? "We don't have time data yet" : undefined} />
+            <StatCard label="Avg benchmark" value={seconds(summary?.averageBenchmarkTime)} sub={!summary?.timedQuestions ? "We don't have time data yet" : undefined} />
             <StatCard
               label="Total time vs benchmark"
               value={summary?.timeDelta === null || summary?.timeDelta === undefined ? "-" : `${summary.timeDelta >= 0 ? "+" : ""}${fmtNum(summary.timeDelta, 0)}s`}
               accent={summary?.timeDelta > 0 ? COLORS.danger : summary?.timeDelta < 0 ? COLORS.good : undefined}
+              sub={!summary?.timedQuestions ? "We don't have time data yet" : undefined}
             />
           </div>
 
@@ -473,8 +474,8 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                   {sectionAnalysis.blocks.map((block, blockIdx) => {
                     const isSet = block.type === "set";
                     const headers = isSet
-                      ? ["Q", "Result", "Outcome Reason", "Type", "Time", "Average Time", "Notes"]
-                      : ["Q", "Result", "Outcome Reason", "Type", "Topic", "Time", "Average Time", "Notes"];
+                      ? ["Q", "Result", "Outcome Reason", "Type", "Time (optional)", "Average Time (optional)", "Notes"]
+                      : ["Q", "Result", "Outcome Reason", "Type", "Topic", "Time (optional)", "Average Time (optional)", "Notes"];
                     return (
                     <div key={block.id} className="flex flex-col gap-2">
                       <div className="flex items-center gap-2 flex-wrap">

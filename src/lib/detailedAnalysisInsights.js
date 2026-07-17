@@ -307,6 +307,7 @@ export function buildDetailedAnalysisInsights(mocks) {
   return {
     analyzedMockCount: analyzedMocks.length,
     questionCount: questions.length,
+    hasTimeData: questions.some((question) => question.timeTaken !== null),
     attempted: totals.attempted,
     wrong: totals.wrong,
     skipped: totals.skipped,

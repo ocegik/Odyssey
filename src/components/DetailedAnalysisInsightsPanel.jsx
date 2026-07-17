@@ -200,7 +200,11 @@ export default function DetailedAnalysisInsightsPanel({ analysis }) {
         </ChartFrame>
       </div>
 
-      <ChartFrame title="Timing by outcome" note="Average seconds per question" empty={empty}>
+      <ChartFrame
+        title="Timing by outcome"
+        note="Average seconds per question"
+        empty={empty || (!analysis.hasTimeData ? "We don't have time data yet — fill in Time Taken on any mock's analysis to unlock timing insights." : null)}
+      >
         <TimingTable rows={analysis.timingRows} />
       </ChartFrame>
 
