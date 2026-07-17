@@ -1,5 +1,5 @@
 import { Fragment, memo, useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, ChevronUp, FileCheck2, FilePlus2, Layers3, MoreVertical, Search, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, ChevronUp, FileCheck2, FilePlus2, Layers3, MoreVertical, Pencil, Search, Trash2 } from "lucide-react";
 import { COLORS, SECTIONS, TYPE, SHADOW } from "../constants";
 import { fmtDate, fmtNum, fmtPct } from "../lib/format";
 import { mockTotalMarks } from "../lib/compute";
@@ -48,7 +48,7 @@ function quickStatsLabel(section) {
   return parts.join(" · ");
 }
 
-function RowActionsMenu({ mockSource, hasAnalysis, onOpenAnalysis, onDelete }) {
+function RowActionsMenu({ mockSource, hasAnalysis, onOpenAnalysis, onEdit, onDelete }) {
   const [open, setOpen] = useState(false);
   const Icon = hasAnalysis ? FileCheck2 : FilePlus2;
 
@@ -95,6 +95,19 @@ function RowActionsMenu({ mockSource, hasAnalysis, onOpenAnalysis, onDelete }) {
             role="menuitem"
             onClick={() => {
               setOpen(false);
+              onEdit();
+            }}
+            className="theme-hover flex items-center gap-2 px-3 py-2 text-xs text-left"
+            style={{ color: COLORS.ink, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, borderTop: `1px solid ${COLORS.border}` }}
+          >
+            <Pencil size={13} />
+            Edit mock
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
               onDelete();
             }}
             className="theme-hover flex items-center gap-2 px-3 py-2 text-xs text-left"
@@ -109,7 +122,7 @@ function RowActionsMenu({ mockSource, hasAnalysis, onOpenAnalysis, onDelete }) {
   );
 }
 
-function MockLogTable({ mocks, settings, onOpenAnalysis, onDeleteMock }) {
+function MockLogTable({ mocks, settings, onOpenAnalysis, onEditMock, onDeleteMock }) {
   const [expandedIds, setExpandedIds] = useState(() => new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [sortKey, setSortKey] = useState("date");
@@ -288,6 +301,7 @@ function MockLogTable({ mocks, settings, onOpenAnalysis, onDeleteMock }) {
                         mockSource={mock.source}
                         hasAnalysis={hasAnalysis}
                         onOpenAnalysis={() => onOpenAnalysis(mock.id)}
+                        onEdit={() => onEditMock(mock.id)}
                         onDelete={handleDelete}
                       />
                     </td>

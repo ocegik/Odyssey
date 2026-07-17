@@ -70,7 +70,7 @@ export default function CATMockTracker() {
     sectionStats, insights, weakestAnalysis, mocks, entriesWithComputed,
     marksSeries, attemptRateSeries, marksPerAttemptSeries, hardnessRatioSeries,
     toast,
-    addScoreOnlyAnalysis, attachAnalysis, loadSample, deleteMock,
+    addScoreOnlyAnalysis, editMock, attachAnalysis, loadSample, deleteMock,
     importMocks, exportMocks, importScoreOnlyMocks,
   } = useMockEntries();
 
@@ -199,6 +199,7 @@ export default function CATMockTracker() {
               onLoadSample={loadSample}
               onOpenAnalysis={handleOpenAnalysis}
               onCreateMock={addScoreOnlyAnalysis}
+              onEditMock={editMock}
               onDeleteMock={deleteMock}
               onImportMocks={importScoreOnlyMocks}
             />

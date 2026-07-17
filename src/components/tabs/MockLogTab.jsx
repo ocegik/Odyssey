@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { ChevronDown, ChevronRight, Plus, Sparkles, Trash2, Upload } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Plus, Sparkles, Trash2, Upload, X } from "lucide-react";
 import { COLORS, SECTIONS, TYPE, SHADOW } from "../../constants";
 import { validateSectionBlockCoverage } from "../../lib/mockModel";
 import MockLogTable from "../MockLogTable";
@@ -16,6 +16,9 @@ const DEFAULT_SECTIONS = [
     totalQuestions: "22",
     attempted: "",
     correct: "",
+    percentile: "",
+    topperScore: "",
+    notes: "",
     questionBlocks: [
       { id: blockId(), type: "set", name: "Set 1", startQuestion: 1, endQuestion: 5 },
       { id: blockId(), type: "set", name: "Set 2", startQuestion: 6, endQuestion: 9 },
@@ -30,6 +33,9 @@ const DEFAULT_SECTIONS = [
     totalQuestions: "20",
     attempted: "",
     correct: "",
+    percentile: "",
+    topperScore: "",
+    notes: "",
     questionBlocks: [
       { id: blockId(), type: "set", name: "Set 1", startQuestion: 1, endQuestion: 5 },
       { id: blockId(), type: "set", name: "Set 2", startQuestion: 6, endQuestion: 10 },
@@ -43,6 +49,9 @@ const DEFAULT_SECTIONS = [
     totalQuestions: "22",
     attempted: "",
     correct: "",
+    percentile: "",
+    topperScore: "",
+    notes: "",
     questionBlocks: [
       { id: blockId(), type: "independent", name: "Independent Questions", startQuestion: 1, endQuestion: 22 },
     ],
@@ -57,6 +66,37 @@ function emptyMockForm() {
       ...section,
       questionBlocks: section.questionBlocks.map((block) => ({ ...block, id: blockId() })),
     })),
+  };
+}
+
+const numToFormValue = (value) => (value === null || value === undefined ? "" : String(value));
+
+/** Reverse of submitMock's payload shape, so an existing mock (however it was
+    created — manual form, JSON import, or a prior edit) can be loaded back
+    into the same form for editing. Falls back to the DEFAULT_SECTIONS
+    template for any section the mock doesn't have. */
+function mockToForm(mock) {
+  return {
+    date: mock.date,
+    source: mock.source,
+    sections: DEFAULT_SECTIONS.map((defaultSection) => {
+      const existing = mock[defaultSection.section];
+      if (!existing) {
+        return { ...defaultSection, questionBlocks: defaultSection.questionBlocks.map((block) => ({ ...block, id: blockId() })) };
+      }
+      const questionBlocks = existing.questionBlocks?.length ? existing.questionBlocks : defaultSection.questionBlocks;
+      return {
+        section: defaultSection.section,
+        score: numToFormValue(existing.manualTotalMarks),
+        totalQuestions: numToFormValue(existing.totalQuestions) || defaultSection.totalQuestions,
+        attempted: numToFormValue(existing.attempted),
+        correct: numToFormValue(existing.correct),
+        percentile: numToFormValue(existing.percentile),
+        topperScore: numToFormValue(existing.topperScore),
+        notes: existing.notes || "",
+        questionBlocks: questionBlocks.map((block) => ({ ...block, id: block.id || blockId() })),
+      };
+    }),
   };
 }
 
@@ -79,6 +119,13 @@ function validateMockForm(form) {
       }
     } else if (correct !== null) {
       errors.push(`${section.section}: enter attempted before correct.`);
+    }
+
+    if (section.percentile !== "" && (!Number.isFinite(Number(section.percentile)) || Number(section.percentile) < 0 || Number(section.percentile) > 100)) {
+      errors.push(`${section.section}: percentile must be a number between 0 and 100.`);
+    }
+    if (section.topperScore !== "" && !Number.isFinite(Number(section.topperScore))) {
+      errors.push(`${section.section}: topper score must be a number.`);
     }
 
     errors.push(...validateSectionBlockCoverage(section));
@@ -113,15 +160,36 @@ export default function MockLogTab({
   onLoadSample,
   onOpenAnalysis,
   onCreateMock,
+  onEditMock,
   onDeleteMock,
   onImportMocks,
 }) {
   const [mockForm, setMockForm] = useState(emptyMockForm);
   const [formErrors, setFormErrors] = useState([]);
   const [showStructure, setShowStructure] = useState(false);
+  const [showExtras, setShowExtras] = useState(false);
+  const [editingMockId, setEditingMockId] = useState(null);
   const importFileInputRef = useRef(null);
   const [importMessage, setImportMessage] = useState("");
   const [importError, setImportError] = useState("");
+  const formTopRef = useRef(null);
+
+  const startEditMock = (mockId) => {
+    const mock = mocks.find((m) => m.id === mockId);
+    if (!mock) return;
+    const form = mockToForm(mock);
+    setMockForm(form);
+    setEditingMockId(mockId);
+    setFormErrors([]);
+    setShowExtras(form.sections.some((section) => section.percentile || section.topperScore || section.notes));
+    formTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const cancelEditMock = () => {
+    setEditingMockId(null);
+    setMockForm(emptyMockForm());
+    setFormErrors([]);
+  };
 
   const setField = (field) => (ev) => {
     setMockForm((form) => ({ ...form, [field]: ev.target.value }));
@@ -220,6 +288,9 @@ export default function MockLogTab({
       totalQuestions: Number(section.totalQuestions),
       attempted: section.attempted === "" ? undefined : Number(section.attempted),
       correct: section.correct === "" ? undefined : Number(section.correct),
+      percentile: section.percentile === "" ? undefined : Number(section.percentile),
+      topperScore: section.topperScore === "" ? undefined : Number(section.topperScore),
+      notes: section.notes || undefined,
       questionSetCount: section.questionBlocks.filter((block) => block.type === "set").length,
       questionBlocks: section.questionBlocks.map((block) => ({
         ...block,
@@ -227,20 +298,27 @@ export default function MockLogTab({
         endQuestion: Number(block.endQuestion),
       })),
     }));
-    onCreateMock({
+    const payload = {
       date: mockForm.date,
       source: mockForm.source.trim(),
       totalMarks: sections.reduce((sum, section) => sum + section.manualTotalMarks, 0),
       sections,
-    });
+    };
+    if (editingMockId) {
+      onEditMock(editingMockId, payload);
+      setEditingMockId(null);
+    } else {
+      onCreateMock(payload);
+    }
     setMockForm(emptyMockForm());
     setFormErrors([]);
   };
 
   return (
     <div className="flex flex-col gap-4">
+      <div ref={formTopRef} />
       <Panel
-        title="Log Mock Result"
+        title={editingMockId ? "Edit Mock Result" : "Log Mock Result"}
         action={
           <div className="flex flex-col items-end gap-1">
             <input ref={importFileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} />
@@ -256,6 +334,12 @@ export default function MockLogTab({
           </div>
         }
       >
+        {editingMockId ? (
+          <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>
+            Editing an existing mock — change anything below (including the date) and save. This updates the mock in place instead
+            of deleting and re-logging it.
+          </p>
+        ) : (
         <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>
           Import adds mocks on top of what's already logged — it doesn't replace anything. Accepts one mock object, an array of
           mocks, or {"{"}"mocks": [...]{"}"}, each like{" "}
@@ -265,7 +349,9 @@ export default function MockLogTab({
           . <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>questionBlocks</code>, <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>percentile</code>,{" "}
           <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>topperScore</code>, <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>attempted</code>, and{" "}
           <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>correct</code> are optional per section — add attempted/correct to get accuracy and attempt rate right away, without needing a full Analysis first.
+          Skipped an optional field or mistyped the date? Edit the mock later from its row menu in the table below.
         </p>
+        )}
         {importError && (
           <div className="p-3 text-sm" style={{ background: COLORS.dangerSoft, color: COLORS.danger, borderRadius: 8 }}>
             {importError}
@@ -284,15 +370,26 @@ export default function MockLogTab({
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setShowStructure((v) => !v)}
-            className="theme-hover self-start inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs -mb-1"
-            style={{ borderRadius: 8, color: COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}
-          >
-            {showStructure ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-            {showStructure ? "Hide question structure" : "Customize question structure (sets & ranges)"}
-          </button>
+          <div className="flex flex-wrap gap-2 -mb-1">
+            <button
+              type="button"
+              onClick={() => setShowStructure((v) => !v)}
+              className="theme-hover self-start inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs"
+              style={{ borderRadius: 8, color: COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}
+            >
+              {showStructure ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+              {showStructure ? "Hide question structure" : "Customize question structure (sets & ranges)"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowExtras((v) => !v)}
+              className="theme-hover self-start inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs"
+              style={{ borderRadius: 8, color: COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}
+            >
+              {showExtras ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+              {showExtras ? "Hide percentile, topper score & notes" : "Add percentile, topper score & notes (optional)"}
+            </button>
+          </div>
 
           <div className="flex flex-col gap-3">
             {mockForm.sections.map((section, sectionIdx) => (
@@ -323,6 +420,23 @@ export default function MockLogTab({
                     </div>
                   </div>
                 </div>
+
+                {showExtras && (
+                <div className="animate-fade-up grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Percentile <span style={{ opacity: 0.6 }}>(optional)</span></label>
+                    <input type="number" min="0" max="100" step="0.01" placeholder="—" value={section.percentile} onChange={setSectionField(sectionIdx, "percentile")} style={{ ...inputStyle(false), width: 110 }} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Topper score <span style={{ opacity: 0.6 }}>(optional)</span></label>
+                    <input type="number" placeholder="—" value={section.topperScore} onChange={setSectionField(sectionIdx, "topperScore")} style={{ ...inputStyle(false), width: 110 }} />
+                  </div>
+                  <div className="flex flex-col gap-1.5 col-span-2 sm:col-span-1">
+                    <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Notes <span style={{ opacity: 0.6 }}>(optional)</span></label>
+                    <input placeholder="e.g. rushed the last set" value={section.notes} onChange={setSectionField(sectionIdx, "notes")} style={inputStyle(false)} />
+                  </div>
+                </div>
+                )}
 
                 {showStructure && (
                 <div className="animate-fade-up overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
@@ -384,9 +498,22 @@ export default function MockLogTab({
             </div>
           )}
 
-          <button type="submit" className="self-start inline-flex items-center gap-1.5 px-4 py-2 text-sm hover:opacity-90" style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}>
-            <Plus size={14} /> Log mock
-          </button>
+          <div className="flex items-center gap-2">
+            <button type="submit" className="self-start inline-flex items-center gap-1.5 px-4 py-2 text-sm hover:opacity-90" style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}>
+              {editingMockId ? <Check size={14} /> : <Plus size={14} />}
+              {editingMockId ? "Save changes" : "Log mock"}
+            </button>
+            {editingMockId && (
+              <button
+                type="button"
+                onClick={cancelEditMock}
+                className="theme-hover self-start inline-flex items-center gap-1.5 px-4 py-2 text-sm"
+                style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.ink, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+              >
+                <X size={14} /> Cancel
+              </button>
+            )}
+          </div>
         </form>
       </Panel>
 
@@ -402,7 +529,7 @@ export default function MockLogTab({
 
       <div className="flex flex-col gap-2">
         <h3 style={TYPE.chartTitle}>Mocks</h3>
-        <MockLogTable mocks={mocks} settings={settings} onOpenAnalysis={onOpenAnalysis} onDeleteMock={onDeleteMock} />
+        <MockLogTable mocks={mocks} settings={settings} onOpenAnalysis={onOpenAnalysis} onEditMock={startEditMock} onDeleteMock={onDeleteMock} />
       </div>
 
     </div>

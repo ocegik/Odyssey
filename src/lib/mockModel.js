@@ -245,6 +245,50 @@ export function addScoreOnlyMock(mocks, payload) {
   ];
 }
 
+/**
+ * Edits an existing mock in place (date, source, and/or any section field)
+ * instead of forcing a delete + re-log. Shares normalizeSectionPayload with
+ * addScoreOnlyMock so edited sections are validated the same way fresh ones
+ * are, and preserves each section's id/createdAt so it doesn't churn on a
+ * simple tweak (e.g. fixing a typo'd date).
+ */
+export function updateScoreOnlyMock(mocks, mockId, payload) {
+  const existing = mocks.find((mock) => mock.id === mockId);
+  if (!existing) return mocks;
+
+  const sections = {};
+  payload.sections.forEach((section, idx) => {
+    const prior = existing.sections[section.section];
+    sections[section.section] = normalizeSectionPayload({
+      id: prior?.id || uid(),
+      mockId,
+      createdAt: prior?.createdAt ?? existing.createdAt + idx,
+      section: section.section,
+      manualTotalMarks: section.manualTotalMarks,
+      attempted: section.attempted,
+      correct: section.correct,
+      questionSetCount: section.questionSetCount,
+      questionBlocks: section.questionBlocks,
+      totalQuestions: section.totalQuestions || 0,
+      percentile: section.percentile,
+      topperScore: section.topperScore,
+      notes: section.notes || "",
+    }, idx, mockId);
+  });
+
+  return mocks.map((mock) => (
+    mock.id === mockId
+      ? {
+          ...mock,
+          date: payload.date,
+          source: payload.source,
+          manualTotalMarks: numberOrNull(payload.totalMarks),
+          sections,
+        }
+      : mock
+  ));
+}
+
 export function attachAnalysisToMocks(mocks, mockId, rawAnalysis) {
   return mocks.map((mock) => (
     mock.id === mockId

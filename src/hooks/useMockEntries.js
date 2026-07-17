@@ -11,6 +11,7 @@ import {
   flattenMockEntries,
   parseScoreOnlyMockImport,
   removeMock,
+  updateScoreOnlyMock,
 } from "../lib/mockModel";
 
 /* Local storage keeps explicit parent mock records. normalizeStoredMocks() still
@@ -123,6 +124,11 @@ export function useMockEntries() {
     showToast("Mock logged");
   }, [showToast]);
 
+  const editMock = useCallback((mockId, payload) => {
+    setMockRecords((prev) => updateScoreOnlyMock(prev, mockId, payload));
+    showToast("Mock updated");
+  }, [showToast]);
+
   const attachAnalysis = useCallback((mockId, rawAnalysis) => {
     try {
       const parsed = typeof rawAnalysis === "string" ? JSON.parse(rawAnalysis) : rawAnalysis;
@@ -178,7 +184,7 @@ export function useMockEntries() {
     sectionStats, insights, weakestAnalysis, mocks, entriesWithComputed,
     marksSeries, attemptRateSeries, marksPerAttemptSeries, hardnessRatioSeries,
     toast,
-    addScoreOnlyAnalysis, attachAnalysis, loadSample, deleteMock,
+    addScoreOnlyAnalysis, editMock, attachAnalysis, loadSample, deleteMock,
     importMocks, exportMocks, importScoreOnlyMocks,
   };
 }
