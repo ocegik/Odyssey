@@ -1,9 +1,8 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, memo, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, ChevronUp, FileCheck2, FilePlus2, Layers3, MoreVertical, Search, Trash2 } from "lucide-react";
 import { COLORS, SECTIONS, TYPE, SHADOW } from "../constants";
 import { fmtDate, fmtNum, fmtPct } from "../lib/format";
 import { mockTotalMarks } from "../lib/compute";
-import { buildPerMockInsights } from "../lib/perMockInsights";
 import { inputStyle } from "./ui/FieldLabel";
 import SectionBadge from "./ui/SectionBadge";
 import EmptyState from "./ui/EmptyState";
@@ -110,7 +109,7 @@ function RowActionsMenu({ mockSource, hasAnalysis, onOpenAnalysis, onDelete }) {
   );
 }
 
-export default function MockLogTable({ mocks, settings, onOpenAnalysis, onDeleteMock }) {
+function MockLogTable({ mocks, settings, onOpenAnalysis, onDeleteMock }) {
   const [expandedIds, setExpandedIds] = useState(() => new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [sortKey, setSortKey] = useState("date");
@@ -230,7 +229,6 @@ export default function MockLogTable({ mocks, settings, onOpenAnalysis, onDelete
               const totalMarks = mock.manualTotalMarks ?? sectionMarks;
               const hasAnalysis = Boolean(mock.analysis);
               const priorMarks = priorMarksByMockId.get(mock.id) ?? null;
-              const insights = buildPerMockInsights(mock, settings, priorMarks);
               const expanded = expandedIds.has(mock.id);
               const rowBg = i % 2 ? COLORS.surface : COLORS.surface2;
 
@@ -312,7 +310,7 @@ export default function MockLogTable({ mocks, settings, onOpenAnalysis, onDelete
                             {hasAnalysis ? <FileCheck2 size={13} /> : <FilePlus2 size={13} />}
                             {analysisLabel(mock)}
                           </span>
-                          {insights.length > 0 && <PerMockInsightsBlock mock={mock} settings={settings} priorMarks={priorMarks} compact />}
+                          <PerMockInsightsBlock mock={mock} settings={settings} priorMarks={priorMarks} compact />
                         </div>
                       </td>
                     </tr>
@@ -327,3 +325,5 @@ export default function MockLogTable({ mocks, settings, onOpenAnalysis, onDelete
     </div>
   );
 }
+
+export default memo(MockLogTable);
