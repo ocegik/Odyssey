@@ -157,7 +157,7 @@ export default function AnalysisInsightsDataTab({ mocks }) {
 
       <GroupHeading>Patterns across all analyzed mocks</GroupHeading>
       <SectionMistakeTrend analysis={analysis} />
-      <DetailedAnalysisInsightsPanel mocks={mocks} />
+      <DetailedAnalysisInsightsPanel analysis={analysis} />
 
       <GroupHeading>Set & topic-level insights</GroupHeading>
       <AdvancedInsightsPanel mocks={mocks} />

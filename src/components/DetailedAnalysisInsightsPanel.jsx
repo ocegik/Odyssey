@@ -1,9 +1,7 @@
-import { useMemo } from "react";
 import { AlertTriangle, Clock3, Target } from "lucide-react";
 import { Bar, BarChart, ComposedChart, Line, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { COLORS, SECTION_META, TYPE } from "../constants";
 import { fmtDate, fmtNum, fmtPct } from "../lib/format";
-import { buildDetailedAnalysisInsights } from "../lib/detailedAnalysisInsights";
 import ChartFrame from "./charts/ChartFrame";
 import SectionBadge from "./ui/SectionBadge";
 import StatCard from "./ui/StatCard";
@@ -178,8 +176,7 @@ function AnalysisBarChart({ rows }) {
   );
 }
 
-export default function DetailedAnalysisInsightsPanel({ mocks }) {
-  const analysis = useMemo(() => buildDetailedAnalysisInsights(mocks), [mocks]);
+export default function DetailedAnalysisInsightsPanel({ analysis }) {
   const empty = analysis.analyzedMockCount === 0
     ? "Attach detailed analysis to any mock to unlock reason, timing, and recurring-pattern insights."
     : null;

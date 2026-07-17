@@ -57,6 +57,7 @@ function themeVariableCSS(themeName, values) {
 
 export default function CATMockTracker() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [visitedTabs, setVisitedTabs] = useState(() => new Set(["overview"]));
   const [analysisMockId, setAnalysisMockId] = useState(null);
   const [theme, setTheme] = useState(loadThemePreference);
 
@@ -89,11 +90,12 @@ export default function CATMockTracker() {
 
   const handleTabChange = (key) => {
     setActiveTab(key);
+    setVisitedTabs((prev) => (prev.has(key) ? prev : new Set(prev).add(key)));
   };
 
   const handleOpenAnalysis = (mockId) => {
     setAnalysisMockId(mockId);
-    setActiveTab("analysis");
+    handleTabChange("analysis");
   };
 
   const handleExportData = () => {
@@ -165,17 +167,23 @@ export default function CATMockTracker() {
 
         <TabNav activeTab={activeTab} onChange={handleTabChange} />
 
-        <div key={activeTab} className="animate-fade-up flex flex-col gap-6">
-          {activeTab === "overview" && (
+        {/* Each tab mounts once (on first visit) and is then kept alive and
+            toggled with display:none — switching tabs used to unmount/remount
+            the whole subtree every time, which re-ran every chart's resize
+            measurement and all aggregate computations on every visit. */}
+        {visitedTabs.has("overview") && (
+          <div className="flex flex-col gap-6" style={{ display: activeTab === "overview" ? "flex" : "none" }}>
             <OverviewTab
               mocks={mocks}
               insights={insights}
               weakestAnalysis={weakestAnalysis}
               settings={settings}
             />
-          )}
+          </div>
+        )}
 
-          {activeTab === "log" && (
+        {visitedTabs.has("log") && (
+          <div className="flex flex-col gap-6" style={{ display: activeTab === "log" ? "flex" : "none" }}>
             <MockLogTab
               mocks={mocks}
               settings={settings}
@@ -184,9 +192,11 @@ export default function CATMockTracker() {
               onCreateMock={addScoreOnlyAnalysis}
               onDeleteMock={deleteMock}
             />
-          )}
+          </div>
+        )}
 
-          {activeTab === "analysis" && (
+        {visitedTabs.has("analysis") && (
+          <div className="flex flex-col gap-6" style={{ display: activeTab === "analysis" ? "flex" : "none" }}>
             <AnalysisTab
               mocks={mocks}
               selectedMockId={analysisMockId}
@@ -194,13 +204,17 @@ export default function CATMockTracker() {
               onSelectMock={setAnalysisMockId}
               onSaveAnalysis={attachAnalysis}
             />
-          )}
+          </div>
+        )}
 
-          {activeTab === "analysisInsights" && (
+        {visitedTabs.has("analysisInsights") && (
+          <div className="flex flex-col gap-6" style={{ display: activeTab === "analysisInsights" ? "flex" : "none" }}>
             <AnalysisInsightsDataTab mocks={mocks} />
-          )}
+          </div>
+        )}
 
-          {activeTab === "trends" && (
+        {visitedTabs.has("trends") && (
+          <div className="flex flex-col gap-6" style={{ display: activeTab === "trends" ? "flex" : "none" }}>
             <TrendsTab
               mocks={mocks}
               entriesWithComputed={entriesWithComputed}
@@ -212,9 +226,11 @@ export default function CATMockTracker() {
               sectionStats={sectionStats}
               settings={settings}
             />
-          )}
+          </div>
+        )}
 
-          {activeTab === "settings" && (
+        {visitedTabs.has("settings") && (
+          <div className="flex flex-col gap-6" style={{ display: activeTab === "settings" ? "flex" : "none" }}>
             <SettingsTab
               settings={settings}
               mocks={mocks}
@@ -226,10 +242,14 @@ export default function CATMockTracker() {
               onExportData={handleExportData}
               onImportData={handleImportData}
             />
-          )}
+          </div>
+        )}
 
-          {activeTab === "about" && <AboutTab />}
-        </div>
+        {visitedTabs.has("about") && (
+          <div className="flex flex-col gap-6" style={{ display: activeTab === "about" ? "flex" : "none" }}>
+            <AboutTab />
+          </div>
+        )}
       </div>
 
       <Toast toast={toast} />
