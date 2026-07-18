@@ -4,7 +4,7 @@ import { COLORS, SECTIONS, TYPE, SHADOW } from "../../constants";
 import { fmtDate, fmtNum, fmtPct } from "../../lib/format";
 import { buildAnalysisSummary, makeSampleDetailedAnalysis, normalizeDetailedAnalysis, OUTCOME_REASONS, TOPIC_OPTIONS } from "../../lib/analysisModel";
 import { mockTotalMarks } from "../../lib/compute";
-import { validateAnalysisAgainstMock } from "../../lib/analysisValidation";
+import { reviewAnalysisAgainstMock } from "../../lib/analysisValidation";
 import { inputStyle } from "../ui/FieldLabel";
 import EmptyState from "../ui/EmptyState";
 import SectionBadge from "../ui/SectionBadge";
@@ -34,8 +34,8 @@ function defaultQuestion(questionNumber, section) {
   return {
     id: tempId("q"),
     questionNumber,
-    result: "Skipped",
-    outcomeReason: OUTCOME_REASONS[section]?.Skipped?.[0] || "",
+    result: "Unreviewed",
+    outcomeReason: "",
     questionType: "MCQ",
     topic: "",
     timeTaken: null,
@@ -106,7 +106,11 @@ function SectionSummary({ section, summary }) {
     <div className="p-3 flex flex-col gap-2" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface2 }}>
       <div className="flex items-center justify-between gap-2">
         <SectionBadge section={section} size="sm" />
-        <span className="text-xs" style={{ color: COLORS.inkMuted }}>{summary.totalQuestions} Qs</span>
+        <span className="text-xs" style={{ color: COLORS.inkMuted }}>
+          {summary.unreviewed > 0
+            ? `${summary.totalQuestions - summary.unreviewed}/${summary.totalQuestions} reviewed`
+            : `${summary.totalQuestions} Qs`}
+        </span>
       </div>
       <div className="grid grid-cols-2 gap-2 text-xs" style={{ color: COLORS.inkMuted }}>
         <span>Accuracy: <strong style={{ color: COLORS.ink }}>{fmtPct(summary.accuracy)}</strong></span>
@@ -129,7 +133,9 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
     [mocks, selectedMockId]
   );
   const [draft, setDraft] = useState(null);
-  const [analysisError, setAnalysisError] = useState("");
+  const [analysisNotices, setAnalysisNotices] = useState([]);
+  const [saveError, setSaveError] = useState("");
+  const [saveMessage, setSaveMessage] = useState("");
   const [importMessage, setImportMessage] = useState("");
   const [importError, setImportError] = useState("");
   const [showPasteImport, setShowPasteImport] = useState(false);
@@ -141,13 +147,25 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
     if (mocks[0] && (!selectedMockId || !selectedExists)) onSelectMock(mocks[0].id);
   }, [mocks, onSelectMock, selectedMockId]);
 
+  // Switching to a different mock resets all feedback from whatever was
+  // happening on the previous one.
+  useEffect(() => {
+    setAnalysisNotices([]);
+    setSaveError("");
+    setSaveMessage("");
+  }, [selectedMock?.id]);
+
+  // Resyncs the draft whenever the canonical saved analysis changes — either
+  // from switching mocks or from our own save landing (attachAnalysis gives
+  // back a freshly normalized object, a new reference every time). Kept
+  // separate from the reset above so a successful save's notices/confirmation
+  // survive this re-render instead of being wiped by their own save.
   useEffect(() => {
     if (!selectedMock) {
       setDraft(null);
       return;
     }
     setDraft(clone(selectedMock.analysis) || buildAnalysisDraftFromMock(selectedMock));
-    setAnalysisError("");
     setImportMessage("");
     setImportError("");
   }, [selectedMock?.id, selectedMock?.analysis]);
@@ -157,7 +175,8 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
     try {
       const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
       setDraft(normalizeDetailedAnalysis(parsed, selectedMock.analysis));
-      setAnalysisError("");
+      setAnalysisNotices([]);
+      setSaveError("");
       setImportError("");
       setImportMessage("Analysis JSON imported — review below, then save.");
     } catch (err) {
@@ -257,21 +276,28 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
       if (!confirmed) return;
     }
     setDraft(buildAnalysisDraftFromMock(selectedMock));
-    setAnalysisError("");
+    setAnalysisNotices([]);
+    setSaveError("");
+    setSaveMessage("");
   };
 
+  /**
+   * Always persists the draft as-is, however complete it is — reviewAnalysisAgainstMock
+   * only returns informational notices (in-progress sections, structure/score
+   * mismatches), never a reason to block. This is what lets a mock go from
+   * "12 of 22 reviewed" to fully reviewed across several sittings without
+   * ever losing what's already been entered.
+   */
   const saveDraft = () => {
     if (!selectedMock || !draft) return;
-    const validationErrors = validateAnalysisAgainstMock(selectedMock, draft);
-    if (validationErrors.length > 0) {
-      setAnalysisError(validationErrors.join(" "));
-      return;
-    }
+    setAnalysisNotices(reviewAnalysisAgainstMock(selectedMock, draft));
     const saved = onSaveAnalysis(selectedMock.id, draft);
     if (saved === false) {
-      setAnalysisError("Could not save this analysis. Check the analysis data and try again.");
+      setSaveError("Could not save this analysis. Check the analysis data and try again.");
+      setSaveMessage("");
     } else {
-      setAnalysisError("");
+      setSaveError("");
+      setSaveMessage("Saved.");
     }
   };
 
@@ -394,8 +420,13 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
 
       {draft && (
         <div className="animate-fade-up flex flex-col gap-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             <StatCard label="Questions" value={summary?.totalQuestions || 0} />
+            <StatCard
+              label="Unreviewed"
+              value={summary?.unreviewed || 0}
+              sub={summary?.unreviewed > 0 ? "Save works anytime — fill these in whenever you remember" : undefined}
+            />
             <StatCard label="Accuracy" value={fmtPct(summary?.accuracy)} />
             <StatCard label="Wrong" value={summary?.wrong || 0} />
             <StatCard label="Skipped" value={summary?.skipped || 0} />
@@ -437,11 +468,25 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                 Sections: <strong style={{ color: COLORS.ink }}>{SECTIONS.filter((section) => selectedMock[section]).length}</strong>
               </div>
             </div>
-            {analysisError && (
+            {saveError && (
               <div className="p-3 text-sm" style={{ background: COLORS.dangerSoft, color: COLORS.danger, borderRadius: 8 }}>
-                {analysisError}
+                {saveError}
               </div>
             )}
+            {saveMessage && !saveError && <p className="text-sm" style={{ color: COLORS.good }}>{saveMessage}</p>}
+            {analysisNotices.map((notice, idx) => (
+              <div
+                key={`${notice.section}-${idx}`}
+                className="p-3 text-sm"
+                style={{
+                  background: notice.tone === "warn" ? COLORS.warnSoft : COLORS.infoSoft,
+                  color: notice.tone === "warn" ? COLORS.warn : COLORS.info,
+                  borderRadius: 8,
+                }}
+              >
+                {notice.text}
+              </div>
+            ))}
             <textarea
               value={draft.overallReflection}
               onChange={setOverall("overallReflection")}
@@ -507,17 +552,21 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                           </thead>
                           <tbody>
                             {block.questions.map((question, questionIdx) => (
-                              <tr key={question.id} style={{ borderTop: `1px solid ${COLORS.border}` }}>
+                              <tr key={question.id} style={{ borderTop: `1px solid ${COLORS.border}`, background: question.result === "Unreviewed" ? COLORS.surface2 : undefined }}>
                                 <td className="px-3 py-2.5" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{question.questionNumber}</td>
                                 <td className="px-3 py-2.5">
                                   <select value={question.result} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "result", ev.target.value)} style={{ ...inputStyle(false), minWidth: 130, height: 40, fontSize: 14 }}>
-                                    {["Correct", "Wrong", "Skipped"].map((result) => <option key={result}>{result}</option>)}
+                                    {["Unreviewed", "Correct", "Wrong", "Skipped"].map((result) => <option key={result}>{result}</option>)}
                                   </select>
                                 </td>
                                 <td className="px-3 py-2.5">
-                                  <select value={question.outcomeReason} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "outcomeReason", ev.target.value)} style={{ ...inputStyle(false), minWidth: 240, height: 40, fontSize: 14 }}>
-                                    {(OUTCOME_REASONS[section]?.[question.result] || []).map((reason) => <option key={reason} value={reason}>{reason}</option>)}
-                                  </select>
+                                  {question.result === "Unreviewed" ? (
+                                    <span className="text-sm" style={{ color: COLORS.inkMuted }}>—</span>
+                                  ) : (
+                                    <select value={question.outcomeReason} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "outcomeReason", ev.target.value)} style={{ ...inputStyle(false), minWidth: 240, height: 40, fontSize: 14 }}>
+                                      {(OUTCOME_REASONS[section]?.[question.result] || []).map((reason) => <option key={reason} value={reason}>{reason}</option>)}
+                                    </select>
+                                  )}
                                 </td>
                                 <td className="px-3 py-2.5">
                                   <select value={question.questionType} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "questionType", ev.target.value)} style={{ ...inputStyle(false), minWidth: 110, height: 40, fontSize: 14 }}>

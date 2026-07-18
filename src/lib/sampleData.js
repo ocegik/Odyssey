@@ -30,6 +30,7 @@ export function makeSampleData() {
         totalQuestions: p.qs,
         percentile: Math.random() > 0.3 ? Math.round((40 + (sec === "Quant" ? -10 : 10) + m * 1.5 + (Math.random() - 0.5) * 10) * 10) / 10 : null,
         topperScore: Math.random() > 0.4 ? Math.round(p.qs * 2.6 + Math.random() * 8) : null,
+        topperPercentile: Math.random() > 0.5 ? Math.round((97 + Math.random() * 2.9) * 100) / 100 : null,
       });
     });
   }

@@ -38,7 +38,10 @@ export function flattenAnalysisQuestions(mocks) {
           blockType: block.type,
           blockName: block.name,
           topic: getEffectiveTopic(block, question),
-          attempted: question.result !== "Skipped",
+          // "Unreviewed" questions carry no information yet — excluded from
+          // attempted (same as an actual Skipped) so a mock still mid-review
+          // doesn't skew accuracy/topic/timing stats with placeholder rows.
+          attempted: question.result === "Correct" || question.result === "Wrong",
           timeDelta: question.timeTaken !== null && question.averageTime !== null ? question.timeTaken - question.averageTime : null,
           slow: question.timeTaken !== null && question.averageTime !== null ? question.timeTaken > question.averageTime + SLOW_DELTA_SECONDS : false,
         }))
@@ -55,6 +58,7 @@ function emptySectionSummary(section) {
     correct: 0,
     wrong: 0,
     skipped: 0,
+    unreviewed: 0,
     slow: 0,
     totalTime: 0,
     timed: 0,
@@ -83,6 +87,7 @@ function summarizeSection(section, questions) {
     if (question.result === "Correct") summary.correct += 1;
     if (question.result === "Wrong") summary.wrong += 1;
     if (question.result === "Skipped") summary.skipped += 1;
+    if (question.result === "Unreviewed") summary.unreviewed += 1;
     if (question.slow) summary.slow += 1;
     if (question.timeTaken !== null) {
       summary.totalTime += question.timeTaken;
@@ -105,7 +110,11 @@ function summarizeSection(section, questions) {
 
   summary.accuracy = accuracyOf(summary.correct, summary.attempted);
   summary.avgTime = avg(summary.totalTime, summary.timed);
-  summary.slowRate = summary.total > 0 ? summary.slow / summary.total : null;
+  // Reviewed count, not raw total — a mock still mid-review has Unreviewed
+  // placeholders (never slow, since they have no time data) that would
+  // otherwise dilute this rate downward.
+  const reviewed = summary.total - summary.unreviewed;
+  summary.slowRate = reviewed > 0 ? summary.slow / reviewed : null;
   return summary;
 }
 
@@ -225,10 +234,12 @@ function buildReasonRows(sectionSummaries) {
     return {
       section,
       total: summary.total,
+      unreviewed: summary.unreviewed,
       accuracy: summary.accuracy,
       correct: summary.correct,
       wrong: summary.wrong,
       skipped: summary.skipped,
+      slow: summary.slow,
       slowRate: summary.slowRate,
       avgTime: summary.avgTime,
       topWrong,

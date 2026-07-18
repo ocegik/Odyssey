@@ -146,7 +146,7 @@ function AnalysisBarChart({ rows }) {
     section: row.section,
     Wrong: row.wrong,
     Skipped: row.skipped,
-    Slow: Math.round((row.slowRate || 0) * row.total),
+    Slow: row.slow || 0,
   }));
   return (
     <div style={{ width: "100%", height: 260 }}>

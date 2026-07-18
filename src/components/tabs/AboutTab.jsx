@@ -76,9 +76,10 @@ Each entry in "sections":
   totalQuestions  integer, required  >= 1
   attempted       integer, optional  0..totalQuestions — include if known, unlocks accuracy immediately
   correct         integer, optional  0..attempted — requires "attempted" to also be set
-  percentile      number, optional
-  topperScore     number, optional
-  notes           string, optional
+  percentile        number, optional
+  topperScore       number, optional
+  topperPercentile  number, optional
+  notes             string, optional
   questionBlocks  array, optional    custom set/independent breakdown (see "blocks" in Schema B for shape:
                                      { "type": "set"|"independent", "name": "Set 1", "startQuestion": 1, "endQuestion": 5 });
                                      every question 1..totalQuestions must be covered exactly once if you provide this.
@@ -99,7 +100,7 @@ Example:
 SCHEMA B — Mock Analysis import (detailed, per-question; use this if I have a full solution/review page showing each question's outcome)
 =======================================================================
 Where it's imported: Mock Analysis tab -> select the matching mock (it must already be logged via Schema A first) -> "Import JSON" or "Paste JSON".
-IMPORTANT constraint: for each section, the number of questions you output must exactly equal that section's logged "totalQuestions", and the sum of question scores (see scoring rule below) must exactly equal that section's logged score — the app checks both and blocks the save with an error if they don't reconcile. If you don't have enough detail to make every question's outcome add up exactly, tell me instead of guessing silently.
+This import is progressive, not all-or-nothing: saving never fails just because some questions are unclear. For each section, the number of questions you output should equal that section's logged "totalQuestions", and once every question has a real result the sum of question scores (see scoring rule below) should equal that section's logged score — but these are just checked and surfaced as notices after saving, not blocking errors. Use "Unreviewed" as a question's result for anything you're not confident about instead of guessing — it's excluded from scoring and from every stat until it's revisited later.
 
 Top-level object fields:
   mockName            string, optional, cosmetic label
@@ -123,8 +124,8 @@ Each block:
 
 Each question:
   questionNumber  integer, required — the question's position within its section (1-based)
-  result          "Correct" | "Wrong" | "Skipped", required
-  outcomeReason   string, required — MUST be exactly one of the allowed reasons for that section+result pair (case-sensitive; an unrecognized value silently falls back to the first allowed reason, which loses information, so pick precisely):
+  result          "Correct" | "Wrong" | "Skipped" | "Unreviewed", required — use "Unreviewed" when you genuinely don't know/remember the outcome; leave it out of the JSON entirely and it defaults to "Unreviewed" too
+  outcomeReason   string, required for Correct/Wrong/Skipped, not applicable for Unreviewed — MUST be exactly one of the allowed reasons for that section+result pair (case-sensitive; an unrecognized value silently falls back to the first allowed reason, which loses information, so pick precisely):
 ${SECTIONS.map((s) => `    ${s}:\n${reasonList(s)}`).join("\n")}
   questionType    "MCQ" | "TITA", required
   topic           string, optional — for INDEPENDENT questions only (set questions inherit their block's topic); one of the topic lists above for that section
@@ -132,11 +133,12 @@ ${SECTIONS.map((s) => `    ${s}:\n${reasonList(s)}`).join("\n")}
   averageTime     number (seconds), optional — the benchmark/expected time for that question type, also fine to omit
   notes           string, optional
 
-Scoring rule (used both to compute totals and to validate your output against the logged mock score):
-  Correct    -> +3
-  Wrong MCQ  -> -1
-  Wrong TITA -> 0
-  Skipped    -> 0
+Scoring rule (used both to compute totals and to check your output against the logged mock score):
+  Correct     -> +3
+  Wrong MCQ   -> -1
+  Wrong TITA  -> 0
+  Skipped     -> 0
+  Unreviewed  -> 0, and excluded from the score check entirely until it's changed to something else
 
 Example (2-question independent block + a 2-question set, VARC):
 {
@@ -170,7 +172,7 @@ WORKFLOW
 =======================================================================
 1. If I only have a scorecard: produce Schema A, I import it in Mock Log.
 2. If I have the full per-question solution page: first make sure the mock is logged (Schema A), then produce Schema B for that same mock and I'll import it in Mock Analysis, matched against the mock I select there.
-3. If a screenshot is ambiguous or missing a required field (date, source, totalQuestions, section score, or a question's result), ask me rather than inventing a value.`;
+3. If a screenshot is ambiguous or missing a required field (date, source, totalQuestions, or section score), ask me rather than inventing a value. A question's result is the one exception — if it's genuinely unclear, use "Unreviewed" rather than guessing or stopping to ask.`;
 }
 
 function CollapsibleAiGuide() {
@@ -278,6 +280,7 @@ export default function AboutTab() {
             { part: "Wrong MCQ", purpose: "-1 mark" },
             { part: "Wrong TITA", purpose: "0 negative marks" },
             { part: "Skipped", purpose: "0 marks" },
+            { part: "Unreviewed", purpose: "0 marks, and left out of every score check/stat until reviewed" },
           ]}
         />
       </Panel>

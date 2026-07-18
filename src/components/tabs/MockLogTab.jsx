@@ -69,6 +69,7 @@ const DEFAULT_SECTIONS = [
     correct: "",
     percentile: "",
     topperScore: "",
+    topperPercentile: "",
     notes: "",
     questionBlocks: [
       { id: blockId(), type: "set", name: "Set 1", startQuestion: 1, endQuestion: 5 },
@@ -86,6 +87,7 @@ const DEFAULT_SECTIONS = [
     correct: "",
     percentile: "",
     topperScore: "",
+    topperPercentile: "",
     notes: "",
     questionBlocks: [
       { id: blockId(), type: "set", name: "Set 1", startQuestion: 1, endQuestion: 5 },
@@ -102,6 +104,7 @@ const DEFAULT_SECTIONS = [
     correct: "",
     percentile: "",
     topperScore: "",
+    topperPercentile: "",
     notes: "",
     questionBlocks: [
       { id: blockId(), type: "independent", name: "Independent Questions", startQuestion: 1, endQuestion: 22 },
@@ -144,6 +147,7 @@ function mockToForm(mock) {
         correct: numToFormValue(existing.correct),
         percentile: numToFormValue(existing.percentile),
         topperScore: numToFormValue(existing.topperScore),
+        topperPercentile: numToFormValue(existing.topperPercentile),
         notes: existing.notes || "",
         questionBlocks: questionBlocks.map((block) => ({ ...block, id: block.id || blockId() })),
       };
@@ -177,6 +181,9 @@ function validateMockForm(form) {
     }
     if (section.topperScore !== "" && !Number.isFinite(Number(section.topperScore))) {
       errors.push(`${section.section}: topper score must be a number.`);
+    }
+    if (section.topperPercentile !== "" && (!Number.isFinite(Number(section.topperPercentile)) || Number(section.topperPercentile) < 0 || Number(section.topperPercentile) > 100)) {
+      errors.push(`${section.section}: topper percentile must be a number between 0 and 100.`);
     }
 
     errors.push(...validateSectionBlockCoverage(section));
@@ -232,7 +239,7 @@ export default function MockLogTab({
     setMockForm(form);
     setEditingMockId(mockId);
     setFormErrors([]);
-    setShowExtras(form.sections.some((section) => section.percentile || section.topperScore || section.notes));
+    setShowExtras(form.sections.some((section) => section.percentile || section.topperScore || section.topperPercentile || section.notes));
     formTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -338,6 +345,7 @@ export default function MockLogTab({
       correct: section.correct === "" ? undefined : Number(section.correct),
       percentile: section.percentile === "" ? undefined : Number(section.percentile),
       topperScore: section.topperScore === "" ? undefined : Number(section.topperScore),
+      topperPercentile: section.topperPercentile === "" ? undefined : Number(section.topperPercentile),
       notes: section.notes || undefined,
       questionSetCount: section.questionBlocks.filter((block) => block.type === "set").length,
       questionBlocks: section.questionBlocks.map((block) => ({
@@ -395,7 +403,8 @@ export default function MockLogTab({
             {'{"date":"2026-07-20","source":"SIMCAT 6","sections":[{"section":"VARC","score":42,"totalQuestions":22,"attempted":20,"correct":15}]}'}
           </code>
           . <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>questionBlocks</code>, <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>percentile</code>,{" "}
-          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>topperScore</code>, <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>attempted</code>, and{" "}
+          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>topperScore</code>, <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>topperPercentile</code>,{" "}
+          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>attempted</code>, and{" "}
           <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>correct</code> are optional per section — add attempted/correct to get accuracy and attempt rate right away, without needing a full Analysis first.
           Skipped an optional field or mistyped the date? Edit the mock later from its row menu in the table below.
         </p>
@@ -435,7 +444,7 @@ export default function MockLogTab({
               style={{ borderRadius: 8, color: COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}
             >
               {showExtras ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-              {showExtras ? "Hide percentile, topper score & notes" : "Add percentile, topper score & notes (optional)"}
+              {showExtras ? "Hide percentile, topper stats & notes" : "Add percentile, topper stats & notes (optional)"}
             </button>
           </div>
 
@@ -470,7 +479,7 @@ export default function MockLogTab({
                 </div>
 
                 {showExtras && (
-                <div className="animate-fade-up grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="animate-fade-up grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="flex flex-col gap-1.5">
                     <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Percentile <span style={{ opacity: 0.6 }}>(optional)</span></label>
                     <input type="number" min="0" max="100" step="0.01" placeholder="—" value={section.percentile} onChange={setSectionField(sectionIdx, "percentile")} style={{ ...inputStyle(false), width: 110 }} />
@@ -478,6 +487,10 @@ export default function MockLogTab({
                   <div className="flex flex-col gap-1.5">
                     <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Topper score <span style={{ opacity: 0.6 }}>(optional)</span></label>
                     <input type="number" placeholder="—" value={section.topperScore} onChange={setSectionField(sectionIdx, "topperScore")} style={{ ...inputStyle(false), width: 110 }} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Topper percentile <span style={{ opacity: 0.6 }}>(optional)</span></label>
+                    <input type="number" min="0" max="100" step="0.01" placeholder="—" value={section.topperPercentile} onChange={setSectionField(sectionIdx, "topperPercentile")} style={{ ...inputStyle(false), width: 110 }} />
                   </div>
                   <div className="flex flex-col gap-1.5 col-span-2 sm:col-span-1">
                     <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Notes <span style={{ opacity: 0.6 }}>(optional)</span></label>

@@ -30,13 +30,15 @@
 |---|---|---|
 | Percentile | number \| null | Percentile in that mock's student pool |
 | Topper Score | number \| null | Highest score in that mock — gives a rough "how hard was this paper" signal |
+| Topper Percentile | number \| null | The topper's percentile for that mock, alongside their score |
 
-### 1.3 Detailed Analysis (optional, separate workflow)
+### 1.3 Detailed Analysis (optional, separate workflow, progressive)
 
 - Score entry stays lightweight: users can log section scores without entering any question-level detail.
 - Every parent mock can optionally have one detailed analysis attached later.
-- Detailed analysis stores mock reflection, structure text, section blocks, question outcomes, reason tags, question type, time taken, benchmark time, review/completion flags, confidence, decision quality, and notes.
-- Analysis data is stored under the same parent mock so future insight modules can use it for recurring mistakes, timing patterns, confidence vs. correctness, decision quality, section trends, and long-term comparisons.
+- Detailed analysis stores mock reflection, structure text, section blocks, question outcomes, reason tags, question type, time taken, benchmark time, and notes.
+- Analysis data is stored under the same parent mock so future insight modules can use it for recurring mistakes, timing patterns, section trends, and long-term comparisons.
+- **Analysis is progressive, not all-or-nothing.** Each question's result is `Correct` / `Wrong` / `Skipped` / `Unreviewed` — `Unreviewed` is the default for anything not yet looked at, distinct from a real `Skipped` in the exam. Saving an analysis always works, however many questions are still `Unreviewed`: those are excluded from scoring and from every downstream stat until revisited. The app cross-checks the analysis against the mock's logged question count and score, but only once nothing is left `Unreviewed` — and even then it's a soft notice, not a blocker. This means a mock can go from "just the score" to "half the questions reviewed" to "fully reviewed" over several sittings, and stays usable at every step (Mock Log shows an "X/Y reviewed" progress badge in the meantime).
 
 ---
 
@@ -88,7 +90,7 @@
     "date": "2026-07-20",
     "source": "SIMCAT 6",
     "sections": [
-      { "section": "VARC", "score": 42, "totalQuestions": 22, "percentile": 91.2, "topperScore": 58 },
+      { "section": "VARC", "score": 42, "totalQuestions": 22, "percentile": 91.2, "topperScore": 58, "topperPercentile": 99.1 },
       { "section": "DILR", "score": 30, "totalQuestions": 20 },
       { "section": "Quant", "score": 18, "totalQuestions": 22 }
     ]
@@ -103,7 +105,7 @@
 - Import / export `scores.json` (full backup — see §3)
 - Sortable, filterable raw section-entry table is available as a maintenance view under Mock Log
 - **Mock Analysis:** separate optional workflow to select an existing mock and attach, edit, inspect, or delete detailed analysis JSON
-- **Mock Analysis → Import JSON** (upload a file or paste directly): accepts the same shape described in §1.3 / produced by `normalizeDetailedAnalysis` in `src/lib/analysisModel.js` — `sections` keyed by `VARC`/`DILR`/`Quant` (or `QA` as an alias for Quant), each with `blocks[]` (`type: "set" | "independent"`, optional `topic`), each block's `questions[]` (`result`, `outcomeReason`, `questionType`, `timeTaken`, `averageTime`, `notes`, `topic` for independent questions). Import only replaces the on-screen draft — nothing is saved until "Save analysis" is clicked, which still validates the imported question count and score against the mock's logged data. Use "Download template" on the Mock Analysis tab to get a ready-to-edit JSON file scaffolded from that mock's actual section/question-block structure.
+- **Mock Analysis → Import JSON** (upload a file or paste directly): accepts the same shape described in §1.3 / produced by `normalizeDetailedAnalysis` in `src/lib/analysisModel.js` — `sections` keyed by `VARC`/`DILR`/`Quant` (or `QA` as an alias for Quant), each with `blocks[]` (`type: "set" | "independent"`, optional `topic`), each block's `questions[]` (`result`, `outcomeReason`, `questionType`, `timeTaken`, `averageTime`, `notes`, `topic` for independent questions). A question's `result` may be `"Unreviewed"` (or omitted — it's the default) for anything you don't remember; that question is skipped by scoring and stats until it's updated later. Import only replaces the on-screen draft — nothing is saved until "Save analysis" is clicked. Saving always succeeds (see §1.3); it checks the imported question count and score against the mock's logged data and surfaces any mismatch as a notice, not a blocker. Use "Download template" on the Mock Analysis tab to get a ready-to-edit JSON file scaffolded from that mock's actual section/question-block structure.
 
 ### 4.2 Visualizations
 - **Overview:** high-level preparation readout: goals, pacing, weakest-section flag, score-level insights, and broad comparison charts

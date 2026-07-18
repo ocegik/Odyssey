@@ -5,7 +5,7 @@ import { normalizeDetailedAnalysis } from "./analysisModel";
 export const DATASET_VERSION = 2;
 
 const SECTION_INPUT_FIELDS = [
-  "attempted", "correct", "totalQuestions", "percentile", "topperScore", "notes",
+  "attempted", "correct", "totalQuestions", "percentile", "topperScore", "topperPercentile", "notes",
   "manualTotalMarks", "questionSetCount", "questionBlocks",
 ];
 
@@ -64,6 +64,7 @@ function normalizeSectionPayload(item, idx, parentMockId) {
     totalQuestions,
     percentile: numberOrNull(item.percentile),
     topperScore: numberOrNull(item.topperScore),
+    topperPercentile: numberOrNull(item.topperPercentile),
     manualTotalMarks: numberOrNull(item.manualTotalMarks),
     questionSetCount: numberOrNull(item.questionSetCount) ?? questionBlocks.filter((block) => block.type === "set").length,
     questionBlocks,
@@ -227,6 +228,7 @@ export function addScoreOnlyMock(mocks, payload) {
       totalQuestions: section.totalQuestions || 0,
       percentile: section.percentile,
       topperScore: section.topperScore,
+      topperPercentile: section.topperPercentile,
       notes: section.notes || "",
     }, idx, id);
   });
@@ -272,6 +274,7 @@ export function updateScoreOnlyMock(mocks, mockId, payload) {
       totalQuestions: section.totalQuestions || 0,
       percentile: section.percentile,
       topperScore: section.topperScore,
+      topperPercentile: section.topperPercentile,
       notes: section.notes || "",
     }, idx, mockId);
   });
@@ -392,6 +395,7 @@ function normalizeImportSection(raw, label) {
     questionSetCount: raw.questionSetCount,
     percentile: raw.percentile,
     topperScore: raw.topperScore,
+    topperPercentile: raw.topperPercentile,
     notes: raw.notes,
   };
 }

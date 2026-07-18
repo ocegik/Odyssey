@@ -30,7 +30,10 @@ function SortableHeader({ label, active, dir, onClick }) {
 function analysisLabel(mock) {
   if (!mock.analysis) return "No analysis";
   const total = mock.analysis.summary?.totalQuestions || 0;
-  return total > 0 ? `${total} questions` : "Attached";
+  const unreviewed = mock.analysis.summary?.unreviewed || 0;
+  if (total === 0) return "Attached";
+  if (unreviewed > 0) return `${total - unreviewed}/${total} reviewed`;
+  return `${total} questions`;
 }
 
 function structureLabel(section) {
@@ -241,6 +244,8 @@ function MockLogTable({ mocks, settings, onOpenAnalysis, onEditMock, onDeleteMoc
               const sectionMarks = sectionNames.reduce((sum, section) => sum + (mock[section]?.totalMarks || 0), 0);
               const totalMarks = mock.manualTotalMarks ?? sectionMarks;
               const hasAnalysis = Boolean(mock.analysis);
+              const isPartialAnalysis = hasAnalysis && (mock.analysis.summary?.unreviewed || 0) > 0;
+              const analysisTone = isPartialAnalysis ? COLORS.warn : COLORS.good;
               const priorMarks = priorMarksByMockId.get(mock.id) ?? null;
               const expanded = expandedIds.has(mock.id);
               const rowBg = i % 2 ? COLORS.surface : COLORS.surface2;
@@ -270,7 +275,7 @@ function MockLogTable({ mocks, settings, onOpenAnalysis, onEditMock, onDeleteMoc
                       <div className="flex flex-col">
                         <span className="inline-flex items-center gap-1.5" style={{ fontWeight: 650 }}>
                           {mock.source}
-                          {hasAnalysis && <FileCheck2 size={13} style={{ color: COLORS.good }} />}
+                          {hasAnalysis && <FileCheck2 size={13} style={{ color: analysisTone }} />}
                         </span>
                         <span className="text-xs" style={{ color: COLORS.inkMuted, fontFamily: "'JetBrains Mono', monospace" }}>{fmtDate(mock.date)}</span>
                       </div>
@@ -314,9 +319,9 @@ function MockLogTable({ mocks, settings, onOpenAnalysis, onEditMock, onDeleteMoc
                             className="inline-flex items-center gap-1.5 self-start px-2 py-1 text-xs"
                             style={{
                               background: hasAnalysis ? COLORS.surface : COLORS.surface2,
-                              border: `1px solid ${hasAnalysis ? COLORS.good : COLORS.border}`,
+                              border: `1px solid ${hasAnalysis ? analysisTone : COLORS.border}`,
                               borderRadius: 8,
-                              color: hasAnalysis ? COLORS.good : COLORS.inkMuted,
+                              color: hasAnalysis ? analysisTone : COLORS.inkMuted,
                               fontFamily: "'Space Grotesk', sans-serif",
                               fontWeight: 650,
                             }}

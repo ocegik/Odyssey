@@ -102,7 +102,10 @@ export function buildTopicRecords(questions) {
     const attempted = qs.filter((q) => q.attempted);
     const correct = attempted.filter((q) => q.result === "Correct");
     const wrong = attempted.filter((q) => q.result === "Wrong");
-    const skipped = qs.filter((q) => !q.attempted);
+    // A real Skipped only — excludes "Unreviewed" placeholders from a mock
+    // that's still mid-review, which aren't a skip pattern, just missing data.
+    const skipped = qs.filter((q) => q.result === "Skipped");
+    const reviewed = qs.filter((q) => q.result !== "Unreviewed");
     const timed = qs.filter((q) => q.timeTaken !== null && q.averageTime !== null);
     const avgTime = timed.length ? avg(timed.map((q) => q.timeTaken)) : null;
     const avgBenchmark = timed.length ? avg(timed.map((q) => q.averageTime)) : null;
@@ -130,7 +133,7 @@ export function buildTopicRecords(questions) {
       wrong: wrong.length,
       skipped: skipped.length,
       accuracy: accuracyOf(correct.length, attempted.length),
-      skipRate: qs.length ? skipped.length / qs.length : null,
+      skipRate: reviewed.length ? skipped.length / reviewed.length : null,
       avgTime,
       avgBenchmark,
       timeDelta: avgTime !== null && avgBenchmark !== null ? avgTime - avgBenchmark : null,

@@ -2,9 +2,16 @@ import { SECTIONS } from "../constants";
 import { uid } from "./format";
 import { accuracyOf } from "./aggregate";
 
-export const ANALYSIS_SCHEMA_VERSION = 1;
+export const ANALYSIS_SCHEMA_VERSION = 2;
 
-const RESULT_VALUES = ["Correct", "Wrong", "Skipped"];
+/**
+ * "Unreviewed" is distinct from "Skipped": it's the default for a question
+ * nobody has looked at yet, so it can be excluded from score reconciliation
+ * and every other stat — a real "Skipped" is an actual exam outcome (worth
+ * 0 marks, same as Unreviewed, but a deliberate one worth counting in skip
+ * patterns). This split is what lets an analysis be saved half-finished.
+ */
+const RESULT_VALUES = ["Correct", "Wrong", "Skipped", "Unreviewed"];
 const QUESTION_TYPES = ["MCQ", "TITA"];
 /**
  * Outcome reasons are tailored per section (max 5 per section/result pair) so
@@ -60,7 +67,7 @@ export function normalizeAnalysisSectionName(section) {
 
 function normalizeResult(value) {
   const str = asString(value).trim();
-  return RESULT_VALUES.find((result) => result.toUpperCase() === str.toUpperCase()) || "Skipped";
+  return RESULT_VALUES.find((result) => result.toUpperCase() === str.toUpperCase()) || "Unreviewed";
 }
 
 function normalizeQuestionType(value) {
@@ -141,6 +148,7 @@ function summarizeQuestions(questions) {
     correct: 0,
     wrong: 0,
     skipped: 0,
+    unreviewed: 0,
     totalTime: 0,
     totalAverageTime: 0,
     timedQuestions: 0,
@@ -161,8 +169,10 @@ function summarizeQuestions(questions) {
     } else if (question.result === "Wrong") {
       summary.wrong += 1;
       summary.attempted += 1;
-    } else {
+    } else if (question.result === "Skipped") {
       summary.skipped += 1;
+    } else {
+      summary.unreviewed += 1;
     }
 
     incrementCounter(summary.resultCounts, question.result);
