@@ -29,6 +29,16 @@ function daysUntil(iso) {
   return Math.ceil((date.getTime() - startOfToday().getTime()) / MS_PER_DAY);
 }
 
+// Days of slack left between the chosen attempt day and the window close —
+// only meaningful for "range" entries; "flexible" has no close date to count down to.
+function slackDays(entry) {
+  if (!entry || entry.dateType !== "range" || !entry.windowEnd) return null;
+  const end = parseDate(entry.windowEnd);
+  const chosen = parseDate(entry.date);
+  if (!end || !chosen) return null;
+  return Math.max(0, Math.round((end.getTime() - chosen.getTime()) / MS_PER_DAY));
+}
+
 function nextScheduledMock(schedule = []) {
   const today = startOfToday();
   return [...schedule]
@@ -168,6 +178,7 @@ function LatestMockSpotlight({ mocks }) {
 
 export default function OverviewTab({ mocks, insights, weakestAnalysis, settings }) {
   const nextMock = nextScheduledMock(settings?.mockSchedule);
+  const nextMockSlack = slackDays(nextMock);
   const catDaysLeft = daysUntil(settings?.catTargetDate);
   const graphData = buildOverallMarksData(mocks);
   const latestMock = mocks.length > 0 ? mocks[mocks.length - 1] : null;
@@ -183,7 +194,12 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, settings
         <StatCard
           label="Next mock exam"
           value={nextMock ? fmtDate(nextMock.date) : "-"}
-          sub={nextMock ? `${nextMock.examName} - target ${fmtNum(nextTargetMarks, 0)} (auto)` : "Add a mock schedule in Settings"}
+          sub={
+            nextMock
+              ? `${nextMock.examName} - target ${fmtNum(nextTargetMarks, 0)} (auto)` +
+                (nextMockSlack !== null ? ` · ${nextMockSlack}d slack` : nextMock.dateType === "flexible" ? " · flexible" : "")
+              : "Add a mock schedule in Settings"
+          }
         />
         <StatCard
           label="Days left until CAT"

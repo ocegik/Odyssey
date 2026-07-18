@@ -47,6 +47,17 @@ function percentileOrNull(value) {
   return n !== null && n >= 0 && n <= 100 ? n : null;
 }
 
+const SCHEDULE_DATE_TYPES = ["fixed", "range", "flexible"];
+
+function isIsoDate(value) {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+// "fixed" = must attempt on `date` exactly. "range" = official window with a
+// chosen attempt day inside it. "flexible" = open-ended from `windowStart`,
+// no real deadline. `windowStart`/`windowEnd` are always populated (derived
+// for "fixed", required for the others) so downstream code never has to
+// branch on dateType just to read the window.
 function normalizeScheduleEntry(item, idx = 0) {
   const date = typeof item?.date === "string" ? item.date : "";
   const examName = typeof item?.examName === "string" ? item.examName.trim() : "";
@@ -54,10 +65,30 @@ function normalizeScheduleEntry(item, idx = 0) {
   if (!date) throw new Error(`Schedule entry ${idx + 1} is missing "date".`);
   if (!examName) throw new Error(`Schedule entry ${idx + 1} is missing "examName".`);
 
+  const dateType = SCHEDULE_DATE_TYPES.includes(item?.dateType) ? item.dateType : "fixed";
+  let windowStart = isIsoDate(item?.windowStart) ? item.windowStart : "";
+  let windowEnd = isIsoDate(item?.windowEnd) ? item.windowEnd : "";
+
+  if (dateType === "fixed") {
+    windowStart = date;
+    windowEnd = date;
+  } else if (dateType === "range") {
+    if (!windowStart || !windowEnd) throw new Error(`Schedule entry ${idx + 1} (range) needs both a window start and end date.`);
+    if (windowEnd < windowStart) throw new Error(`Schedule entry ${idx + 1}: window end can't be before window start.`);
+    if (date < windowStart || date > windowEnd) throw new Error(`Schedule entry ${idx + 1}: chosen date must fall within the window.`);
+  } else {
+    if (!windowStart) throw new Error(`Schedule entry ${idx + 1} (flexible) needs a window-open date.`);
+    if (date < windowStart) throw new Error(`Schedule entry ${idx + 1}: chosen date can't be before the window opens.`);
+    windowEnd = "";
+  }
+
   return {
     id: item.id || uid(),
     date,
     examName,
+    dateType,
+    windowStart,
+    windowEnd,
   };
 }
 
@@ -100,9 +131,11 @@ function parseScheduleImport(raw) {
       ? parsed.mockSchedule
       : Array.isArray(parsed?.schedule)
         ? parsed.schedule
-        : null;
+        : parsed && typeof parsed === "object" && typeof parsed.date === "string"
+          ? [parsed]
+          : null;
 
-  if (!entries) throw new Error('Schedule JSON must be an array or an object with "mockSchedule".');
+  if (!entries) throw new Error('Schedule JSON must be a single entry object, an array, or an object with "mockSchedule".');
   return entries.map(normalizeScheduleEntry);
 }
 
