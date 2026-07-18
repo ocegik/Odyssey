@@ -9,11 +9,62 @@ import { inputStyle } from "../ui/FieldLabel";
 const today = () => new Date().toISOString().slice(0, 10);
 const blockId = () => `block_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
+/** Shifts every block after the edited one so ranges stay contiguous, instead
+    of leaving the user to retype each subsequent block's start/end by hand.
+    Editing a block's end moves the next block's start (and, to preserve its
+    size, its end too) — cascading all the way down the list. Editing a
+    block's start only pulls in the previous block's end, since that's the
+    one shared boundary it affects. */
+function cascadeBlockRanges(blocks, editedId, field, newValue) {
+  const editedIdx = blocks.findIndex((block) => block.id === editedId);
+  if (editedIdx === -1) return blocks;
+
+  const next = blocks.map((block) => ({ ...block }));
+  next[editedIdx][field] = newValue;
+
+  if (field === "endQuestion") {
+    for (let i = editedIdx + 1; i < next.length; i += 1) {
+      const size = Math.max(0, Number(next[i].endQuestion) - Number(next[i].startQuestion));
+      const start = Number(next[i - 1].endQuestion) + 1;
+      next[i].startQuestion = start;
+      next[i].endQuestion = start + size;
+    }
+  } else if (field === "startQuestion" && editedIdx > 0) {
+    next[editedIdx - 1].endQuestion = newValue - 1;
+  }
+
+  return next;
+}
+
+const isAutoBlockName = (name, type) => (type === "set" ? /^Set \d+$/.test(name) : name === "Independent Questions");
+
+/** Keeps "Set N" labels in sync with a block's position/type — e.g. flipping
+    a block between set/independent, or deleting one, used to leave stale or
+    duplicate numbers behind. `forceRenameId`, if given, always gets the
+    fresh auto name regardless of what it was called before (used right after
+    a type toggle so that block updates even if its old name looked custom). */
+function renumberBlockNames(blocks, forceRenameId) {
+  let setCount = 0;
+  return blocks.map((block) => {
+    if (block.type === "set") {
+      setCount += 1;
+      if (block.id === forceRenameId || isAutoBlockName(block.name, "set")) {
+        return { ...block, name: `Set ${setCount}` };
+      }
+      return block;
+    }
+    if (block.id === forceRenameId || isAutoBlockName(block.name, "independent")) {
+      return { ...block, name: "Independent Questions" };
+    }
+    return block;
+  });
+}
+
 const DEFAULT_SECTIONS = [
   {
     section: "VARC",
     score: "",
-    totalQuestions: "22",
+    totalQuestions: "24",
     attempted: "",
     correct: "",
     percentile: "",
@@ -24,13 +75,13 @@ const DEFAULT_SECTIONS = [
       { id: blockId(), type: "set", name: "Set 2", startQuestion: 6, endQuestion: 9 },
       { id: blockId(), type: "independent", name: "Independent Questions", startQuestion: 10, endQuestion: 13 },
       { id: blockId(), type: "set", name: "Set 3", startQuestion: 14, endQuestion: 18 },
-      { id: blockId(), type: "set", name: "Set 4", startQuestion: 19, endQuestion: 22 },
+      { id: blockId(), type: "set", name: "Set 4", startQuestion: 19, endQuestion: 24 },
     ],
   },
   {
     section: "DILR",
     score: "",
-    totalQuestions: "20",
+    totalQuestions: "22",
     attempted: "",
     correct: "",
     percentile: "",
@@ -40,7 +91,7 @@ const DEFAULT_SECTIONS = [
       { id: blockId(), type: "set", name: "Set 1", startQuestion: 1, endQuestion: 5 },
       { id: blockId(), type: "set", name: "Set 2", startQuestion: 6, endQuestion: 10 },
       { id: blockId(), type: "set", name: "Set 3", startQuestion: 11, endQuestion: 15 },
-      { id: blockId(), type: "set", name: "Set 4", startQuestion: 16, endQuestion: 20 },
+      { id: blockId(), type: "set", name: "Set 4", startQuestion: 16, endQuestion: 22 },
     ],
   },
   {
@@ -211,12 +262,15 @@ export default function MockLogTab({
       ...form,
       sections: form.sections.map((section, idx) => {
         if (idx !== sectionIdx) return section;
-        return {
-          ...section,
-          questionBlocks: section.questionBlocks.map((block) => (
-            block.id === blockIdValue ? { ...block, [field]: field === "startQuestion" || field === "endQuestion" ? Number(value) : value } : block
-          )),
-        };
+
+        if (field === "startQuestion" || field === "endQuestion") {
+          return { ...section, questionBlocks: cascadeBlockRanges(section.questionBlocks, blockIdValue, field, Number(value)) };
+        }
+
+        const updatedBlocks = section.questionBlocks.map((block) => (
+          block.id === blockIdValue ? { ...block, [field]: value } : block
+        ));
+        return { ...section, questionBlocks: field === "type" ? renumberBlockNames(updatedBlocks, blockIdValue) : updatedBlocks };
       }),
     }));
   };
@@ -227,19 +281,13 @@ export default function MockLogTab({
       sections: form.sections.map((section, idx) => {
         if (idx !== sectionIdx) return section;
         const lastEnd = section.questionBlocks.reduce((max, block) => Math.max(max, Number(block.endQuestion || 0)), 0);
-        return {
-          ...section,
-          questionBlocks: [
-            ...section.questionBlocks,
-            {
-              id: blockId(),
-              type,
-              name: type === "set" ? `Set ${section.questionBlocks.filter((block) => block.type === "set").length + 1}` : "Independent Questions",
-              startQuestion: Math.min(lastEnd + 1, Number(section.totalQuestions || 1)),
-              endQuestion: Math.min(lastEnd + 1, Number(section.totalQuestions || 1)),
-            },
-          ],
-        };
+        const start = Math.min(lastEnd + 1, Number(section.totalQuestions || 1));
+        const newBlockId = blockId();
+        const newBlocks = [
+          ...section.questionBlocks,
+          { id: newBlockId, type, name: type === "set" ? "Set" : "Independent Questions", startQuestion: start, endQuestion: start },
+        ];
+        return { ...section, questionBlocks: renumberBlockNames(newBlocks, newBlockId) };
       }),
     }));
   };
@@ -249,7 +297,7 @@ export default function MockLogTab({
       ...form,
       sections: form.sections.map((section, idx) => (
         idx === sectionIdx
-          ? { ...section, questionBlocks: section.questionBlocks.filter((block) => block.id !== blockIdValue) }
+          ? { ...section, questionBlocks: renumberBlockNames(section.questionBlocks.filter((block) => block.id !== blockIdValue)) }
           : section
       )),
     }));
