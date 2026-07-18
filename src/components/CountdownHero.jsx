@@ -48,11 +48,15 @@ function CountdownTiles({ parts }) {
     <div className="flex gap-2">
       <Tile value={parts.weeks} label="Weeks" />
       <Tile value={parts.days} label="Days" />
-      <Tile value={parts.hours} label="Hours" />
+      <Tile value={fmtNum(parts.totalHours, 0)} label="Total Hours" />
     </div>
   );
 }
 
+// Both cards share a grid row and stretch to the taller one (the mock card,
+// once its upcoming-list rows are added) — centering the body keeps a
+// shorter card's content looking intentional instead of top-anchored with
+// dead space below it.
 function CardShell({ icon: Icon, label, accent, children }) {
   return (
     <div className="p-5 flex flex-col gap-3" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
@@ -60,7 +64,7 @@ function CardShell({ icon: Icon, label, accent, children }) {
         <Icon size={16} style={{ color: accent }} />
         <h3 style={TYPE.panelTitle}>{label}</h3>
       </div>
-      {children}
+      <div className="flex-1 flex flex-col justify-center gap-3">{children}</div>
     </div>
   );
 }
