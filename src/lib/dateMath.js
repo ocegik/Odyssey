@@ -18,30 +18,39 @@ export function daysUntil(iso) {
   return Math.ceil((date.getTime() - startOfToday().getTime()) / MS_PER_DAY);
 }
 
-// Countdown to midnight of `iso`, expressed as three independent flat totals
-// (whole weeks left, whole days left, whole hours left) rather than a
-// decomposed clock — each is the full remaining span in that unit, not a
-// remainder. Target-is-today is its own state instead of falling out of the
-// ms diff, since "midnight of today" is already in the past by the time
-// anyone's looking at the page.
-export function countdownParts(iso, now = Date.now()) {
-  const target = parseDate(iso);
+// "29 Nov 2026" — a year-qualified sibling of lib/format.js's fmtDate, which
+// stays short-form (no year) since it's used all over for compact contexts
+// (chart labels, table cells) where the year would just be noise.
+export function fmtDateLong(iso) {
+  if (!iso) return "—";
+  const d = parseDate(iso);
+  if (!d) return iso;
+  return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+// Compact relative-day label for a pill/badge, not a full countdown.
+export function relativeDayLabel(iso) {
+  const d = daysUntil(iso);
+  if (d === null) return null;
+  if (d < 0) return "Passed";
+  if (d === 0) return "Today";
+  if (d === 1) return "Tomorrow";
+  if (d < 14) return `In ${d}d`;
+  return `In ${Math.round(d / 7)}w`;
+}
+
+// Rough "how far through prep" read for the CAT Progress bar. There's no
+// stored prep-start date anywhere in the app, so this is deliberately
+// approximate: prep is assumed to start the most recent June 1 on or before
+// the exam date (typical CAT prep cycle), not a real user-set date.
+export function prepProgressPercent(catTargetDate, now = Date.now()) {
+  const target = parseDate(catTargetDate);
   if (!target) return null;
-
-  const today = startOfToday();
-  if (target.getTime() === today.getTime()) {
-    return { isToday: true, past: false, weeks: 0, days: 0, totalHours: 0 };
-  }
-
-  const diffMs = target.getTime() - now;
-  if (diffMs <= 0) {
-    return { isToday: false, past: true, weeks: 0, days: 0, totalHours: 0 };
-  }
-
-  const totalHours = Math.floor(diffMs / 3600000);
-  const weeks = Math.floor(totalHours / 168);
-  const days = Math.floor(totalHours / 24);
-  return { isToday: false, past: false, weeks, days, totalHours };
+  const startYear = target.getMonth() >= 5 ? target.getFullYear() : target.getFullYear() - 1;
+  const start = new Date(startYear, 5, 1);
+  const total = target.getTime() - start.getTime();
+  if (total <= 0) return null;
+  return Math.max(0, Math.min(100, ((now - start.getTime()) / total) * 100));
 }
 
 // A schedule entry is still "upcoming" as long as its window hasn't fully

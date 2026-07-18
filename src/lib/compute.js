@@ -76,6 +76,18 @@ export function mockTotalMarks(mock) {
   }, 0);
 }
 
+export function avgOfLastN(mocks, n) {
+  if (!mocks.length) return null;
+  const vals = mocks.slice(-n).map(mockTotalMarks).filter((v) => Number.isFinite(v));
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+}
+
+export function bestMarks(mocks) {
+  if (!mocks.length) return null;
+  const vals = mocks.map(mockTotalMarks).filter((v) => Number.isFinite(v));
+  return vals.length ? Math.max(...vals) : null;
+}
+
 /* Flat step used to nudge the next target above the last logged score —
    deliberately small and simple rather than a fraction of the remaining
    gap, so the ask stays "realistic incremental improvement" every time. */

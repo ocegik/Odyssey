@@ -1,8 +1,7 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { COLORS, SECTIONS, SHADOW, TYPE } from "../../constants";
 import { fmtDate, fmtNum, fmtPct } from "../../lib/format";
-import { computePacing, mockTotalMarks, computeAdaptiveTarget } from "../../lib/compute";
-import StatCard from "../ui/StatCard";
+import { computePacing, mockTotalMarks, computeAdaptiveTarget, avgOfLastN, bestMarks } from "../../lib/compute";
 import SectionBadge from "../ui/SectionBadge";
 import ChartFrame from "../charts/ChartFrame";
 import CollegeTargetsPanel from "../CollegeTargetsPanel";
@@ -144,19 +143,22 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, settings
   const pacing = computePacing(mocks, settings?.catTargetDate);
   const lastMarks = latestMock ? mockTotalMarks(latestMock) : null;
   const nextTargetMarks = computeAdaptiveTarget(lastMarks, settings?.overallTargetMarks);
+  const avgLast3 = avgOfLastN(mocks, 3);
+  const bestMarksValue = bestMarks(mocks);
 
   return (
     <div className="flex flex-col gap-4">
-      <CountdownHero catTargetDate={settings?.catTargetDate} mockSchedule={settings?.mockSchedule} nextTargetMarks={nextTargetMarks} />
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <StatCard label="Mocks logged" value={mocks.length} />
-        <StatCard
-          label="Recent pace"
-          value={pacing ? `${fmtNum(pacing.recentPerWeek, 1)}/wk` : "-"}
-          sub={pacing ? pacing.note : "Set the CAT date in Settings to see a pacing read"}
-        />
-      </div>
+      <CountdownHero
+        catTargetDate={settings?.catTargetDate}
+        overallTargetPercentile={settings?.overallTargetPercentile}
+        mockSchedule={settings?.mockSchedule}
+        nextTargetMarks={nextTargetMarks}
+        mocksLogged={mocks.length}
+        latestMarks={lastMarks}
+        avgLast3={avgLast3}
+        bestMarksValue={bestMarksValue}
+        pacing={pacing}
+      />
 
       <LatestMockSpotlight mocks={mocks} />
 
