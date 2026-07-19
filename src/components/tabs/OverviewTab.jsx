@@ -5,7 +5,7 @@ import { computePacing, mockTotalMarks, computeAdaptiveTarget, avgOfLastN, bestM
 import SectionBadge from "../ui/SectionBadge";
 import ChartFrame from "../charts/ChartFrame";
 import CollegeTargetsPanel from "../CollegeTargetsPanel";
-import CountdownHero from "../CountdownHero";
+import CountdownHero, { QuickStatsCard } from "../CountdownHero";
 import WeakestSectionCard from "../charts/WeakestSectionCard";
 import InsightList from "../charts/InsightList";
 
@@ -153,6 +153,9 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, settings
         overallTargetPercentile={settings?.overallTargetPercentile}
         mockSchedule={settings?.mockSchedule}
         nextTargetMarks={nextTargetMarks}
+      />
+
+      <QuickStatsCard
         mocksLogged={mocks.length}
         latestMarks={lastMarks}
         avgLast3={avgLast3}

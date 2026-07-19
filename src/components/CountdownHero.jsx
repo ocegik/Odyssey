@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Hourglass, CalendarClock, ClipboardList, TrendingUp, Target, Activity, Trophy } from "lucide-react";
+import { Hourglass, CalendarClock, ClipboardList, TrendingUp, Target, Trophy, Clock } from "lucide-react";
 import { COLORS, TYPE, SHADOW } from "../constants";
 import { fmtDate, fmtNum } from "../lib/format";
 import { daysUntil, fmtDateLong, relativeDayLabel, prepProgressPercent, upcomingSchedule } from "../lib/dateMath";
@@ -62,7 +62,7 @@ function ProgressBar({ percent }) {
 
 function CardShell({ icon: Icon, label, accent, right, children }) {
   return (
-    <div className="p-5 flex flex-col gap-3" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
+    <div className="p-5 flex flex-col gap-3 h-full" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Icon size={16} style={{ color: accent }} />
@@ -70,7 +70,7 @@ function CardShell({ icon: Icon, label, accent, right, children }) {
         </div>
         {right}
       </div>
-      {children}
+      <div className="flex-1 flex flex-col gap-3">{children}</div>
     </div>
   );
 }
@@ -94,20 +94,24 @@ function CatProgressCard({ catTargetDate, overallTargetPercentile }) {
           <span className="text-sm" style={{ color: COLORS.inkMuted }}>Exam date has passed</span>
         ) : (
           <div className="flex flex-col gap-0.5">
-            <strong style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 44, color: COLORS.ink, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+            <strong style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 56, color: COLORS.ink, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
               {daysLeft === 0 ? "Today" : daysLeft}
             </strong>
-            {daysLeft > 0 && <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>Days left</span>}
+            {daysLeft > 0 && <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>Days remaining</span>}
           </div>
         )}
-        <div className="flex flex-col gap-1.5 items-end shrink-0">
+        <div className="flex flex-col gap-1.5 items-end shrink-0 text-right">
           <Badge>{fmtDateLong(catTargetDate)}</Badge>
           {overallTargetPercentile !== null && overallTargetPercentile !== undefined && (
             <Badge>{fmtNum(overallTargetPercentile, 1)}%ile target</Badge>
           )}
         </div>
       </div>
-      {percent !== null && daysLeft >= 0 && <ProgressBar percent={percent} />}
+      {percent !== null && daysLeft >= 0 && (
+        <div className="mt-auto">
+          <ProgressBar percent={percent} />
+        </div>
+      )}
     </CardShell>
   );
 }
@@ -134,58 +138,66 @@ function NextMockCard({ mockSchedule, nextTargetMarks }) {
       right={<Pill color={COLORS.info}>{relativeDayLabel(nextMock.date)}</Pill>}
     >
       <div className="flex flex-col gap-1">
-        <strong style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 20, color: COLORS.ink }}>{nextMock.examName}</strong>
+        <strong style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 26, color: COLORS.ink }}>{nextMock.examName}</strong>
         <span className="text-sm" style={{ color: COLORS.good, fontWeight: 650 }}>Target {fmtNum(nextTargetMarks, 0)} (auto)</span>
       </div>
 
-      <div className="flex gap-2">
-        <Badge>{fmtDate(nextMock.date)}</Badge>
-        <Badge style={{ textTransform: "capitalize" }}>{nextMock.dateType}</Badge>
-        {nextMock.dateType !== "fixed" && <Badge>{windowLabel(nextMock)}</Badge>}
-      </div>
-
-      {laterMocks.length > 0 && (
-        <div className="flex flex-col gap-1.5 pt-2" style={{ borderTop: `1px solid ${COLORS.border}` }}>
-          {laterMocks.map((entry) => (
-            <div key={entry.id} className="flex items-center justify-between text-xs gap-2">
-              <span style={{ color: COLORS.ink }}>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>{fmtDate(entry.date)}</span> · {entry.examName}
-              </span>
-              <span style={{ color: COLORS.inkMuted, textTransform: "capitalize" }}>{entry.dateType}</span>
-            </div>
-          ))}
-          {extraCount > 0 && (
-            <span className="text-xs" style={{ color: COLORS.inkMuted }}>+{extraCount} more — see Settings</span>
-          )}
+      <div className="mt-auto flex flex-col gap-3">
+        <div className="flex gap-2 flex-wrap">
+          <Badge>{fmtDate(nextMock.date)}</Badge>
+          <Badge style={{ textTransform: "capitalize" }}>{nextMock.dateType}</Badge>
+          {nextMock.dateType !== "fixed" && <Badge>{windowLabel(nextMock)}</Badge>}
         </div>
-      )}
+
+        {laterMocks.length > 0 && (
+          <div className="flex flex-col gap-1.5 pt-2" style={{ borderTop: `1px solid ${COLORS.border}` }}>
+            {laterMocks.map((entry) => (
+              <div key={entry.id} className="flex items-center justify-between text-xs gap-2">
+                <span style={{ color: COLORS.ink }}>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>{fmtDate(entry.date)}</span> · {entry.examName}
+                </span>
+                <span style={{ color: COLORS.inkMuted, textTransform: "capitalize" }}>{entry.dateType}</span>
+              </div>
+            ))}
+            {extraCount > 0 && (
+              <span className="text-xs" style={{ color: COLORS.inkMuted }}>+{extraCount} more — see Settings</span>
+            )}
+          </div>
+        )}
+      </div>
     </CardShell>
   );
 }
 
-function StatRow({ icon: Icon, value, label, accent }) {
+function StatItem({ icon: Icon, value, label, accent }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex items-center justify-center shrink-0" style={{ width: 30, height: 30, borderRadius: 8, background: COLORS.surface2 }}>
-        <Icon size={14} style={{ color: accent || COLORS.inkMuted }} />
+      <div className="flex items-center justify-center shrink-0" style={{ width: 36, height: 36, borderRadius: 10, background: `${accent}1a` }}>
+        <Icon size={16} style={{ color: accent }} />
       </div>
       <div className="flex flex-col leading-tight">
-        <strong style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 16, color: COLORS.ink, fontVariantNumeric: "tabular-nums" }}>{value}</strong>
+        <strong style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 22, color: COLORS.ink, fontVariantNumeric: "tabular-nums" }}>{value}</strong>
         <span className="text-xs" style={{ color: COLORS.inkMuted }}>{label}</span>
       </div>
     </div>
   );
 }
 
-function QuickStatsCard({ mocksLogged, latestMarks, avgLast3, bestMarksValue, pacing }) {
+export function QuickStatsCard({ mocksLogged, latestMarks, avgLast3, bestMarksValue, pacing }) {
+  const stats = [
+    { icon: ClipboardList, value: mocksLogged, label: "Mocks logged", accent: COLORS.primary },
+    { icon: TrendingUp, value: latestMarks !== null ? fmtNum(latestMarks, 1) : "-", label: "Latest marks", accent: COLORS.good },
+    { icon: Trophy, value: bestMarksValue !== null ? fmtNum(bestMarksValue, 1) : "-", label: "Best marks", accent: COLORS.warn },
+    { icon: Target, value: avgLast3 !== null ? fmtNum(avgLast3, 1) : "-", label: "Avg (last 3)", accent: COLORS.info },
+    { icon: Clock, value: pacing ? `${fmtNum(pacing.recentPerWeek, 1)}/wk` : "-", label: "Current pace", accent: COLORS.primary },
+  ];
+
   return (
     <CardShell icon={ClipboardList} label="Quick Stats" accent={COLORS.ink}>
-      <div className="flex flex-col gap-3">
-        <StatRow icon={ClipboardList} value={mocksLogged} label="Mocks logged" />
-        <StatRow icon={TrendingUp} value={latestMarks !== null ? fmtNum(latestMarks, 1) : "-"} label="Latest marks" />
-        <StatRow icon={Target} value={avgLast3 !== null ? fmtNum(avgLast3, 1) : "-"} label="Avg (last 3)" />
-        <StatRow icon={Activity} value={pacing ? `${fmtNum(pacing.recentPerWeek, 1)}/wk` : "-"} label="Current pace" />
-        <StatRow icon={Trophy} value={bestMarksValue !== null ? fmtNum(bestMarksValue, 1) : "-"} label="Best marks" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-4">
+        {stats.map((stat) => (
+          <StatItem key={stat.label} {...stat} />
+        ))}
       </div>
     </CardShell>
   );
@@ -196,19 +208,13 @@ export default function CountdownHero({
   overallTargetPercentile,
   mockSchedule,
   nextTargetMarks,
-  mocksLogged,
-  latestMarks,
-  avgLast3,
-  bestMarksValue,
-  pacing,
 }) {
   useNow();
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1.15fr_0.85fr] gap-4 items-start">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
       <CatProgressCard catTargetDate={catTargetDate} overallTargetPercentile={overallTargetPercentile} />
       <NextMockCard mockSchedule={mockSchedule} nextTargetMarks={nextTargetMarks} />
-      <QuickStatsCard mocksLogged={mocksLogged} latestMarks={latestMarks} avgLast3={avgLast3} bestMarksValue={bestMarksValue} pacing={pacing} />
     </div>
   );
 }
