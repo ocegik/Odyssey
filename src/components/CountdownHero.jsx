@@ -89,29 +89,27 @@ function CatProgressCard({ catTargetDate, overallTargetPercentile }) {
 
   return (
     <CardShell icon={Hourglass} label="CAT Progress" accent={COLORS.primary}>
-      <div className="flex items-start justify-between gap-4">
-        {daysLeft < 0 ? (
-          <span className="text-sm" style={{ color: COLORS.inkMuted }}>Exam date has passed</span>
-        ) : (
-          <div className="flex flex-col gap-0.5">
-            <strong style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 56, color: COLORS.ink, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
-              {daysLeft === 0 ? "Today" : daysLeft}
-            </strong>
-            {daysLeft > 0 && <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>Days remaining</span>}
-          </div>
-        )}
-        <div className="flex flex-col gap-1.5 items-end shrink-0 text-right">
-          <Badge>{fmtDateLong(catTargetDate)}</Badge>
-          {overallTargetPercentile !== null && overallTargetPercentile !== undefined && (
-            <Badge>{fmtNum(overallTargetPercentile, 1)}%ile target</Badge>
+      <div className="flex-1 flex flex-col justify-center gap-5">
+        <div className="flex items-start justify-between gap-4">
+          {daysLeft < 0 ? (
+            <span className="text-sm" style={{ color: COLORS.inkMuted }}>Exam date has passed</span>
+          ) : (
+            <div className="flex flex-col gap-0.5">
+              <strong style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 56, color: COLORS.ink, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                {daysLeft === 0 ? "Today" : daysLeft}
+              </strong>
+              {daysLeft > 0 && <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>Days remaining</span>}
+            </div>
           )}
+          <div className="flex flex-col gap-2 items-end shrink-0 text-right">
+            <Badge>{fmtDateLong(catTargetDate)}</Badge>
+            {overallTargetPercentile !== null && overallTargetPercentile !== undefined && (
+              <Badge>{fmtNum(overallTargetPercentile, 1)}%ile target</Badge>
+            )}
+          </div>
         </div>
+        {percent !== null && daysLeft >= 0 && <ProgressBar percent={percent} />}
       </div>
-      {percent !== null && daysLeft >= 0 && (
-        <div className="mt-auto">
-          <ProgressBar percent={percent} />
-        </div>
-      )}
     </CardShell>
   );
 }
@@ -171,14 +169,14 @@ function NextMockCard({ mockSchedule, nextTargetMarks }) {
 
 function StatItem({ icon: Icon, value, label, accent }) {
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex items-center justify-center shrink-0" style={{ width: 36, height: 36, borderRadius: 10, background: `${accent}1a` }}>
-        <Icon size={16} style={{ color: accent }} />
-      </div>
-      <div className="flex flex-col leading-tight">
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center shrink-0" style={{ width: 36, height: 36, borderRadius: 10, background: `${accent}1a` }}>
+          <Icon size={16} style={{ color: accent }} />
+        </div>
         <strong style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 22, color: COLORS.ink, fontVariantNumeric: "tabular-nums" }}>{value}</strong>
-        <span className="text-xs" style={{ color: COLORS.inkMuted }}>{label}</span>
       </div>
+      <span className="text-xs" style={{ color: COLORS.inkMuted, paddingLeft: 48 }}>{label}</span>
     </div>
   );
 }
@@ -194,7 +192,7 @@ export function QuickStatsCard({ mocksLogged, latestMarks, avgLast3, bestMarksVa
 
   return (
     <CardShell icon={ClipboardList} label="Quick Stats" accent={COLORS.ink}>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-4">
+      <div className="flex flex-wrap justify-between gap-y-4">
         {stats.map((stat) => (
           <StatItem key={stat.label} {...stat} />
         ))}

@@ -1,4 +1,5 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { ClipboardCheck, Lightbulb } from "lucide-react";
 import { COLORS, SECTIONS, SHADOW, TYPE } from "../../constants";
 import { fmtDate, fmtNum, fmtPct } from "../../lib/format";
 import { computePacing, mockTotalMarks, computeAdaptiveTarget, avgOfLastN, bestMarks } from "../../lib/compute";
@@ -42,6 +43,7 @@ function OverallMarksChart({ data }) {
           <CartesianGrid stroke={COLORS.border} strokeDasharray="3 3" vertical={false} />
           <XAxis
             dataKey="label"
+            tickFormatter={(value) => value.split(" - ")[0]}
             tick={{ fontSize: 11, fontFamily: "'Inter', sans-serif", fill: COLORS.inkMuted }}
             axisLine={{ stroke: COLORS.border }}
             tickLine={{ stroke: COLORS.border }}
@@ -90,7 +92,10 @@ function LatestMockSpotlight({ mocks }) {
   return (
     <div className="p-5 flex flex-col gap-4" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
       <div className="flex items-baseline justify-between flex-wrap gap-2">
-        <h3 style={TYPE.chartTitle}>Latest mock</h3>
+        <div className="flex items-center gap-2">
+          <ClipboardCheck size={15} style={{ color: COLORS.inkMuted }} />
+          <h3 style={TYPE.chartTitle}>Latest mock</h3>
+        </div>
         <span className="text-xs" style={{ color: COLORS.inkMuted }}>{fmtDate(latest.date)} · {latest.source}</span>
       </div>
 
@@ -166,7 +171,7 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, settings
       <LatestMockSpotlight mocks={mocks} />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4 items-start">
-        <ChartFrame title="Insights" note="Latest signals from your rolling stats" empty={insights.length === 0 ? emptyInsightText(mocks) : null}>
+        <ChartFrame title="Insights" icon={Lightbulb} note="Latest signals from your rolling stats" empty={insights.length === 0 ? emptyInsightText(mocks) : null}>
           <InsightList insights={insights} />
         </ChartFrame>
 

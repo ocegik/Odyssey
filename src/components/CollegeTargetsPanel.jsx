@@ -32,8 +32,8 @@ function CollegeRow({ college, currentPercentile, expanded, onToggle }) {
         <div className="flex items-center gap-2 min-w-0">
           {expanded ? <ChevronDown size={14} style={{ color: COLORS.inkMuted, flexShrink: 0 }} /> : <ChevronRight size={14} style={{ color: COLORS.inkMuted, flexShrink: 0 }} />}
           <span
-            className="text-[10px] shrink-0 px-1.5 py-0.5"
-            style={{ border: `1px solid ${typeMeta.color}`, color: typeMeta.color, borderRadius: 6, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}
+            className="text-[10px] shrink-0 py-0.5"
+            style={{ border: `1px solid ${typeMeta.color}`, color: typeMeta.color, borderRadius: 6, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, width: 60, textAlign: "center" }}
           >
             {typeMeta.label}
           </span>

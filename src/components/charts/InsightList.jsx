@@ -9,15 +9,16 @@ function toneMeta(tone) {
 
 /* A thin fill bar driven by the raw `significance` (0-1) value every insight
    generator already computes — gives every row a legible, granular weight
-   cue instead of leaning on section color alone. */
+   cue instead of leaning on section color alone. Labeled with its percentage
+   so the bar isn't a mystery mark. */
 function ImpactMeter({ value, color }) {
   const pct = Math.round(Math.max(0, Math.min(1, value ?? 0.5)) * 100);
   return (
-    <div
-      style={{ width: 28, height: 4, borderRadius: 999, background: COLORS.border, overflow: "hidden", flexShrink: 0 }}
-      title={`Relative impact: ${pct}%`}
-    >
-      <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 999 }} />
+    <div className="flex items-center gap-1.5 shrink-0" title={`Relative impact: ${pct}%`}>
+      <span className="text-xs" style={{ color: COLORS.inkMuted, fontFamily: "'JetBrains Mono', monospace" }}>{pct}%</span>
+      <div style={{ width: 24, height: 4, borderRadius: 999, background: COLORS.border, overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 999 }} />
+      </div>
     </div>
   );
 }
@@ -28,7 +29,7 @@ function ImpactMeter({ value, color }) {
 function InsightHero({ insight, Icon, tone }) {
   const meta = SECTION_META[insight.section];
   return (
-    <div className="p-4 flex flex-col gap-2" style={{ background: meta.soft, border: `1px solid ${meta.color}`, borderRadius: 10 }}>
+    <div className="p-4 flex flex-col gap-2" style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderLeft: `3px solid ${meta.color}`, borderRadius: 10 }}>
       <div className="flex items-center gap-2 flex-wrap">
         <span
           className="text-xs px-2 py-0.5"
@@ -48,10 +49,13 @@ function InsightHero({ insight, Icon, tone }) {
   );
 }
 
-function InsightRow({ insight, Icon, tone, isLast }) {
+function InsightRow({ insight, Icon, tone }) {
   const meta = SECTION_META[insight.section];
   return (
-    <div className="flex items-start gap-3 py-2.5" style={{ borderBottom: isLast ? "none" : `1px solid ${COLORS.border}` }}>
+    <div
+      className="p-3 flex items-start gap-3"
+      style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderLeft: `3px solid ${meta.color}`, borderRadius: 10 }}
+    >
       <Icon size={13} color={tone.color} strokeWidth={2.25} style={{ marginTop: 3, flexShrink: 0 }} />
       <div className="flex flex-col gap-0.5 flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -80,15 +84,11 @@ export default function InsightList({ insights, iconFor }) {
   return (
     <div className="flex flex-col gap-3">
       <InsightHero insight={hero} Icon={HeroIcon} tone={heroTone} />
-      {rest.length > 0 && (
-        <div className="flex flex-col px-3" style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10 }}>
-          {rest.map((insight, i) => {
-            const tone = toneMeta(insight.tone);
-            const Icon = (iconFor && iconFor(insight)) || tone.Icon;
-            return <InsightRow key={insight.id} insight={insight} Icon={Icon} tone={tone} isLast={i === rest.length - 1} />;
-          })}
-        </div>
-      )}
+      {rest.map((insight) => {
+        const tone = toneMeta(insight.tone);
+        const Icon = (iconFor && iconFor(insight)) || tone.Icon;
+        return <InsightRow key={insight.id} insight={insight} Icon={Icon} tone={tone} />;
+      })}
     </div>
   );
 }
