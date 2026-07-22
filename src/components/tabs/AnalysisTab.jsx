@@ -1,10 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Save, ClipboardList, Plus, Upload, Download, ChevronDown, ChevronRight } from "lucide-react";
+import { Save, ClipboardList, Plus, Upload, Download, ChevronDown, ChevronRight, Pencil, Trash2, X } from "lucide-react";
 import { COLORS, SECTIONS, TYPE, SHADOW } from "../../constants";
 import { fmtDate, fmtNum, fmtPct } from "../../lib/format";
 import { buildAnalysisSummary, makeSampleDetailedAnalysis, normalizeDetailedAnalysis, OUTCOME_REASONS, TOPIC_OPTIONS } from "../../lib/analysisModel";
 import { mockTotalMarks } from "../../lib/compute";
 import { reviewAnalysisAgainstMock } from "../../lib/analysisValidation";
+import {
+  blankBlockFor,
+  cascadeBlockRanges,
+  mockFormToPayload,
+  mockToForm,
+  renumberBlockNames,
+  structureSummary,
+  validateMockForm,
+} from "../../lib/mockFormModel";
 import { inputStyle } from "../ui/FieldLabel";
 import EmptyState from "../ui/EmptyState";
 import SectionBadge from "../ui/SectionBadge";
@@ -100,6 +109,84 @@ function buildAnalysisDraftFromMock(mock) {
   };
 }
 
+function mockFromStructurePayload(mock, payload) {
+  const sectionPatches = {};
+  payload.sections.forEach((section) => {
+    sectionPatches[section.section] = {
+      ...(mock[section.section] || {}),
+      section: section.section,
+      manualTotalMarks: section.manualTotalMarks,
+      totalMarks: section.manualTotalMarks,
+      totalQuestions: section.totalQuestions,
+      attempted: section.attempted ?? null,
+      correct: section.correct ?? null,
+      percentile: section.percentile ?? null,
+      topperScore: section.topperScore ?? null,
+      topperPercentile: section.topperPercentile ?? null,
+      notes: section.notes || "",
+      questionSetCount: section.questionSetCount,
+      questionBlocks: section.questionBlocks,
+    };
+  });
+
+  return {
+    ...mock,
+    date: payload.date,
+    source: payload.source,
+    manualTotalMarks: payload.totalMarks,
+    ...sectionPatches,
+  };
+}
+
+function mergeDraftOntoMockStructure(mock, currentDraft) {
+  const next = buildAnalysisDraftFromMock(mock);
+  if (!currentDraft) return next;
+
+  return {
+    ...next,
+    id: currentDraft.id,
+    createdAt: currentDraft.createdAt,
+    updatedAt: currentDraft.updatedAt,
+    sourceFormat: currentDraft.sourceFormat || next.sourceFormat,
+    mockName: currentDraft.mockName || next.mockName,
+    date: currentDraft.date || next.date,
+    overallReflection: currentDraft.overallReflection || "",
+    overallPercentile: currentDraft.overallPercentile ?? next.overallPercentile,
+    overallTopperScore: currentDraft.overallTopperScore ?? next.overallTopperScore,
+    sections: SECTIONS.reduce((acc, sectionName) => {
+      const nextSection = next.sections[sectionName];
+      if (!nextSection) return acc;
+      const priorSection = currentDraft.sections?.[sectionName];
+      const priorQuestions = new Map(
+        (priorSection?.blocks || [])
+          .flatMap((block) => block.questions || [])
+          .map((question) => [Number(question.questionNumber), question])
+      );
+      const priorBlocks = priorSection?.blocks || [];
+
+      acc[sectionName] = {
+        ...nextSection,
+        id: priorSection?.id || nextSection.id,
+        createdAt: priorSection?.createdAt || nextSection.createdAt,
+        notes: priorSection?.notes || "",
+        blocks: nextSection.blocks.map((block) => {
+          const priorBlock = priorBlocks.find((candidate) => candidate.id === block.id)
+            || priorBlocks.find((candidate) => candidate.name === block.name && candidate.type === block.type);
+          return {
+            ...block,
+            topic: priorBlock?.topic || block.topic || "",
+            questions: block.questions.map((question) => {
+              const priorQuestion = priorQuestions.get(Number(question.questionNumber));
+              return priorQuestion ? { ...question, ...priorQuestion, questionNumber: question.questionNumber } : question;
+            }),
+          };
+        }),
+      };
+      return acc;
+    }, {}),
+  };
+}
+
 function SectionSummary({ section, summary }) {
   if (!summary) return null;
   return (
@@ -127,7 +214,7 @@ function SectionSummary({ section, summary }) {
   );
 }
 
-export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectMock, onSaveAnalysis }) {
+export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectMock, onSaveAnalysis, onEditMock }) {
   const selectedMock = useMemo(
     () => mocks.find((mock) => mock.id === selectedMockId) || mocks[0] || null,
     [mocks, selectedMockId]
@@ -140,6 +227,9 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
   const [importError, setImportError] = useState("");
   const [showPasteImport, setShowPasteImport] = useState(false);
   const [pasteValue, setPasteValue] = useState("");
+  const [showStructureEditor, setShowStructureEditor] = useState(false);
+  const [structureForm, setStructureForm] = useState(null);
+  const [structureErrors, setStructureErrors] = useState([]);
   const importFileInputRef = useRef(null);
 
   useEffect(() => {
@@ -163,12 +253,20 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
   useEffect(() => {
     if (!selectedMock) {
       setDraft(null);
+      setStructureForm(null);
       return;
     }
     setDraft(clone(selectedMock.analysis) || buildAnalysisDraftFromMock(selectedMock));
+    setStructureForm(mockToForm(selectedMock));
     setImportMessage("");
     setImportError("");
   }, [selectedMock?.id, selectedMock?.analysis]);
+
+  useEffect(() => {
+    if (!selectedMock) return;
+    setStructureForm(mockToForm(selectedMock));
+    setStructureErrors([]);
+  }, [selectedMock]);
 
   const applyImportedAnalysis = (raw) => {
     if (!selectedMock) return;
@@ -213,6 +311,79 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
   const setOverall = (field) => (ev) => {
     const value = ev.target.value;
     setDraft((current) => ({ ...current, [field]: value }));
+  };
+
+  const setStructureSectionField = (sectionIdx, field) => (ev) => {
+    const value = ev.target.value;
+    setStructureForm((form) => ({
+      ...form,
+      sections: form.sections.map((section, idx) => (
+        idx === sectionIdx ? { ...section, [field]: value } : section
+      )),
+    }));
+  };
+
+  const setStructureBlockField = (sectionIdx, blockIdValue, field) => (ev) => {
+    const value = ev.target.value;
+    setStructureForm((form) => ({
+      ...form,
+      sections: form.sections.map((section, idx) => {
+        if (idx !== sectionIdx) return section;
+
+        if (field === "startQuestion" || field === "endQuestion") {
+          return { ...section, questionBlocks: cascadeBlockRanges(section.questionBlocks, blockIdValue, field, Number(value)) };
+        }
+
+        const updatedBlocks = section.questionBlocks.map((block) => (
+          block.id === blockIdValue ? { ...block, [field]: value } : block
+        ));
+        return { ...section, questionBlocks: field === "type" ? renumberBlockNames(updatedBlocks, blockIdValue) : updatedBlocks };
+      }),
+    }));
+  };
+
+  const addStructureBlock = (sectionIdx, type) => {
+    setStructureForm((form) => ({
+      ...form,
+      sections: form.sections.map((section, idx) => {
+        if (idx !== sectionIdx) return section;
+        const newBlock = blankBlockFor(section, type);
+        return { ...section, questionBlocks: renumberBlockNames([...section.questionBlocks, newBlock], newBlock.id) };
+      }),
+    }));
+  };
+
+  const removeStructureBlock = (sectionIdx, blockIdValue) => {
+    setStructureForm((form) => ({
+      ...form,
+      sections: form.sections.map((section, idx) => (
+        idx === sectionIdx
+          ? { ...section, questionBlocks: renumberBlockNames(section.questionBlocks.filter((block) => block.id !== blockIdValue)) }
+          : section
+      )),
+    }));
+  };
+
+  const cancelStructureEdit = () => {
+    if (selectedMock) setStructureForm(mockToForm(selectedMock));
+    setStructureErrors([]);
+    setShowStructureEditor(false);
+  };
+
+  const saveStructureEdit = () => {
+    if (!selectedMock || !structureForm) return;
+    const errors = validateMockForm(structureForm);
+    setStructureErrors(errors);
+    if (errors.length > 0) return;
+
+    const payload = mockFormToPayload(structureForm);
+    const patchedMock = mockFromStructurePayload(selectedMock, payload);
+    onEditMock(selectedMock.id, payload);
+    setDraft((current) => mergeDraftOntoMockStructure(patchedMock, current));
+    setAnalysisNotices([]);
+    setSaveError("");
+    setSaveMessage("Paper structure updated. Existing answers were kept by question number; save analysis when ready.");
+    setShowStructureEditor(false);
   };
 
   const setSectionNotes = (section) => (ev) => {
@@ -446,15 +617,26 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
           <Panel
             title={draft.mockName || selectedMock.source}
             action={
-              <button
-                type="button"
-                onClick={saveDraft}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:opacity-90"
-                style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
-              >
-                <Save size={14} />
-                Save analysis
-              </button>
+              <div className="flex flex-wrap gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowStructureEditor((value) => !value)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-black/[0.04]"
+                  style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+                >
+                  <Pencil size={14} />
+                  Paper structure
+                </button>
+                <button
+                  type="button"
+                  onClick={saveDraft}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:opacity-90"
+                  style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+                >
+                  <Save size={14} />
+                  Save analysis
+                </button>
+              </div>
             }
           >
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -468,6 +650,122 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                 Sections: <strong style={{ color: COLORS.ink }}>{SECTIONS.filter((section) => selectedMock[section]).length}</strong>
               </div>
             </div>
+            {showStructureEditor && structureForm && (
+              <div className="animate-fade-up p-4 flex flex-col gap-3" style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10 }}>
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div className="flex flex-col gap-1">
+                    <h4 style={TYPE.chartTitle}>Edit Paper Structure</h4>
+                    <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>
+                      Update score, total questions, attempted/correct counts, and set ranges for this logged mock.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={cancelStructureEdit}
+                    className="theme-hover inline-flex items-center justify-center"
+                    style={{ width: 36, height: 36, border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.inkMuted }}
+                    aria-label="Close paper structure editor"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  {structureForm.sections.map((section, sectionIdx) => (
+                    <div key={section.section} className="p-3 flex flex-col gap-3" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
+                      <div className="flex flex-wrap items-end justify-between gap-3">
+                        <div className="flex flex-col gap-1.5">
+                          <SectionBadge section={section.section} size="sm" />
+                          <span className="text-xs" style={{ color: COLORS.inkMuted }}>{structureSummary(section)}</span>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full sm:w-auto">
+                          <div className="flex flex-col gap-1.5">
+                            <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Score</label>
+                            <input type="number" value={section.score} onChange={setStructureSectionField(sectionIdx, "score")} style={{ ...inputStyle(false), width: 110 }} />
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Total Qs</label>
+                            <input type="number" min="1" value={section.totalQuestions} onChange={setStructureSectionField(sectionIdx, "totalQuestions")} style={{ ...inputStyle(false), width: 110 }} />
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Attempted</label>
+                            <input type="number" min="0" placeholder="-" value={section.attempted} onChange={setStructureSectionField(sectionIdx, "attempted")} style={{ ...inputStyle(false), width: 100 }} />
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Correct</label>
+                            <input type="number" min="0" placeholder="-" value={section.correct} onChange={setStructureSectionField(sectionIdx, "correct")} style={{ ...inputStyle(false), width: 100 }} />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
+                        <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 860 }}>
+                          <thead>
+                            <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>
+                              {["Type", "Name", "Start Q", "End Q", ""].map((label) => (
+                                <th key={label} className="text-left px-3 py-2.5" style={{ ...TYPE.label, color: COLORS.inkMuted }}>{label}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {section.questionBlocks.map((block) => (
+                              <tr key={block.id} style={{ borderTop: `1px solid ${COLORS.border}` }}>
+                                <td className="px-3 py-2.5">
+                                  <select value={block.type} onChange={setStructureBlockField(sectionIdx, block.id, "type")} style={{ ...inputStyle(false), minWidth: 150, height: 40, fontSize: 14 }}>
+                                    <option value="set">Set</option>
+                                    <option value="independent">Independent</option>
+                                  </select>
+                                </td>
+                                <td className="px-3 py-2.5">
+                                  <input value={block.name} onChange={setStructureBlockField(sectionIdx, block.id, "name")} style={{ ...inputStyle(false), minWidth: 240, height: 40, fontSize: 14 }} />
+                                </td>
+                                <td className="px-3 py-2.5">
+                                  <input type="number" min="1" value={block.startQuestion} onChange={setStructureBlockField(sectionIdx, block.id, "startQuestion")} style={{ ...inputStyle(false), width: 110, height: 40, fontSize: 14 }} />
+                                </td>
+                                <td className="px-3 py-2.5">
+                                  <input type="number" min="1" value={block.endQuestion} onChange={setStructureBlockField(sectionIdx, block.id, "endQuestion")} style={{ ...inputStyle(false), width: 110, height: 40, fontSize: 14 }} />
+                                </td>
+                                <td className="px-3 py-2.5 text-right">
+                                  <button type="button" onClick={() => removeStructureBlock(sectionIdx, block.id)} className="theme-hover inline-flex items-center justify-center" style={{ width: 40, height: 40, border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.danger }}>
+                                    <Trash2 size={15} />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <button type="button" onClick={() => addStructureBlock(sectionIdx, "set")} className="theme-hover inline-flex items-center gap-1.5 px-3 py-1.5 text-xs" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.ink }}>
+                          <Plus size={13} /> Add set
+                        </button>
+                        <button type="button" onClick={() => addStructureBlock(sectionIdx, "independent")} className="theme-hover inline-flex items-center gap-1.5 px-3 py-1.5 text-xs" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.ink }}>
+                          <Plus size={13} /> Add independent
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {structureErrors.length > 0 && (
+                  <div className="p-3 text-sm" style={{ background: COLORS.dangerSoft, color: COLORS.danger, borderRadius: 8 }}>
+                    {structureErrors.map((error) => <div key={error}>{error}</div>)}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={saveStructureEdit} className="inline-flex items-center gap-1.5 px-4 py-2 text-sm hover:opacity-90" style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}>
+                    <Save size={14} />
+                    Save structure
+                  </button>
+                  <button type="button" onClick={cancelStructureEdit} className="theme-hover inline-flex items-center gap-1.5 px-4 py-2 text-sm" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.ink, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}>
+                    <X size={14} />
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
             {saveError && (
               <div className="p-3 text-sm" style={{ background: COLORS.dangerSoft, color: COLORS.danger, borderRadius: 8 }}>
                 {saveError}

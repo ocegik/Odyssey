@@ -214,6 +214,7 @@ export default function CATMockTracker() {
               settings={settings}
               onSelectMock={setAnalysisMockId}
               onSaveAnalysis={attachAnalysis}
+              onEditMock={editMock}
             />
           </div>
         )}
