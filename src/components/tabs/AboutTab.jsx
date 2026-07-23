@@ -227,9 +227,8 @@ function CollapsibleAiGuide() {
             {guide}
           </pre>
           <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>
-            Tip: for Schema B, "Download template" on the Mock Analysis tab generates a live example already matching
-            your selected mock's exact section/question structure — handing that to an AI alongside this prompt gives
-            it the precise shape to fill in.
+            Tip: for Schema B, "Download template" on the Mock Analysis tab now gives an instruction guide plus an
+            empty analysis object already matching your selected mock's exact section/question structure.
           </p>
         </div>
       )}

@@ -219,7 +219,10 @@ export function normalizeDetailedAnalysis(rawAnalysis, existing = null) {
     throw new Error("Analysis file must contain a JSON object.");
   }
 
-  const rawSections = rawAnalysis.sections || {};
+  const analysisPayload = rawAnalysis.analysis && typeof rawAnalysis.analysis === "object"
+    ? rawAnalysis.analysis
+    : rawAnalysis;
+  const rawSections = analysisPayload.sections || {};
   const sections = {};
 
   Object.entries(rawSections).forEach(([rawSectionName, rawSection]) => {
@@ -230,16 +233,16 @@ export function normalizeDetailedAnalysis(rawAnalysis, existing = null) {
 
   return {
     schemaVersion: ANALYSIS_SCHEMA_VERSION,
-    id: existing?.id || rawAnalysis.id || analysisId(),
-    createdAt: existing?.createdAt || rawAnalysis.createdAt || Date.now(),
-    updatedAt: existing ? Date.now() : rawAnalysis.updatedAt || Date.now(),
-    sourceFormat: rawAnalysis.sourceFormat || "detailed-analysis-json",
-    mockName: asString(rawAnalysis.mockName),
-    date: asString(rawAnalysis.date),
-    overallReflection: asString(rawAnalysis.overallReflection),
-    overallPercentile: asNumberOrNull(rawAnalysis.overallPercentile),
-    overallTopperScore: asNumberOrNull(rawAnalysis.overallTopperScore),
-    structureText: asString(rawAnalysis.structureText),
+    id: existing?.id || analysisPayload.id || analysisId(),
+    createdAt: existing?.createdAt || analysisPayload.createdAt || Date.now(),
+    updatedAt: existing ? Date.now() : analysisPayload.updatedAt || Date.now(),
+    sourceFormat: analysisPayload.sourceFormat || "detailed-analysis-json",
+    mockName: asString(analysisPayload.mockName),
+    date: asString(analysisPayload.date),
+    overallReflection: asString(analysisPayload.overallReflection),
+    overallPercentile: asNumberOrNull(analysisPayload.overallPercentile),
+    overallTopperScore: asNumberOrNull(analysisPayload.overallTopperScore),
+    structureText: asString(analysisPayload.structureText),
     insightDimensions: [
       "recurringMistakes",
       "accuracyPatterns",
@@ -253,48 +256,122 @@ export function normalizeDetailedAnalysis(rawAnalysis, existing = null) {
   };
 }
 
-function sampleQuestion(section, questionNumber, idx) {
-  const resultCycle = ["Wrong", "Skipped", "Correct", "Correct", "Wrong", "Correct", "Skipped"];
-  const result = resultCycle[(idx + section.length) % resultCycle.length];
-  const reasons = OUTCOME_REASONS[section]?.[result] || [];
-  const averageTime = section === "VARC" ? 60 : section === "DILR" ? 150 : 120;
-  const timeTaken = Math.max(25, averageTime + ((idx % 5) - 2) * 18 + (result === "Wrong" ? 22 : 0));
-  const topics = TOPIC_OPTIONS[section] || [];
+function fillableQuestion(questionNumber) {
   return {
     questionNumber,
-    result,
-    outcomeReason: reasons[idx % reasons.length],
-    questionType: idx % 5 === 4 ? "TITA" : "MCQ",
-    topic: topics.length ? topics[idx % topics.length] : "",
-    timeTaken,
-    averageTime,
+    result: "Unreviewed",
+    outcomeReason: "",
+    questionType: "MCQ",
+    topic: "",
+    timeTaken: null,
+    averageTime: null,
     notes: "",
   };
 }
 
-function sampleBlocksForSection(section, totalQuestions) {
-  const count = Math.max(1, Number(totalQuestions) || (section === "VARC" ? 24 : 22));
-  if (section === "Quant") {
-    return [{
-      type: "independent",
-      name: "Questions",
-      questions: Array.from({ length: count }, (_, idx) => sampleQuestion(section, idx + 1, idx)),
-    }];
-  }
+function blocksForTemplateSection(scoreSection) {
+  const totalQuestions = Math.max(1, Number(scoreSection.totalQuestions) || 1);
+  const blocks = Array.isArray(scoreSection.questionBlocks) && scoreSection.questionBlocks.length > 0
+    ? scoreSection.questionBlocks
+    : [{ type: "independent", name: "Questions", startQuestion: 1, endQuestion: totalQuestions }];
 
-  const blockSize = section === "VARC" ? 5 : 4;
-  const topics = TOPIC_OPTIONS[section] || [];
-  const blocks = [];
-  for (let start = 1; start <= count; start += blockSize) {
-    const end = Math.min(count, start + blockSize - 1);
-    blocks.push({
-      type: "set",
-      name: `Set ${blocks.length + 1}`,
-      topic: topics.length ? topics[blocks.length % topics.length] : "",
-      questions: Array.from({ length: end - start + 1 }, (_, idx) => sampleQuestion(section, start + idx, start + idx - 1)),
-    });
-  }
-  return blocks;
+  return blocks.map((block, idx) => {
+    const start = Number(block.startQuestion || 1);
+    const end = Number(block.endQuestion || start);
+    return {
+      type: block.type === "set" ? "set" : "independent",
+      name: block.name || `${block.type === "set" ? "Set" : "Independent"} ${idx + 1}`,
+      topic: "",
+      questions: Array.from({ length: Math.max(0, end - start + 1) }, (_, questionIdx) => fillableQuestion(start + questionIdx)),
+    };
+  });
+}
+
+function buildTemplateInformation(mock, sections) {
+  const includedSections = SECTIONS.filter((section) => sections[section]);
+  const mockContext = includedSections.reduce((acc, section) => {
+    const scoreSection = mock.sections?.[section] || mock[section];
+    acc[section] = {
+      loggedScore: scoreSection.manualTotalMarks ?? scoreSection.totalMarks ?? null,
+      totalQuestions: scoreSection.totalQuestions ?? null,
+      attempted: scoreSection.attempted ?? null,
+      correct: scoreSection.correct ?? null,
+      questionBlocks: scoreSection.questionBlocks || [],
+    };
+    return acc;
+  }, {});
+
+  return {
+    purpose: "This file explains the detailed mock analysis JSON accepted by Odyssey and includes an empty analysis object for this exact logged mock.",
+    howToUse: [
+      "Give this whole JSON file plus your raw review data to an AI assistant.",
+      "Ask it to fill only the analysis object. It can remove the information object before returning the final JSON, but Odyssey can also import this whole file and will read analysis automatically.",
+      "Keep the section names and question numbers aligned with the logged mock unless you first edit Paper structure inside Odyssey.",
+      "You do not need to create id, createdAt, updatedAt, schemaVersion, insightDimensions, or summary fields; Odyssey creates those when importing.",
+    ],
+    acceptedTopLevelImportShapes: [
+      "A clean analysis object with mockName, date, overallReflection, structureText, and sections.",
+      "This guide format with information and analysis objects. Odyssey imports the analysis object and ignores information.",
+    ],
+    scoringModel: {
+      Correct: 3,
+      WrongMCQ: -1,
+      WrongTITA: 0,
+      Skipped: 0,
+      Unreviewed: 0,
+      note: "Score mismatch warnings are shown only after every question in a section is reviewed.",
+    },
+    allowedValues: {
+      sections: SECTIONS,
+      result: RESULT_VALUES,
+      questionType: QUESTION_TYPES,
+      blockType: ["set", "independent"],
+      topicsBySection: TOPIC_OPTIONS,
+      outcomeReasonsBySectionAndResult: OUTCOME_REASONS,
+    },
+    fieldRules: {
+      "analysis.mockName": "String. Usually the mock or exam name.",
+      "analysis.date": "String in YYYY-MM-DD format.",
+      "analysis.overallReflection": "String. Overall review notes.",
+      "analysis.overallPercentile": "Number from 0 to 100, or null.",
+      "analysis.overallTopperScore": "Number, or null.",
+      "analysis.structureText": "String summary of the paper structure.",
+      "section.percentile": "Number from 0 to 100, or null.",
+      "section.topperScore": "Number, or null.",
+      "section.notes": "String section-level notes.",
+      "block.type": "Must be set or independent.",
+      "block.topic": "For set blocks, choose one topic from topicsBySection for that section, or leave blank.",
+      "question.result": "Choose one of Correct, Wrong, Skipped, or Unreviewed.",
+      "question.outcomeReason": "For Correct/Wrong/Skipped, choose one value from outcomeReasonsBySectionAndResult for that section/result. Leave blank for Unreviewed.",
+      "question.questionType": "Choose MCQ or TITA.",
+      "question.topic": "For independent questions, choose one topic from topicsBySection for that section, or leave blank. Set questions inherit block.topic.",
+      "question.timeTaken": "Seconds as a number, or null.",
+      "question.averageTime": "Benchmark seconds as a number, or null.",
+      "question.notes": "String question-level notes.",
+    },
+    constraints: [
+      "Each section should contain the same number of questions as the logged mock.",
+      "Question numbers should stay unique inside each section.",
+      "Do not invent extra sections outside VARC, DILR, and Quant.",
+      "Use null, not an empty string, for unknown numeric fields.",
+      "Extra fields are safe to omit. Unknown helper fields are ignored by the importer unless they replace the analysis object.",
+    ],
+    mockContext,
+  };
+}
+
+function buildStructureText(mock, sections) {
+  return SECTIONS
+    .filter((section) => sections[section])
+    .map((section) => {
+      const scoreSection = mock.sections?.[section] || mock[section];
+      const total = scoreSection?.totalQuestions ?? 0;
+      const blockSummary = (scoreSection?.questionBlocks || [])
+        .map((block) => `${block.name || block.type}: Q${block.startQuestion}-${block.endQuestion}`)
+        .join(", ");
+      return `${section}: ${total} questions${blockSummary ? ` (${blockSummary})` : ""}`;
+    })
+    .join("\n");
 }
 
 export function makeSampleDetailedAnalysis(mock) {
@@ -303,20 +380,27 @@ export function makeSampleDetailedAnalysis(mock) {
     const scoreSection = mock.sections?.[sectionName] || mock[sectionName];
     if (!scoreSection) return;
     sections[sectionName] = {
+      section: sectionName,
       percentile: scoreSection.percentile ?? null,
       topperScore: scoreSection.topperScore ?? null,
-      notes: `Sample ${sectionName} analysis for testing. Replace or delete this before using real data.`,
-      blocks: sampleBlocksForSection(sectionName, scoreSection.totalQuestions),
+      notes: "",
+      blocks: blocksForTemplateSection(scoreSection),
     };
   });
 
-  return {
-    mockName: `${mock.source} sample analysis`,
+  const analysis = {
+    sourceFormat: "odyssey-detailed-analysis-template",
+    mockName: mock.source,
     date: mock.date,
-    overallReflection: "Sample analysis loaded for testing detailed insights. This is synthetic data, not a real mock review.",
+    overallReflection: "",
     overallPercentile: null,
     overallTopperScore: null,
-    structureText: SECTIONS.filter((section) => sections[section]).map((section) => `${section}\nSample structure`).join("\n\n"),
+    structureText: buildStructureText(mock, sections),
     sections,
+  };
+
+  return {
+    information: buildTemplateInformation(mock, sections),
+    analysis,
   };
 }
