@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { COLORS, FONT_IMPORT, THEME_COLORS } from "./constants";
 import { useMockEntries } from "./hooks/useMockEntries";
 import { useSettings, normalizeSettings, LAYOUT_WIDTH_OPTIONS } from "./hooks/useSettings";
+import { useSyllabus } from "./hooks/useSyllabus";
 import { normalizeStoredMocks } from "./lib/mockStorage";
 import Header from "./components/layout/Header";
 import TabNav from "./components/layout/TabNav";
 import Toast from "./components/ui/Toast";
+import SyllabusTab from "./components/tabs/SyllabusTab";
 import MockLogTab from "./components/tabs/MockLogTab";
 import TrendsTab from "./components/tabs/TrendsTab";
 import OverviewTab from "./components/tabs/OverviewTab";
@@ -84,6 +86,21 @@ export default function CATMockTracker() {
     importScheduleEntries,
     replaceSettings,
   } = useSettings();
+
+  const {
+    progress: syllabusProgress,
+    expanded: syllabusExpanded,
+    filters: syllabusFilters,
+    toggleMicroComplete,
+    toggleSectionExpanded,
+    toggleMacroExpanded,
+    toggleMicroExpanded,
+    expandAll: expandAllSyllabus,
+    collapseAll: collapseAllSyllabus,
+    setSearch: setSyllabusSearch,
+    setStatusFilter: setSyllabusStatusFilter,
+    setFrequencyFilter: setSyllabusFrequencyFilter,
+  } = useSyllabus();
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -187,6 +204,25 @@ export default function CATMockTracker() {
               insights={insights}
               weakestAnalysis={weakestAnalysis}
               settings={settings}
+            />
+          </div>
+        )}
+
+        {visitedTabs.has("syllabus") && (
+          <div className="flex flex-col gap-6" style={{ display: activeTab === "syllabus" ? "flex" : "none" }}>
+            <SyllabusTab
+              progress={syllabusProgress}
+              expanded={syllabusExpanded}
+              filters={syllabusFilters}
+              onToggleMicroComplete={toggleMicroComplete}
+              onToggleSectionExpanded={toggleSectionExpanded}
+              onToggleMacroExpanded={toggleMacroExpanded}
+              onToggleMicroExpanded={toggleMicroExpanded}
+              onExpandAll={expandAllSyllabus}
+              onCollapseAll={collapseAllSyllabus}
+              onSetSearch={setSyllabusSearch}
+              onSetStatusFilter={setSyllabusStatusFilter}
+              onSetFrequencyFilter={setSyllabusFrequencyFilter}
             />
           </div>
         )}

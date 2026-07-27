@@ -1,4 +1,4 @@
-import { BarChart3, ClipboardList, LineChart as LineChartIcon, LayoutDashboard, Info, FileSearch, Settings } from "lucide-react";
+import { BarChart3, ClipboardList, LineChart as LineChartIcon, LayoutDashboard, Info, FileSearch, ListChecks, Settings } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  Design tokens                                                      */
@@ -115,6 +115,7 @@ export const SECTION_META = {
 
 export const TABS = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
+  { key: "syllabus", label: "Syllabus", icon: ListChecks },
   { key: "log", label: "Mock log", icon: ClipboardList },
   { key: "analysis", label: "Mock analysis", icon: FileSearch },
   { key: "analysisInsights", label: "Insights", icon: BarChart3 },
