@@ -1,14 +1,17 @@
+import { useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { ClipboardCheck, Lightbulb } from "lucide-react";
 import { COLORS, SECTIONS, SHADOW, TYPE } from "../../constants";
 import { fmtDate, fmtNum, fmtPct } from "../../lib/format";
 import { computePacing, mockTotalMarks, computeAdaptiveTarget, avgOfLastN, bestMarks } from "../../lib/compute";
+import { computeSyllabusStats, getHighFrequencyRemaining, getLeastCompletedMacroTopics } from "../../lib/syllabusModel";
 import SectionBadge from "../ui/SectionBadge";
 import ChartFrame from "../charts/ChartFrame";
 import CollegeTargetsPanel from "../CollegeTargetsPanel";
 import CountdownHero, { QuickStatsCard } from "../CountdownHero";
 import WeakestSectionCard from "../charts/WeakestSectionCard";
 import InsightList from "../charts/InsightList";
+import SyllabusSnapshotCard from "../SyllabusSnapshotCard";
 
 function mockOverallPercentile(mock) {
   if (!mock) return null;
@@ -141,7 +144,7 @@ function LatestMockSpotlight({ mocks }) {
   );
 }
 
-export default function OverviewTab({ mocks, insights, weakestAnalysis, settings }) {
+export default function OverviewTab({ mocks, insights, weakestAnalysis, settings, syllabusProgress, onOpenSyllabus }) {
   const graphData = buildOverallMarksData(mocks);
   const latestMock = mocks.length > 0 ? mocks[mocks.length - 1] : null;
   const currentPercentile = mockOverallPercentile(latestMock);
@@ -150,6 +153,10 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, settings
   const nextTargetMarks = computeAdaptiveTarget(lastMarks, settings?.overallTargetMarks);
   const avgLast3 = avgOfLastN(mocks, 3);
   const bestMarksValue = bestMarks(mocks);
+
+  const syllabusStats = useMemo(() => computeSyllabusStats(syllabusProgress), [syllabusProgress]);
+  const highFrequencyRemaining = useMemo(() => getHighFrequencyRemaining(syllabusProgress, 4), [syllabusProgress]);
+  const leastCompletedMacroTopics = useMemo(() => getLeastCompletedMacroTopics(syllabusStats, 4), [syllabusStats]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -169,6 +176,13 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, settings
       />
 
       <LatestMockSpotlight mocks={mocks} />
+
+      <SyllabusSnapshotCard
+        stats={syllabusStats}
+        highFrequencyRemaining={highFrequencyRemaining}
+        leastCompletedMacroTopics={leastCompletedMacroTopics}
+        onOpenSyllabus={onOpenSyllabus}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4 items-start">
         <ChartFrame title="Insights" icon={Lightbulb} note="Latest signals from your rolling stats" empty={insights.length === 0 ? emptyInsightText(mocks) : null}>

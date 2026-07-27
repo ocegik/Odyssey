@@ -122,6 +122,47 @@ export function computeSyllabusStats(progress) {
   return { overall: withPercent(overall), bySection, byMacroTopic };
 }
 
+const SECTION_BY_ID = Object.fromEntries(SYLLABUS_TREE.map((section) => [section.id, section]));
+
+/**
+ * Incomplete micro topics tagged "High" frequency, in syllabus order — the
+ * topics most likely to show up in the exam that still need coverage.
+ * Used by the Overview dashboard to surface what to study next.
+ */
+export function getHighFrequencyRemaining(progress, limit = 5) {
+  return ALL_MICRO_TOPICS
+    .filter((micro) => frequencyBucket(micro.frequency) === "High" && !progress?.[micro.id]?.completed)
+    .slice(0, limit)
+    .map((micro) => ({
+      id: micro.id,
+      name: micro.name,
+      frequency: micro.frequency,
+      sectionId: micro.sectionId,
+      section: SECTION_BY_ID[micro.sectionId],
+      macroTopicId: micro.macroTopicId,
+    }));
+}
+
+/**
+ * Macro topics ranked by lowest completion percent (untouched topics first,
+ * ties broken by size so the biggest gaps surface). Fully completed and
+ * empty macro topics are excluded. Takes already-computed stats so callers
+ * that also need overall/bySection numbers don't run the tree walk twice.
+ */
+export function getLeastCompletedMacroTopics(stats, limit = 5) {
+  return ALL_MACRO_TOPICS
+    .map((macro) => ({
+      id: macro.id,
+      name: macro.name,
+      sectionId: macro.sectionId,
+      section: SECTION_BY_ID[macro.sectionId],
+      ...stats.byMacroTopic[macro.id],
+    }))
+    .filter((macro) => macro.total > 0 && macro.percent < 100)
+    .sort((a, b) => a.percent - b.percent || b.total - a.total)
+    .slice(0, limit);
+}
+
 /* ------------------------------------------------------------------ */
 /*  Search + filters                                                   */
 /* ------------------------------------------------------------------ */

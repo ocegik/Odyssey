@@ -204,6 +204,8 @@ export default function CATMockTracker() {
               insights={insights}
               weakestAnalysis={weakestAnalysis}
               settings={settings}
+              syllabusProgress={syllabusProgress}
+              onOpenSyllabus={() => handleTabChange("syllabus")}
             />
           </div>
         )}
