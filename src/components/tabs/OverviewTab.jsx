@@ -1,9 +1,9 @@
-import { useMemo } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Suspense, lazy, useMemo } from "react";
 import { ClipboardCheck, Lightbulb } from "lucide-react";
 import { COLORS, SECTIONS, SHADOW, TYPE } from "../../constants";
 import { fmtDate, fmtNum, fmtPct } from "../../lib/format";
 import { computePacing, mockTotalMarks, computeAdaptiveTarget, avgOfLastN, bestMarks } from "../../lib/compute";
+import { latestKnownPercentile, mockOverallPercentile, percentileCaveat } from "../../lib/percentile";
 import { computeSyllabusStats, getHighFrequencyRemaining, getLeastCompletedMacroTopics } from "../../lib/syllabusModel";
 import SectionBadge from "../ui/SectionBadge";
 import ChartFrame from "../charts/ChartFrame";
@@ -12,72 +12,28 @@ import CountdownHero, { QuickStatsCard } from "../CountdownHero";
 import WeakestSectionCard from "../charts/WeakestSectionCard";
 import InsightList from "../charts/InsightList";
 import SyllabusSnapshotCard from "../SyllabusSnapshotCard";
+import SectionTargetPanel, { buildTargetRows, targetGapSummary } from "../SectionTargetPanel";
+import Disclosure from "../ui/Disclosure";
+import { countWithinReach } from "../../lib/collegeCutoffs";
 
-function mockOverallPercentile(mock) {
-  if (!mock) return null;
-  const analysisPercentile = mock.analysis?.overallPercentile;
-  if (analysisPercentile !== null && analysisPercentile !== undefined) return analysisPercentile;
+const OverallMarksChart = lazy(() => import("../charts/OverallMarksChart"));
 
-  const sectionPercentiles = ["VARC", "DILR", "Quant"]
-    .map((section) => mock[section]?.percentile)
-    .filter((value) => value !== null && value !== undefined);
-  if (sectionPercentiles.length === 0) return null;
-  return sectionPercentiles.reduce((sum, value) => sum + value, 0) / sectionPercentiles.length;
-}
-
+/* Mocks logged without any score would otherwise plot as a hole in the line
+   (mockTotalMarks returns null for them) — dropping them keeps the trend
+   continuous and honest instead of implying a zero. */
 function buildOverallMarksData(mocks) {
-  return mocks.map((mock) => ({
-    label: `${fmtDate(mock.date)} - ${mock.source}`,
-    marks: mockTotalMarks(mock),
-  }));
+  return mocks
+    .map((mock) => ({
+      label: `${fmtDate(mock.date)} - ${mock.source}`,
+      marks: mockTotalMarks(mock),
+    }))
+    .filter((row) => row.marks !== null);
 }
 
 function emptyInsightText(mocks) {
   if (mocks.length === 0) return "Log a mock to start seeing prep signals here.";
   if (mocks.length < 3) return "A few more mocks will make the first meaningful trend easier to read.";
   return "No major swing stands out in the latest data. Keep logging mocks to sharpen the signal.";
-}
-
-function OverallMarksChart({ data }) {
-  return (
-    <div style={{ width: "100%", height: 280 }}>
-      <ResponsiveContainer>
-        <LineChart data={data} margin={{ top: 8, right: 16, left: -8, bottom: 0 }}>
-          <CartesianGrid stroke={COLORS.border} strokeDasharray="3 3" vertical={false} />
-          <XAxis
-            dataKey="label"
-            tickFormatter={(value) => value.split(" - ")[0]}
-            tick={{ fontSize: 11, fontFamily: "'Inter', sans-serif", fill: COLORS.inkMuted }}
-            axisLine={{ stroke: COLORS.border }}
-            tickLine={{ stroke: COLORS.border }}
-            interval="preserveStartEnd"
-          />
-          <YAxis
-            tick={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", fill: COLORS.inkMuted }}
-            axisLine={{ stroke: COLORS.border }}
-            tickLine={{ stroke: COLORS.border }}
-            tickFormatter={(value) => fmtNum(value, 0)}
-            domain={["auto", "auto"]}
-          />
-          <Tooltip
-            formatter={(value) => [fmtNum(value, 1), "Marks"]}
-            cursor={{ stroke: COLORS.border, strokeWidth: 1 }}
-            contentStyle={{ backgroundColor: COLORS.surface, color: COLORS.ink, fontFamily: "'Inter', sans-serif", fontSize: 12, borderRadius: 8, border: `1px solid ${COLORS.border}`, boxShadow: "var(--shadow-floating)" }}
-            labelStyle={{ fontWeight: 600, color: COLORS.ink, marginBottom: 2 }}
-          />
-          <Line
-            type="monotone"
-            dataKey="marks"
-            stroke={COLORS.ink}
-            strokeWidth={2.4}
-            dot={{ r: 3, strokeWidth: 0, fill: COLORS.ink }}
-            activeDot={{ r: 5, strokeWidth: 0 }}
-            name="Overall marks"
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
 }
 
 /* The one thing a user opening the app actually wants first: how did the
@@ -89,8 +45,9 @@ function LatestMockSpotlight({ mocks }) {
   const prev = mocks.length > 1 ? mocks[mocks.length - 2] : null;
   const marks = mockTotalMarks(latest);
   const prevMarks = prev ? mockTotalMarks(prev) : null;
-  const delta = prevMarks !== null ? marks - prevMarks : null;
+  const delta = marks !== null && prevMarks !== null ? marks - prevMarks : null;
   const percentile = mockOverallPercentile(latest);
+  const caveat = percentileCaveat(percentile);
 
   return (
     <div className="p-5 flex flex-col gap-4" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
@@ -116,11 +73,15 @@ function LatestMockSpotlight({ mocks }) {
         </div>
         {percentile !== null && (
           <div className="flex flex-col gap-1">
-            <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>Percentile</span>
-            <strong style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 20, color: COLORS.ink }}>{fmtNum(percentile, 2)}%ile</strong>
+            <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>
+              Percentile{percentile.estimated && <span style={{ opacity: 0.7 }}> (est.)</span>}
+            </span>
+            <strong style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 20, color: COLORS.ink }}>{fmtNum(percentile.value, 2)}%ile</strong>
           </div>
         )}
       </div>
+
+      {caveat && <span className="text-xs" style={{ color: COLORS.inkMuted }}>{caveat}.</span>}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {SECTIONS.map((section) => {
@@ -144,10 +105,12 @@ function LatestMockSpotlight({ mocks }) {
   );
 }
 
-export default function OverviewTab({ mocks, insights, weakestAnalysis, settings, syllabusProgress, onOpenSyllabus }) {
+export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionStats, settings, syllabusProgress, onOpenSyllabus }) {
   const graphData = buildOverallMarksData(mocks);
   const latestMock = mocks.length > 0 ? mocks[mocks.length - 1] : null;
-  const currentPercentile = mockOverallPercentile(latestMock);
+  // Not mockOverallPercentile(latestMock): percentile is optional per mock,
+  // and one mock logged without it shouldn't blank the college comparison.
+  const currentPercentile = latestKnownPercentile(mocks);
   const pacing = computePacing(mocks, settings?.catTargetDate);
   const lastMarks = latestMock ? mockTotalMarks(latestMock) : null;
   const nextTargetMarks = computeAdaptiveTarget(lastMarks, settings?.overallTargetMarks);
@@ -157,6 +120,11 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, settings
   const syllabusStats = useMemo(() => computeSyllabusStats(syllabusProgress), [syllabusProgress]);
   const highFrequencyRemaining = useMemo(() => getHighFrequencyRemaining(syllabusProgress, 4), [syllabusProgress]);
   const leastCompletedMacroTopics = useMemo(() => getLeastCompletedMacroTopics(syllabusStats, 4), [syllabusStats]);
+
+  const targetRows = useMemo(() => buildTargetRows(sectionStats, settings), [sectionStats, settings]);
+  const collegeSummary = currentPercentile
+    ? `${countWithinReach(currentPercentile.value)} programs within reach at ${fmtNum(currentPercentile.value, 2)}%ile`
+    : "Log a mock with a percentile to compare against cutoffs";
 
   return (
     <div className="flex flex-col gap-4">
@@ -177,13 +145,6 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, settings
 
       <LatestMockSpotlight mocks={mocks} />
 
-      <SyllabusSnapshotCard
-        stats={syllabusStats}
-        highFrequencyRemaining={highFrequencyRemaining}
-        leastCompletedMacroTopics={leastCompletedMacroTopics}
-        onOpenSyllabus={onOpenSyllabus}
-      />
-
       <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4 items-start">
         <ChartFrame title="Insights" icon={Lightbulb} note="Latest signals from your rolling stats" empty={insights.length === 0 ? emptyInsightText(mocks) : null}>
           <InsightList insights={insights} />
@@ -192,14 +153,42 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, settings
         <WeakestSectionCard analysis={weakestAnalysis} />
       </div>
 
-      <ChartFrame
-        title="Overall marks by mock"
-        empty={graphData.length === 0 ? "Log a mock to see overall marks across dates." : null}
-      >
-        <OverallMarksChart data={graphData} />
-      </ChartFrame>
+      <SyllabusSnapshotCard
+        stats={syllabusStats}
+        highFrequencyRemaining={highFrequencyRemaining}
+        leastCompletedMacroTopics={leastCompletedMacroTopics}
+        onOpenSyllabus={onOpenSyllabus}
+      />
 
-      <CollegeTargetsPanel currentPercentile={currentPercentile} />
+      {/* Below the daily glance: still one click away, but not competing
+          with it every time the app is opened for a 10-second check. */}
+      {targetRows.length > 0 && (
+        <Disclosure id="overview.targets" title="Gap to section targets" summary={targetGapSummary(targetRows)}>
+          <SectionTargetPanel rows={targetRows} />
+        </Disclosure>
+      )}
+
+      <Disclosure
+        id="overview.marksChart"
+        title="Overall marks by mock"
+        summary={graphData.length ? `${graphData.length} scored mocks · best ${fmtNum(bestMarksValue, 0)}` : "No scored mocks yet"}
+      >
+        <div className="pt-4">
+          {graphData.length === 0 ? (
+            <p className="text-sm" style={{ color: COLORS.inkMuted }}>Log a mock to see overall marks across dates.</p>
+          ) : (
+            <Suspense fallback={<div style={{ height: 280 }} aria-busy="true" />}>
+              <OverallMarksChart data={graphData} />
+            </Suspense>
+          )}
+        </div>
+      </Disclosure>
+
+      <Disclosure id="overview.colleges" title="College targets" summary={collegeSummary}>
+        <div className="pt-4">
+          <CollegeTargetsPanel percentile={currentPercentile} />
+        </div>
+      </Disclosure>
     </div>
   );
 }

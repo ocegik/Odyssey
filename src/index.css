@@ -36,7 +36,12 @@ body {
   to { opacity: 1; transform: translate(-50%, 0); }
 }
 
+@keyframes spinSlow {
+  to { transform: rotate(360deg); }
+}
+
 @media (prefers-reduced-motion: no-preference) {
+  .animate-spin-slow { animation: spinSlow 1.4s linear infinite; }
   .animate-fade-in { animation: fadeIn 200ms ease both; }
   .animate-fade-up { animation: fadeUp 240ms cubic-bezier(0.16, 1, 0.3, 1) both; }
   .animate-scale-in { animation: scaleIn 160ms cubic-bezier(0.16, 1, 0.3, 1) both; }

@@ -1,9 +1,10 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { SECTIONS } from "../constants";
 import { computeDerived, byDateAsc, rollingSeries, buildMockPivot, buildSeries, generateInsights, analyzeWeakest } from "../lib/compute";
+import { buildPercentileSeries } from "../lib/percentile";
 import { normalizeStoredMocks, toRaw } from "../lib/mockStorage";
 import { makeSampleData } from "../lib/sampleData";
-import { fetchRemoteValue, saveRemoteValue } from "../lib/cloudStore";
+import { useCloudSyncedState } from "./useCloudSyncedState";
 import {
   addScoreOnlyMock,
   attachAnalysisToMocks,
@@ -19,7 +20,6 @@ import {
    It's a fast local cache; Supabase (see cloudStore.js) is the durable copy. */
 const STORAGE_KEY = "cat-mock-tracker:entries";
 const REMOTE_KEY = "entries";
-const REMOTE_SAVE_DEBOUNCE_MS = 600;
 
 function loadStoredMocks() {
   try {
@@ -39,49 +39,21 @@ function loadStoredMocks() {
  * they just call the functions this returns.
  */
 export function useMockEntries() {
-  const [mockRecords, setMockRecords] = useState(loadStoredMocks);
+  const {
+    state: mockRecords,
+    setState: setMockRecords,
+    status: syncStatus,
+    lastSyncedAt,
+  } = useCloudSyncedState({
+    storageKey: STORAGE_KEY,
+    remoteKey: REMOTE_KEY,
+    load: loadStoredMocks,
+    normalize: normalizeStoredMocks,
+    serialize: toRaw,
+  });
+
   const [toast, setToast] = useState(null);
-  const [remoteReady, setRemoteReady] = useState(false);
   const toastTimer = useRef(null);
-  const remoteSaveTimer = useRef(null);
-
-  // Persist each mock/analysis update through the single parent mock dataset.
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(toRaw(mockRecords)));
-    } catch {
-      // Storage unavailable (quota, private mode, etc.) — don't block the UI.
-    }
-  }, [mockRecords]);
-
-  // On first mount, reconcile the local cache against Supabase: remote data
-  // (if any) wins; otherwise this is a first sync and local data gets pushed up.
-  useEffect(() => {
-    let cancelled = false;
-    fetchRemoteValue(REMOTE_KEY).then((remote) => {
-      if (cancelled) return;
-      if (remote) setMockRecords(normalizeStoredMocks(remote));
-      setRemoteReady(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // Debounced cloud sync — waits for the initial remote reconcile above so a
-  // slow fetch can't clobber fresher remote data with a stale local cache,
-  // and coalesces rapid edits (e.g. typing) into a single write.
-  useEffect(() => {
-    if (!remoteReady) return;
-    if (remoteSaveTimer.current) clearTimeout(remoteSaveTimer.current);
-    remoteSaveTimer.current = setTimeout(() => {
-      saveRemoteValue(REMOTE_KEY, toRaw(mockRecords)).then((ok) => {
-        if (!ok) showToast("Couldn't sync to cloud — saved on this device only");
-      });
-    }, REMOTE_SAVE_DEBOUNCE_MS);
-    return () => clearTimeout(remoteSaveTimer.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mockRecords, remoteReady]);
 
   const showToast = useCallback((message, action) => {
     setToast({ message, action });
@@ -118,6 +90,7 @@ export function useMockEntries() {
     () => buildSeries(mocks, (e) => (e.hardnessRatio !== null && e.hardnessRatio !== undefined ? +(e.hardnessRatio * 100).toFixed(1) : null)),
     [mocks]
   );
+  const percentileSeries = useMemo(() => buildPercentileSeries(mocks), [mocks]);
 
   const addScoreOnlyAnalysis = useCallback((payload) => {
     setMockRecords((prev) => addScoreOnlyMock(prev, payload));
@@ -182,8 +155,8 @@ export function useMockEntries() {
 
   return {
     sectionStats, insights, weakestAnalysis, mocks, entriesWithComputed,
-    marksSeries, attemptRateSeries, marksPerAttemptSeries, hardnessRatioSeries,
-    toast,
+    marksSeries, attemptRateSeries, marksPerAttemptSeries, hardnessRatioSeries, percentileSeries,
+    toast, syncStatus, lastSyncedAt,
     addScoreOnlyAnalysis, editMock, attachAnalysis, loadSample, deleteMock,
     importMocks, exportMocks, importScoreOnlyMocks,
   };

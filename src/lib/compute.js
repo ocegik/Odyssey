@@ -68,22 +68,37 @@ export function buildSeries(mocks, accessor) {
   }));
 }
 
+/**
+ * Total marks for a mock — the mock-level manual value if one was entered,
+ * otherwise the sum of whichever sections have a score.
+ *
+ * Returns null (not 0) when nothing scoreable exists, because a mock can be
+ * logged with blank scores. A 0 there would be indistinguishable from a real
+ * zero and would drag down "best marks", the last-3 average, the adaptive
+ * next-mock target, and the overall-marks trend line.
+ */
 export function mockTotalMarks(mock) {
-  if (mock?.manualTotalMarks !== null && mock?.manualTotalMarks !== undefined) return mock.manualTotalMarks;
-  return SECTIONS.reduce((sum, section) => {
+  if (Number.isFinite(mock?.manualTotalMarks)) return mock.manualTotalMarks;
+  let sum = 0;
+  let found = false;
+  SECTIONS.forEach((section) => {
     const marks = mock?.[section]?.totalMarks;
-    return Number.isFinite(marks) ? sum + marks : sum;
-  }, 0);
+    if (Number.isFinite(marks)) {
+      sum += marks;
+      found = true;
+    }
+  });
+  return found ? sum : null;
 }
 
+/* Averages the last N *scored* mocks rather than the last N rows — a mock
+   logged without any score would otherwise silently shrink the window. */
 export function avgOfLastN(mocks, n) {
-  if (!mocks.length) return null;
-  const vals = mocks.slice(-n).map(mockTotalMarks).filter((v) => Number.isFinite(v));
+  const vals = mocks.map(mockTotalMarks).filter((v) => Number.isFinite(v)).slice(-n);
   return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
 }
 
 export function bestMarks(mocks) {
-  if (!mocks.length) return null;
   const vals = mocks.map(mockTotalMarks).filter((v) => Number.isFinite(v));
   return vals.length ? Math.max(...vals) : null;
 }
@@ -210,6 +225,9 @@ function percentileVsMarksInsight(section, list) {
   if (withPercentile.length < 2) return null;
   const latest = withPercentile[withPercentile.length - 1];
   const prev = withPercentile[withPercentile.length - 2];
+  // The whole insight is a marks-vs-percentile divergence, so both mocks need
+  // a score — without one the subtraction below would just be NaN.
+  if (!Number.isFinite(latest.totalMarks) || !Number.isFinite(prev.totalMarks)) return null;
   const pctlDelta = latest.percentile - prev.percentile;
   const marksDelta = latest.totalMarks - prev.totalMarks;
   if (Math.abs(pctlDelta) < PERCENTILE_VS_MARKS_MIN_PCTL_DELTA) return null;

@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { fetchRemoteValue, saveRemoteValue } from "../lib/cloudStore";
+import { useCallback } from "react";
 import { ALL_MICRO_TOPICS, STATUS_FILTERS, FREQUENCY_BUCKETS, SYLLABUS_TREE } from "../lib/syllabusModel";
+import { useCloudSyncedState } from "./useCloudSyncedState";
 
 const STORAGE_KEY = "cat-mock-tracker:syllabus";
 const REMOTE_KEY = "syllabus";
-const REMOTE_SAVE_DEBOUNCE_MS = 600;
 
 const DEFAULT_FILTERS = { search: "", status: "all", frequency: "all" };
 
@@ -110,40 +109,12 @@ function toggleInList(list, id) {
 }
 
 export function useSyllabus() {
-  const [state, setState] = useState(loadState);
-  const [remoteReady, setRemoteReady] = useState(false);
-  const remoteSaveTimer = useRef(null);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      // Storage unavailable — syllabus progress just won't persist across reloads.
-    }
-  }, [state]);
-
-  // Same reconcile-then-debounced-sync pattern as useSettings/useMockEntries:
-  // remote wins on first load if present, otherwise local state gets pushed up.
-  useEffect(() => {
-    let cancelled = false;
-    fetchRemoteValue(REMOTE_KEY).then((remote) => {
-      if (cancelled) return;
-      if (remote) setState(normalizeState(remote));
-      setRemoteReady(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!remoteReady) return;
-    if (remoteSaveTimer.current) clearTimeout(remoteSaveTimer.current);
-    remoteSaveTimer.current = setTimeout(() => {
-      saveRemoteValue(REMOTE_KEY, state);
-    }, REMOTE_SAVE_DEBOUNCE_MS);
-    return () => clearTimeout(remoteSaveTimer.current);
-  }, [state, remoteReady]);
+  const { state, setState, status: syncStatus } = useCloudSyncedState({
+    storageKey: STORAGE_KEY,
+    remoteKey: REMOTE_KEY,
+    load: loadState,
+    normalize: normalizeState,
+  });
 
   const updateMicroProgress = useCallback((microTopicId, patch) => {
     setState((prev) => {
@@ -202,6 +173,7 @@ export function useSyllabus() {
     progress: state.progress,
     expanded: state.expanded,
     filters: state.filters,
+    syncStatus,
     updateMicroProgress,
     toggleMicroComplete,
     toggleSectionExpanded,

@@ -1,7 +1,18 @@
 import { useState } from "react";
-import { Check, ChevronDown, ChevronRight, Copy, Download, Info, ShieldCheck, Sparkles, Bot } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Command, Copy, Download, Info, ShieldCheck, Sparkles, Bot } from "lucide-react";
 import { COLORS, SECTIONS, TYPE, SHADOW } from "../../constants";
 import { OUTCOME_REASONS, TOPIC_OPTIONS } from "../../lib/analysisModel";
+
+const mono = { fontFamily: "'JetBrains Mono', monospace" };
+const kbd = {
+  ...mono,
+  fontSize: 11,
+  padding: "2px 6px",
+  border: `1px solid ${COLORS.border}`,
+  borderRadius: 5,
+  background: COLORS.surface2,
+  color: COLORS.ink,
+};
 
 function Panel({ icon: Icon, title, children }) {
   return (
@@ -241,10 +252,42 @@ export default function AboutTab() {
     <div className="flex flex-col gap-4">
       <Panel icon={Sparkles} title="What's new">
         <ul className="text-sm leading-relaxed flex flex-col gap-1.5 list-disc pl-4" style={{ color: COLORS.inkMuted }}>
-          <li>Named the project <strong style={{ color: COLORS.ink }}>Odyssey</strong>.</li>
-          <li>Data now syncs to a Supabase-backed cloud store in the background, so it's no longer at risk of being lost to a cleared browser cache or a switch of device/browser.</li>
-          <li>Mocks can now be deleted directly from Mock Log — useful for clearing out sample/test entries.</li>
+          <li>
+            <strong style={{ color: COLORS.ink }}>Where your marks go</strong> (Trends) splits each section's gap to a
+            perfect score into three separate causes — questions never attempted, attempts that went wrong, and marks
+            the negative marking actually took off. Each one needs a different fix.
+          </li>
+          <li>
+            <strong style={{ color: COLORS.ink }}>Percentile trend</strong> (Trends) plots section and overall
+            percentile over time — the one view that's comparable across mocks from different sources, since marks
+            aren't.
+          </li>
+          <li>
+            <strong style={{ color: COLORS.ink }}>Gap to section targets</strong> (Overview) turns the per-section
+            targets from Settings into a live read on how far off each section is.
+          </li>
+          <li>
+            Deeper stats now sit behind collapsible rows that show a one-line summary while closed, so the daily view
+            stays short. Open one and it stays open on that device.
+          </li>
+          <li>
+            The active tab lives in the URL (<code style={mono}>#/trends</code>) — reloads keep your place and views
+            can be bookmarked.
+          </li>
+          <li>
+            A sync badge in the header always shows whether your data reached the cloud, instead of failures being
+            silent.
+          </li>
         </ul>
+      </Panel>
+
+      <Panel icon={Command} title="Keyboard">
+        <p className="text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>
+          Press <kbd style={kbd}>⌘</kbd> <kbd style={kbd}>K</kbd> (or <kbd style={kbd}>Ctrl</kbd> <kbd style={kbd}>K</kbd>)
+          anywhere to open the command palette: jump to any tab, open a specific mock's analysis by name, export a
+          backup, or switch theme. Everything in it is reachable the normal way too — it's a shortcut, never the only
+          path.
+        </p>
       </Panel>
 
       <Panel icon={Info} title="Mock-first structure">

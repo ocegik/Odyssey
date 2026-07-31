@@ -64,6 +64,11 @@ export const COLLEGE_TYPE_META = {
  * a cutoff. `currentPercentile` is the actual percentile to compare against
  * (e.g. the most recent mock's percentile), not a static target.
  */
+/** Shared by the panel and by the collapsed-summary line above it. */
+export function countWithinReach(currentPercentile) {
+  return COLLEGE_CUTOFFS.filter((college) => reachStatus(college.req, currentPercentile) === "reach").length;
+}
+
 export function reachStatus(req, currentPercentile) {
   const numericReq = Number(req);
   if (!Number.isFinite(numericReq)) return "filter";

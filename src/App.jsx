@@ -1,20 +1,27 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { COLORS, FONT_IMPORT, THEME_COLORS } from "./constants";
 import { useMockEntries } from "./hooks/useMockEntries";
 import { useSettings, normalizeSettings, LAYOUT_WIDTH_OPTIONS } from "./hooks/useSettings";
 import { useSyllabus } from "./hooks/useSyllabus";
+import { useHashTab } from "./hooks/useHashTab";
 import { normalizeStoredMocks } from "./lib/mockStorage";
 import Header from "./components/layout/Header";
 import TabNav from "./components/layout/TabNav";
 import Toast from "./components/ui/Toast";
-import SyllabusTab from "./components/tabs/SyllabusTab";
-import MockLogTab from "./components/tabs/MockLogTab";
-import TrendsTab from "./components/tabs/TrendsTab";
+import CommandPalette from "./components/CommandPalette";
 import OverviewTab from "./components/tabs/OverviewTab";
-import AboutTab from "./components/tabs/AboutTab";
-import AnalysisTab from "./components/tabs/AnalysisTab";
-import AnalysisInsightsDataTab from "./components/tabs/AnalysisInsightsDataTab";
-import SettingsTab from "./components/tabs/SettingsTab";
+
+/* Overview is the landing tab and stays in the main bundle. Everything else
+   is split out: the heavy chart/analysis tabs used to force every visitor to
+   download all of recharts and the full syllabus dataset before seeing
+   anything, on an app that's opened for a 10-second score check most days. */
+const SyllabusTab = lazy(() => import("./components/tabs/SyllabusTab"));
+const MockLogTab = lazy(() => import("./components/tabs/MockLogTab"));
+const TrendsTab = lazy(() => import("./components/tabs/TrendsTab"));
+const AboutTab = lazy(() => import("./components/tabs/AboutTab"));
+const AnalysisTab = lazy(() => import("./components/tabs/AnalysisTab"));
+const AnalysisInsightsDataTab = lazy(() => import("./components/tabs/AnalysisInsightsDataTab"));
+const SettingsTab = lazy(() => import("./components/tabs/SettingsTab"));
 
 const THEME_STORAGE_KEY = "cat-mock-tracker:theme";
 
@@ -62,22 +69,29 @@ function themeVariableCSS(themeName, values) {
   `;
 }
 
+/* Tabs render inside <Suspense>; a chunk fetch is fast enough that a spinner
+   would flash more than it would inform, so this just holds the height. */
+function TabFallback() {
+  return <div style={{ minHeight: 240 }} aria-busy="true" />;
+}
+
 export default function CATMockTracker() {
-  const [activeTab, setActiveTab] = useState("overview");
-  const [visitedTabs, setVisitedTabs] = useState(() => new Set(["overview"]));
+  const [activeTab, setActiveTab] = useHashTab("overview");
+  const [visitedTabs, setVisitedTabs] = useState(() => new Set([activeTab]));
   const [analysisMockId, setAnalysisMockId] = useState(null);
   const [theme, setTheme] = useState(loadThemePreference);
 
   const {
     sectionStats, insights, weakestAnalysis, mocks, entriesWithComputed,
-    marksSeries, attemptRateSeries, marksPerAttemptSeries, hardnessRatioSeries,
-    toast,
+    marksSeries, attemptRateSeries, marksPerAttemptSeries, hardnessRatioSeries, percentileSeries,
+    toast, syncStatus: mocksSyncStatus,
     addScoreOnlyAnalysis, editMock, attachAnalysis, loadSample, deleteMock,
     importMocks, exportMocks, importScoreOnlyMocks,
   } = useMockEntries();
 
   const {
     settings,
+    syncStatus: settingsSyncStatus,
     updateProfile,
     updateSectionTarget,
     addScheduleEntry,
@@ -91,6 +105,7 @@ export default function CATMockTracker() {
     progress: syllabusProgress,
     expanded: syllabusExpanded,
     filters: syllabusFilters,
+    syncStatus: syllabusSyncStatus,
     toggleMicroComplete,
     toggleSectionExpanded,
     toggleMacroExpanded,
@@ -111,10 +126,16 @@ export default function CATMockTracker() {
     }
   }, [theme]);
 
-  const handleTabChange = (key) => {
-    setActiveTab(key);
-    setVisitedTabs((prev) => (prev.has(key) ? prev : new Set(prev).add(key)));
-  };
+  /* Tabs mount lazily and then stay mounted (see the comment on the tab
+     block below), so this has to track every way `activeTab` can change —
+     not just clicks. Back/forward and hand-edited hashes go straight through
+     useHashTab without passing handleTabChange, and keying off the effect
+     covers all of them. */
+  useEffect(() => {
+    setVisitedTabs((prev) => (prev.has(activeTab) ? prev : new Set(prev).add(activeTab)));
+  }, [activeTab]);
+
+  const handleTabChange = (key) => setActiveTab(key);
 
   const handleOpenAnalysis = (mockId) => {
     setAnalysisMockId(mockId);
@@ -189,6 +210,7 @@ export default function CATMockTracker() {
         <Header
           theme={theme}
           onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
+          syncStatuses={[mocksSyncStatus, settingsSyncStatus, syllabusSyncStatus]}
         />
 
         <TabNav activeTab={activeTab} onChange={handleTabChange} />
@@ -197,12 +219,14 @@ export default function CATMockTracker() {
             toggled with display:none — switching tabs used to unmount/remount
             the whole subtree every time, which re-ran every chart's resize
             measurement and all aggregate computations on every visit. */}
+        <Suspense fallback={<TabFallback />}>
         {visitedTabs.has("overview") && (
           <div className="flex flex-col gap-6" style={{ display: activeTab === "overview" ? "flex" : "none" }}>
             <OverviewTab
               mocks={mocks}
               insights={insights}
               weakestAnalysis={weakestAnalysis}
+              sectionStats={sectionStats}
               settings={settings}
               syllabusProgress={syllabusProgress}
               onOpenSyllabus={() => handleTabChange("syllabus")}
@@ -272,6 +296,7 @@ export default function CATMockTracker() {
               attemptRateSeries={attemptRateSeries}
               marksPerAttemptSeries={marksPerAttemptSeries}
               hardnessRatioSeries={hardnessRatioSeries}
+              percentileSeries={percentileSeries}
               sectionStats={sectionStats}
               settings={settings}
             />
@@ -300,7 +325,17 @@ export default function CATMockTracker() {
             <AboutTab />
           </div>
         )}
+        </Suspense>
       </div>
+
+      <CommandPalette
+        mocks={mocks}
+        theme={theme}
+        onNavigate={handleTabChange}
+        onOpenAnalysis={handleOpenAnalysis}
+        onExport={handleExportData}
+        onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
+      />
 
       <Toast toast={toast} />
     </div>

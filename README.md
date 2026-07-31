@@ -45,6 +45,7 @@
 ## 2. Derived / Computed Stats (never stored — always calculated live from raw data)
 
 - **Total Marks (auto-calculated, not entered)** = (Right MCQ × 3) + (Right TITA × 3) + (Wrong MCQ × −1) + (Wrong TITA × 0) + (Unattempted × 0), where Unattempted = Total Questions in Section − Attempted MCQ − Attempted TITA (also derived, not a separate stored field)
+  - A mock logged with **no** section scores has a total of `null`, not `0` — see `mockTotalMarks` in `src/lib/compute.js`. A `0` there is indistinguishable from a genuine zero and would drag down best marks, the rolling average, and the adaptive next-mock target.
 - Overall Accuracy = (Right MCQ + Right TITA) / (Attempted MCQ + Attempted TITA)
 - MCQ Accuracy = Right MCQ / Attempted MCQ
 - TITA Accuracy = Right TITA / Attempted TITA
@@ -55,6 +56,14 @@
 - Weakest Section Flag — lowest rolling accuracy × attempt-rate combination
 - Percentile trend (only for entries where Percentile is filled)
 - Exam hardness indicator (only for entries where Topper Score is filled) — your score relative to topper, to contextualize whether a low mock score reflects a hard paper
+- **Score leak decomposition** (`src/lib/scoreLeak.js`) — splits a section's gap to a perfect score into three causes that each need a different fix:
+  - `unattemptedCost` = unattempted × 3 (marks never contested → *attempt rate*)
+  - `wrongCost` = wrong × 3 (contested and missed → *accuracy*)
+  - `negativeCost` = (correct × 3) − marks (what the penalty actually took → *question selection*)
+
+  The three always sum exactly to `ceiling − marks`. `negativeCost` is derived from the **entered score**, so it needs no assumption about which wrong answers were MCQ vs TITA — the paper's real marking is already baked into the score you logged. Requires `totalQuestions`, `attempted`, `correct` and a score on the same section; it reports nothing rather than guessing from a partial row.
+
+**Overall percentile is an estimate unless reported.** Percentiles are ranks, so averaging three sectional percentiles does *not* give the overall percentile a real mock report would show. `src/lib/percentile.js` returns `{ value, estimated, sectionsUsed }` rather than a bare number, and every place that displays it (Latest mock, College targets, Percentile trend) says so. `latestKnownPercentile` also walks back to the most recent mock that *has* a percentile, so one mock logged without one doesn't blank the college comparison.
 
 **Rule:** Any chart/stat depending on an optional field simply skips data points where that field is missing — it never blocks rendering of the rest of the dashboard.
 
@@ -108,7 +117,16 @@
 - **Mock Analysis → Import JSON** (upload a file or paste directly): accepts the same shape described in §1.3 / produced by `normalizeDetailedAnalysis` in `src/lib/analysisModel.js` — `sections` keyed by `VARC`/`DILR`/`Quant` (or `QA` as an alias for Quant), each with `blocks[]` (`type: "set" | "independent"`, optional `topic`), each block's `questions[]` (`result`, `outcomeReason`, `questionType`, `timeTaken`, `averageTime`, `notes`, `topic` for independent questions). A question's `result` may be `"Unreviewed"` (or omitted — it's the default) for anything you don't remember; that question is skipped by scoring and stats until it's updated later. Import only replaces the on-screen draft — nothing is saved until "Save analysis" is clicked. Saving always succeeds (see §1.3); it checks the imported question count and score against the mock's logged data and surfaces any mismatch as a notice, not a blocker. Use "Download template" on the Mock Analysis tab to get a ready-to-edit JSON file scaffolded from that mock's actual section/question-block structure.
 
 ### 4.2 Visualizations
+
+**Progressive disclosure.** Overview and Trends each show a short always-visible core, with everything deeper behind collapsible rows (`src/components/ui/Disclosure.jsx`). A collapsed row still carries a one-line summary drawn from real data — "Quant: 56 marks/mock to questions left unattempted", "Most volatile: DILR ±32.0% accuracy" — so it tells you whether opening it is worth the scroll. Open state is remembered per device in localStorage (`useDisclosure`), deliberately *not* synced: which panels you like expanded is a reading preference, not prep data. Collapsed panels don't render their children at all, so stacking several costs nothing.
+
 - **Overview:** high-level preparation readout: goals, pacing, weakest-section flag, score-level insights, and broad comparison charts
+  - Always on: countdown, quick stats, latest-mock spotlight, insights, weakest section, syllabus snapshot
+  - Behind disclosure: gap to section targets, overall-marks chart, college targets
+- **Trends:**
+  - Always on: section-wise marks trend, accuracy comparison, attempt-rate trend
+  - Behind disclosure: where your marks go + marks-per-attempt, percentile & paper difficulty, section shape (radar), consistency & sources
+- **Gap to section targets** (Overview) — the per-section target marks in Settings, compared against each section's rolling 5-mock average. Renders only when at least one target is set.
 - Section-wise trend lines over time (VARC / DILR / Quant on the same or separate charts) — primary "who's lagging" view
 - Accuracy comparison: overall / MCQ / TITA, both latest mock and rolling average, per section
 - Attempt-rate trend per section over time
@@ -119,6 +137,12 @@
 - **Mock Analysis insights:** detailed reason, timing, confidence, decision-quality, mistake, strength, weakness, and section-level pattern views from attached analysis
 
 
+### 4.3 App shell
+- **URL-addressable tabs** — the active tab lives in the URL hash (`#/trends`), so reloads keep your place and any view can be bookmarked or linked. Hash rather than path, to stay a static site with no server rewrite rules (`src/hooks/useHashTab.js`).
+- **Command palette** — `⌘K` / `Ctrl-K` opens a search over every tab, every logged mock (jumps straight to its analysis), and the export/theme actions. Intentionally undiscoverable from the UI beyond one note in About, so it adds no clutter; everything in it is reachable the normal way too.
+- **Sync badge** — the header always shows whether data reached the cloud (`Synced` / `Saving` / `Sync failed` / `This device`), reflecting the *worst* state across the mocks, settings and syllabus slices. Previously only a failed mock save surfaced anything, and settings/syllabus failures were entirely silent.
+- **Error boundary** — a render crash shows a recovery screen with a "Download backup" button that reads straight from localStorage, instead of a white screen that's indistinguishable from data loss.
+
 ## 5. Tech Stack
 
 - **React** (single-file component to start, ports cleanly to a full project)
@@ -126,6 +150,15 @@
 - **JSON** for data storage/import/export (no xlsx, no database)
 - No backend, no auth, no server-side code — fully static
 - Deployment: GitHub repo → Vercel (free tier), via a standard Vite + React scaffold
+
+### 5.1 Bundle
+Tabs are lazy-loaded and recharts is split into its own cached chunk (`vite.config.js`), taking the initial download from **1058 kB → 347 kB**. Overview's one chart is lazy too, so the numbers above it paint before recharts arrives.
+
+### 5.2 Tests
+`npm test` (vitest) covers the scoring math where a silent wrong answer would be worst: the score-leak decomposition, `mockTotalMarks` null-vs-zero handling, the adaptive target, and percentile estimation/recency. Pure functions only — no DOM harness.
+
+### 5.3 Persistence internals
+All three synced slices (mocks, settings, syllabus) share `src/hooks/useCloudSyncedState.js` rather than each carrying its own copy of the localStorage-mirror + fetch-reconcile + debounced-push dance. One behavioural rule worth knowing: **the initial remote fetch only replaces local state if the user hasn't edited anything while it was in flight.** Supabase can take seconds on a cold connection, and unconditionally applying the response — as each hook used to — silently discarded anything typed in the meantime.
 
 ---
 
