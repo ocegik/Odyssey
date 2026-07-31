@@ -13,7 +13,7 @@ import {
 } from "../../lib/mockFormModel";
 import MockLogTable from "../MockLogTable";
 import SectionBadge from "../ui/SectionBadge";
-import { inputStyle } from "../ui/FieldLabel";
+import { inputStyle, selectStyle } from "../ui/FieldLabel";
 
 function Panel({ title, children, action }) {
   return (
@@ -301,7 +301,7 @@ export default function MockLogTab({
                       {section.questionBlocks.map((block) => (
                         <tr key={block.id} style={{ borderTop: `1px solid ${COLORS.border}` }}>
                           <td className="px-3 py-2.5">
-                            <select value={block.type} onChange={setBlockField(sectionIdx, block.id, "type")} style={{ ...inputStyle(false), minWidth: 150, height: 40, fontSize: 14 }}>
+                            <select value={block.type} onChange={setBlockField(sectionIdx, block.id, "type")} style={{ ...selectStyle(false), minWidth: 150, height: 40, fontSize: 14 }}>
                               <option value="set">Set</option>
                               <option value="independent">Independent</option>
                             </select>

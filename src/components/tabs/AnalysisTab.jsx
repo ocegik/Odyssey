@@ -14,7 +14,7 @@ import {
   structureSummary,
   validateMockForm,
 } from "../../lib/mockFormModel";
-import { inputStyle } from "../ui/FieldLabel";
+import { inputStyle, selectStyle } from "../ui/FieldLabel";
 import EmptyState from "../ui/EmptyState";
 import SectionBadge from "../ui/SectionBadge";
 import StatCard from "../ui/StatCard";
@@ -527,7 +527,7 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
           <select
             value={selectedMock?.id || ""}
             onChange={(ev) => onSelectMock(ev.target.value)}
-            style={{ ...inputStyle(false), fontFamily: "'Inter', sans-serif" }}
+            style={{ ...selectStyle(false), fontFamily: "'Inter', sans-serif" }}
           >
             {mocks.map((mock) => (
               <option key={mock.id} value={mock.id}>
@@ -711,7 +711,7 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                             {section.questionBlocks.map((block) => (
                               <tr key={block.id} style={{ borderTop: `1px solid ${COLORS.border}` }}>
                                 <td className="px-3 py-2.5">
-                                  <select value={block.type} onChange={setStructureBlockField(sectionIdx, block.id, "type")} style={{ ...inputStyle(false), minWidth: 150, height: 40, fontSize: 14 }}>
+                                  <select value={block.type} onChange={setStructureBlockField(sectionIdx, block.id, "type")} style={{ ...selectStyle(false), minWidth: 150, height: 40, fontSize: 14 }}>
                                     <option value="set">Set</option>
                                     <option value="independent">Independent</option>
                                   </select>
@@ -831,7 +831,7 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                             <select
                               value={block.topic || ""}
                               onChange={setBlockTopic(section, blockIdx)}
-                              style={{ ...inputStyle(false), minWidth: 200, height: 36, fontSize: 13 }}
+                              style={{ ...selectStyle(false), minWidth: 200, height: 36, fontSize: 13 }}
                             >
                               <option value="">-</option>
                               {(TOPIC_OPTIONS[section] || []).map((topic) => <option key={topic} value={topic}>{topic}</option>)}
@@ -853,7 +853,7 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                               <tr key={question.id} style={{ borderTop: `1px solid ${COLORS.border}`, background: question.result === "Unreviewed" ? COLORS.surface2 : undefined }}>
                                 <td className="px-3 py-2.5" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{question.questionNumber}</td>
                                 <td className="px-3 py-2.5">
-                                  <select value={question.result} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "result", ev.target.value)} style={{ ...inputStyle(false), minWidth: 130, height: 40, fontSize: 14 }}>
+                                  <select value={question.result} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "result", ev.target.value)} style={{ ...selectStyle(false), minWidth: 130, height: 40, fontSize: 14 }}>
                                     {["Unreviewed", "Correct", "Wrong", "Skipped"].map((result) => <option key={result}>{result}</option>)}
                                   </select>
                                 </td>
@@ -861,19 +861,19 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                                   {question.result === "Unreviewed" ? (
                                     <span className="text-sm" style={{ color: COLORS.inkMuted }}>—</span>
                                   ) : (
-                                    <select value={question.outcomeReason} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "outcomeReason", ev.target.value)} style={{ ...inputStyle(false), minWidth: 240, height: 40, fontSize: 14 }}>
+                                    <select value={question.outcomeReason} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "outcomeReason", ev.target.value)} style={{ ...selectStyle(false), minWidth: 240, height: 40, fontSize: 14 }}>
                                       {(OUTCOME_REASONS[section]?.[question.result] || []).map((reason) => <option key={reason} value={reason}>{reason}</option>)}
                                     </select>
                                   )}
                                 </td>
                                 <td className="px-3 py-2.5">
-                                  <select value={question.questionType} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "questionType", ev.target.value)} style={{ ...inputStyle(false), minWidth: 110, height: 40, fontSize: 14 }}>
+                                  <select value={question.questionType} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "questionType", ev.target.value)} style={{ ...selectStyle(false), minWidth: 110, height: 40, fontSize: 14 }}>
                                     {["MCQ", "TITA"].map((type) => <option key={type}>{type}</option>)}
                                   </select>
                                 </td>
                                 {!isSet && (
                                   <td className="px-3 py-2.5">
-                                    <select value={question.topic || ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "topic", ev.target.value)} style={{ ...inputStyle(false), minWidth: 200, height: 40, fontSize: 14 }}>
+                                    <select value={question.topic || ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "topic", ev.target.value)} style={{ ...selectStyle(false), minWidth: 200, height: 40, fontSize: 14 }}>
                                       <option value="">-</option>
                                       {(TOPIC_OPTIONS[section] || []).map((topic) => <option key={topic} value={topic}>{topic}</option>)}
                                     </select>

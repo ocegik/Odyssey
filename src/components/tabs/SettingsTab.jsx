@@ -4,7 +4,7 @@ import { COLORS, SECTIONS, SECTION_META, TYPE, SHADOW } from "../../constants";
 import { LAYOUT_WIDTH_OPTIONS } from "../../hooks/useSettings";
 import { fmtDate, fmtNum } from "../../lib/format";
 import { mockTotalMarks, computeAdaptiveTarget } from "../../lib/compute";
-import { FieldLabel, inputStyle } from "../ui/FieldLabel";
+import { FieldLabel, inputStyle, selectStyle } from "../ui/FieldLabel";
 import EmptyState from "../ui/EmptyState";
 
 const EMPTY_SCHEDULE_FORM = { date: "", examName: "", dateType: "fixed", windowStart: "", windowEnd: "" };
@@ -273,7 +273,7 @@ export default function SettingsTab({
                 id="scheduleType"
                 value={scheduleForm.dateType}
                 onChange={(ev) => setScheduleForm((form) => ({ ...form, dateType: ev.target.value }))}
-                style={inputStyle(false)}
+                style={selectStyle(false)}
               >
                 {DATE_TYPE_OPTIONS.map((opt) => (
                   <option key={opt.key} value={opt.key}>{opt.label}</option>

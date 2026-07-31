@@ -34,6 +34,14 @@ function loadThemePreference() {
   }
 }
 
+/* Chevron for <select> (see selectStyle in ui/FieldLabel). It has to ship as a
+   data URI rather than a lucide icon because it's painted as a background
+   image, so the stroke colour is baked in per theme instead of inherited. */
+function selectChevronDataURI(strokeColor) {
+  const stroke = strokeColor.replace("#", "%23");
+  return `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${stroke}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`;
+}
+
 function themeVariableCSS(themeName, values) {
   const selector = themeName === "light" ? ":root, [data-theme=\"light\"]" : "[data-theme=\"dark\"]";
   return `
@@ -64,6 +72,7 @@ function themeVariableCSS(themeName, values) {
       --color-focus-ring: ${values.focusRing};
       --shadow-card: ${values.shadowCard};
       --shadow-floating: ${values.shadowFloating};
+      --select-chevron: ${selectChevronDataURI(values.inkMuted)};
       color-scheme: ${themeName};
     }
   `;
