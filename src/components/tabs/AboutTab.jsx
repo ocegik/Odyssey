@@ -121,8 +121,8 @@ Each section object:
 
 Each block:
   type       "set" | "independent", required
-  name       string, e.g. "Set 1" or "Independent Questions"
-  topicRef   object, optional — ONLY meaningful when type is "set"; canonical form is { topicId, source, taxonomyVersion }. Legacy topic strings are still accepted during migration.
+  name       string, e.g. "Passage 1" or "Independent Questions"
+  topicRef   object, optional — ONLY meaningful when type is "set"; canonical form is { topicId, source, taxonomyVersion }. For VARC RC passages, topicId specifies the Passage Domain (e.g., Philosophy, Economics, Biology). Legacy topic strings are still accepted.
   questions  array, required
 
 Each question:
@@ -143,15 +143,15 @@ Scoring rule (used both to compute totals and to check your output against the l
   Skipped     -> 0
   Unreviewed  -> 0, and excluded from the score check entirely until it's changed to something else
 
-Example (2-question independent block + a 2-question set, VARC):
+Example (2-question independent block + a 2-question RC passage set, VARC):
 {
   "sections": {
     "VARC": {
       "blocks": [
         {
           "type": "set",
-          "name": "Set 1",
-          "topic": "Reading Comprehension",
+          "name": "Passage 1",
+          "topic": "Philosophy",
           "questions": [
             { "questionNumber": 1, "result": "Correct", "outcomeReason": "Strong Passage Understanding", "questionType": "MCQ" },
             { "questionNumber": 2, "result": "Wrong", "outcomeReason": "Trap Option", "questionType": "MCQ", "timeTaken": 95, "averageTime": 70 }

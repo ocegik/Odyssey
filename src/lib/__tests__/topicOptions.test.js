@@ -11,6 +11,9 @@ describe("legacy topic option compatibility", () => {
       "Modern Math",
     ]);
     expect(TOPIC_OPTIONS.DILR).toContain("Sets & Venn Diagrams");
-    expect(TOPIC_OPTIONS.VARC).toEqual(["Reading Comprehension", "Verbal Ability"]);
+    expect(TOPIC_OPTIONS.VARC).toContain("Reading Comprehension");
+    expect(TOPIC_OPTIONS.VARC).toContain("Verbal Ability");
+    expect(TOPIC_OPTIONS.VARC).toContain("Philosophy");
+    expect(TOPIC_OPTIONS.VARC).toContain("Economics");
   });
 });

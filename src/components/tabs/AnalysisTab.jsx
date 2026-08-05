@@ -840,9 +840,10 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                 <div className="flex flex-col gap-4">
                   {sectionAnalysis.blocks.map((block, blockIdx) => {
                     const isSet = block.type === "set";
+                    const topicHeader = section === "VARC" ? "Passage Domain" : "Topic";
                     const headers = isSet
                       ? ["Q", "Result", "Outcome Reason", "Type", "Time (optional)", "Average Time (optional)", "Notes"]
-                      : ["Q", "Result", "Outcome Reason", "Type", "Topic", "Time (optional)", "Average Time (optional)", "Notes"];
+                      : ["Q", "Result", "Outcome Reason", "Type", topicHeader, "Time (optional)", "Average Time (optional)", "Notes"];
                     return (
                     <div key={block.id} className="flex flex-col gap-2">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -851,7 +852,7 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                         <span className="text-xs" style={{ color: COLORS.inkMuted }}>{block.questions.length} Qs</span>
                         {isSet && (
                           <div className="flex items-center gap-1.5 ml-auto">
-                            <span className="text-xs" style={{ color: COLORS.inkMuted }}>Set topic:</span>
+                            <span className="text-xs" style={{ color: COLORS.inkMuted }}>{section === "VARC" ? "Passage Domain:" : "Set topic:"}</span>
                             <TopicPicker
                               section={section}
                               topicRef={block.topicRef}

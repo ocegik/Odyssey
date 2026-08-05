@@ -34,6 +34,7 @@ export const SYLLABUS_SECTIONS = [
           {
             id: "varc-rc-factual-detail",
             name: "Factual/detail-based questions",
+            category: "Question Types",
             frequency: "High",
             questionTypes: [
               'Direct information lookup ("According to the passage, which of the following is true?")',
@@ -43,6 +44,7 @@ export const SYLLABUS_SECTIONS = [
           {
             id: "varc-rc-inference",
             name: "Inference-based questions",
+            category: "Question Types",
             frequency: "High",
             questionTypes: [
               '"The author would most likely agree/disagree with..." type',
@@ -53,6 +55,7 @@ export const SYLLABUS_SECTIONS = [
           {
             id: "varc-rc-main-idea",
             name: "Main idea / central theme questions",
+            category: "Question Types",
             frequency: "Medium-High",
             questionTypes: [
               '"The primary purpose of the passage is..."',
@@ -63,6 +66,7 @@ export const SYLLABUS_SECTIONS = [
           {
             id: "varc-rc-tone",
             name: "Author's tone/attitude/purpose questions",
+            category: "Question Types",
             frequency: "Medium",
             questionTypes: [
               "Identifying whether tone is critical, neutral, appreciative, skeptical, etc.",
@@ -72,6 +76,7 @@ export const SYLLABUS_SECTIONS = [
           {
             id: "varc-rc-vocab-context",
             name: "Vocabulary-in-context questions",
+            category: "Question Types",
             frequency: "Medium",
             questionTypes: [
               '"As used in the passage, the word X most nearly means..."',
@@ -81,6 +86,7 @@ export const SYLLABUS_SECTIONS = [
           {
             id: "varc-rc-critical-reasoning",
             name: "Critical reasoning within RC",
+            category: "Question Types",
             frequency: "Medium",
             questionTypes: [
               "Strengthen/weaken the author's argument",
@@ -89,13 +95,58 @@ export const SYLLABUS_SECTIONS = [
           },
           {
             id: "varc-rc-domain-familiarity",
-            name: "Passage-domain familiarity",
+            name: "Passage Domain",
+            category: "General",
             frequency: null,
-            note: "Affects difficulty, not a question type.",
+            note: "Underlying academic or disciplinary domain of RC passages.",
             questionTypes: [
-              "Science & Technology, Economics, Philosophy, History, Sociology, Environment, Arts & Literature, Business, Psychology, Politics – all domains are fair game, with Economics/Business, Science & Tech, and Philosophy/Sociology recurring most often",
+              "Humanities, Social Sciences, Science, Technology, Business, General – classify by core academic discipline rather than surface examples",
             ],
           },
+          // Humanities
+          { id: "varc-rc-philosophy", name: "Philosophy", category: "Humanities", questionTypes: ["Underlying philosophical arguments, ethics, epistemology, logic"] },
+          { id: "varc-rc-history", name: "History", category: "Humanities", questionTypes: ["Historical analysis, historiography, narrative analysis"] },
+          { id: "varc-rc-literature", name: "Literature", category: "Humanities", questionTypes: ["Literary criticism, author analysis, fiction/prose analysis"] },
+          { id: "varc-rc-art-architecture", name: "Art & Architecture", category: "Humanities", questionTypes: ["Art history, architectural theory, aesthetics"] },
+          { id: "varc-rc-linguistics", name: "Linguistics", category: "Humanities", questionTypes: ["Language evolution, syntax, semantics, socio-linguistics"] },
+          { id: "varc-rc-religion-mythology", name: "Religion & Mythology", category: "Humanities", questionTypes: ["Comparative religion, mythological frameworks, theology"] },
+
+          // Social Sciences
+          { id: "varc-rc-psychology", name: "Psychology", category: "Social Sciences", questionTypes: ["Cognitive science, behavioral psychology, human perception"] },
+          { id: "varc-rc-sociology", name: "Sociology", category: "Social Sciences", questionTypes: ["Social structures, cultural dynamics, systemic behavior"] },
+          { id: "varc-rc-economics", name: "Economics", category: "Social Sciences", questionTypes: ["Micro/macroeconomics, market mechanics, economic theory"] },
+          { id: "varc-rc-political-science", name: "Political Science", category: "Social Sciences", questionTypes: ["Political theory, governance models, international relations"] },
+          { id: "varc-rc-anthropology", name: "Anthropology", category: "Social Sciences", questionTypes: ["Human origin, evolution, cultural anthropology"] },
+          { id: "varc-rc-law", name: "Law", category: "Social Sciences", questionTypes: ["Jurisprudence, constitutional law, legal reasoning"] },
+          { id: "varc-rc-education", name: "Education", category: "Social Sciences", questionTypes: ["Pedagogy, educational philosophy, policy"] },
+
+          // Science
+          { id: "varc-rc-biology", name: "Biology", category: "Science", questionTypes: ["Evolution, genetics, ecology, cellular biology"] },
+          { id: "varc-rc-physics", name: "Physics", category: "Science", questionTypes: ["Quantum mechanics, relativity, thermodynamics, astrophysics"] },
+          { id: "varc-rc-chemistry", name: "Chemistry", category: "Science", questionTypes: ["Chemical processes, molecular structure, biochemistry"] },
+          { id: "varc-rc-astronomy-space", name: "Astronomy & Space", category: "Science", questionTypes: ["Cosmology, space exploration, planetary sciences"] },
+          { id: "varc-rc-medicine-healthcare", name: "Medicine & Healthcare", category: "Science", questionTypes: ["Medical research, immunology, public health"] },
+          { id: "varc-rc-neuroscience", name: "Neuroscience", category: "Science", questionTypes: ["Brain function, neurobiology, consciousness"] },
+          { id: "varc-rc-environmental-science", name: "Environmental Science", category: "Science", questionTypes: ["Climate change, conservation, biodiversity"] },
+          { id: "varc-rc-mathematics", name: "Mathematics", category: "Science", questionTypes: ["Mathematical philosophy, chaos theory, statistics"] },
+
+          // Technology
+          { id: "varc-rc-computer-science", name: "Computer Science", category: "Technology", questionTypes: ["Computation theory, algorithms, software engineering"] },
+          { id: "varc-rc-artificial-intelligence", name: "Artificial Intelligence", category: "Technology", questionTypes: ["Machine learning, neural networks, AI ethics"] },
+          { id: "varc-rc-engineering", name: "Engineering", category: "Technology", questionTypes: ["Robotics, material science, mechanical systems"] },
+          { id: "varc-rc-internet-digital-society", name: "Internet & Digital Society", category: "Technology", questionTypes: ["Cybersecurity, digital culture, information policy"] },
+
+          // Business
+          { id: "varc-rc-finance", name: "Finance", category: "Business", questionTypes: ["Capital markets, corporate finance, investing"] },
+          { id: "varc-rc-marketing", name: "Marketing", category: "Business", questionTypes: ["Consumer behavior, branding, advertising"] },
+          { id: "varc-rc-management", name: "Management", category: "Business", questionTypes: ["Organizational behavior, leadership, strategy"] },
+          { id: "varc-rc-entrepreneurship", name: "Entrepreneurship", category: "Business", questionTypes: ["Startups, venture capital, business model innovation"] },
+
+          // General
+          { id: "varc-rc-culture-society", name: "Culture & Society", category: "General", questionTypes: ["Pop culture, media studies, contemporary customs"] },
+          { id: "varc-rc-geography", name: "Geography", category: "General", questionTypes: ["Physical geography, geopolitics, demography"] },
+          { id: "varc-rc-current-affairs", name: "Current Affairs", category: "General", questionTypes: ["Global policy, recent world events, news analysis"] },
+          { id: "varc-rc-mixed-interdisciplinary", name: "Mixed / Interdisciplinary", category: "General", questionTypes: ["Cross-domain synthesis combining multiple academic fields"] },
         ],
       },
       {

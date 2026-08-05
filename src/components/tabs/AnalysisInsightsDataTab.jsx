@@ -194,15 +194,15 @@ export default function AnalysisInsightsDataTab({ mocks }) {
         <SectionReasonTable rows={analysis.reasonRows} />
       </ChartFrame>
 
-      <GroupHeading>Topic insights</GroupHeading>
+      <GroupHeading>Topic & Passage Domain insights</GroupHeading>
       <ChartFrame
-        title="Topic-based patterns"
-        note="Guessing, concept gaps, timing, and trend by topic"
-        empty={topicInsightsRemaining.length === 0 ? "No strong topic patterns yet — tag more questions and log a few more mocks." : null}
+        title="Topic & domain patterns"
+        note="Guessing, concept gaps, timing, and trend by topic/domain"
+        empty={topicInsightsRemaining.length === 0 ? "No strong topic/domain patterns yet — tag more questions and log a few more mocks." : null}
       >
         <InsightList insights={topicInsightsRemaining} showHero={false} />
       </ChartFrame>
-      <ChartFrame title="Topic accuracy breakdown" note="Every tagged topic, weakest first">
+      <ChartFrame title="Topic & domain accuracy breakdown" note="Every tagged topic and domain, weakest first">
         <TopicAccuracyTable rows={analysis.topicRows} />
       </ChartFrame>
 

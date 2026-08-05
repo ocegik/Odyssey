@@ -60,6 +60,7 @@ SYLLABUS_TREE.forEach((section) => {
         parentId: macro.id,
         kind: "leaf",
         name: micro.name,
+        category: micro.category || null,
         sectionId: section.id,
         taggable: true,
         frequency: micro.frequency,
