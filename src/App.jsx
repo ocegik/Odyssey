@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { COLORS, FONT_IMPORT, THEME_COLORS } from "./constants";
 import { useMockEntries } from "./hooks/useMockEntries";
 import { useSettings, normalizeSettings, LAYOUT_WIDTH_OPTIONS } from "./hooks/useSettings";
