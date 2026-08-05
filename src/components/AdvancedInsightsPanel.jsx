@@ -1,9 +1,5 @@
-import { useMemo } from "react";
 import { Lightbulb } from "lucide-react";
 import { COLORS } from "../constants";
-import { buildAdvancedInsights } from "../lib/advancedInsights";
-import ChartFrame from "./charts/ChartFrame";
-import InsightList from "./charts/InsightList";
 import SectionBadge from "./ui/SectionBadge";
 import StatCard from "./ui/StatCard";
 
@@ -22,44 +18,20 @@ function RecommendationCard({ recommendation }) {
   );
 }
 
-export default function AdvancedInsightsPanel({ mocks }) {
-  const analysis = useMemo(() => buildAdvancedInsights(mocks), [mocks]);
-  const hasAnyData = analysis.setRecords.length > 0 || analysis.topicRecords.length > 0;
-  const noDataMessage = "Attach detailed analysis with tagged set/question topics to unlock set-pattern and topic-based insights.";
-
+export function AdvancedStatCards({ analysis }) {
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <StatCard label="Set patterns found" value={analysis.setInsights.length} />
-        <StatCard label="Topic insights" value={analysis.topicInsights.length} />
-        <StatCard label="Recommendations" value={analysis.recommendations.length} />
-      </div>
+    <>
+      <StatCard label="Set patterns found" value={analysis.setInsights.length} />
+      <StatCard label="Topic insights" value={analysis.topicInsights.length} />
+      <StatCard label="Recommendations" value={analysis.recommendations.length} />
+    </>
+  );
+}
 
-      <ChartFrame
-        title="Set-level insights"
-        note="Why a set went the way it did, not just the score"
-        empty={!hasAnyData ? noDataMessage : analysis.setInsights.length === 0 ? "No strong set-level patterns yet — keep tagging set topics and logging mocks." : null}
-      >
-        <InsightList insights={analysis.setInsights} />
-      </ChartFrame>
-
-      <ChartFrame
-        title="Topic-based insights"
-        note="Accuracy, time, confidence, and trend by topic"
-        empty={!hasAnyData ? noDataMessage : analysis.topicInsights.length === 0 ? "No strong topic patterns yet — tag more questions and log a few more mocks." : null}
-      >
-        <InsightList insights={analysis.topicInsights} />
-      </ChartFrame>
-
-      <ChartFrame
-        title="Recommendations"
-        note="Evidence-based next steps, tied to the pattern that triggered them"
-        empty={analysis.recommendations.length === 0 ? "No actionable recommendations yet." : null}
-      >
-        <div className="flex flex-col gap-2">
-          {analysis.recommendations.map((rec) => <RecommendationCard key={rec.id} recommendation={rec} />)}
-        </div>
-      </ChartFrame>
+export function RecommendationList({ recommendations }) {
+  return (
+    <div className="flex flex-col gap-2">
+      {recommendations.map((rec) => <RecommendationCard key={rec.id} recommendation={rec} />)}
     </div>
   );
 }

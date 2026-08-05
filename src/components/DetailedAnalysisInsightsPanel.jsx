@@ -2,37 +2,43 @@ import { AlertTriangle, Clock3, Target } from "lucide-react";
 import { Bar, BarChart, ComposedChart, Line, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { COLORS, TYPE } from "../constants";
 import { fmtDate, fmtNum, fmtPct } from "../lib/format";
-import ChartFrame from "./charts/ChartFrame";
-import InsightList from "./charts/InsightList";
-import SectionBadge from "./ui/SectionBadge";
 import StatCard from "./ui/StatCard";
+import SectionBadge from "./ui/SectionBadge";
 
 function seconds(value) {
   return value === null || value === undefined ? "-" : `${fmtNum(value, 0)}s`;
 }
 
-function ReasonLabel({ entry, total }) {
-  if (!entry) return <span style={{ color: COLORS.inkMuted }}>-</span>;
-  return (
-    <span>
-      {entry.label} <span style={{ color: COLORS.inkMuted }}>({entry.count}/{total})</span>
-    </span>
-  );
-}
-
-function detailedInsightIcon(insight) {
+export function detailedInsightIcon(insight) {
   if (insight.title.includes("Time")) return Clock3;
   if (insight.title.includes("Question")) return Target;
   return AlertTriangle;
 }
 
-function SectionReasonTable({ rows }) {
+/* Stacks the top-3 reasons (not just the single top one) so this table fully
+   subsumes what a separate "top reasons per section" card would show —
+   the same fact should live in one place, at its fullest detail, not be
+   split between a table's top-1 and a card's top-3 elsewhere on the page. */
+function ReasonList({ entries, total }) {
+  if (!entries || entries.length === 0) return <span style={{ color: COLORS.inkMuted }}>-</span>;
+  return (
+    <div className="flex flex-col gap-0.5">
+      {entries.slice(0, 3).map((entry) => (
+        <span key={entry.label} className="text-xs whitespace-nowrap">
+          {entry.label} <span style={{ color: COLORS.inkMuted, fontFamily: "'JetBrains Mono', monospace" }}>({entry.count}/{total})</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export function SectionReasonTable({ rows }) {
   return (
     <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
       <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 860 }}>
         <thead>
           <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>
-            {["Section", "Accuracy", "Correct signal", "Wrong driver", "Skip driver", "Slow", "Avg time"].map((label) => (
+            {["Section", "Accuracy", "Wrong drivers", "Skip drivers", "Slow", "Avg time"].map((label) => (
               <th key={label} className="text-left px-3 py-2" style={{ ...TYPE.label, color: COLORS.inkMuted }}>{label}</th>
             ))}
           </tr>
@@ -42,9 +48,8 @@ function SectionReasonTable({ rows }) {
             <tr key={row.section} style={{ borderTop: `1px solid ${COLORS.border}` }}>
               <td className="px-3 py-2"><SectionBadge section={row.section} size="sm" /></td>
               <td className="px-3 py-2" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{fmtPct(row.accuracy)}</td>
-              <td className="px-3 py-2"><ReasonLabel entry={row.topCorrect} total={row.correct} /></td>
-              <td className="px-3 py-2"><ReasonLabel entry={row.topWrong} total={row.wrong} /></td>
-              <td className="px-3 py-2"><ReasonLabel entry={row.topSkipped} total={row.skipped} /></td>
+              <td className="px-3 py-2"><ReasonList entries={row.wrongReasons} total={row.wrong} /></td>
+              <td className="px-3 py-2"><ReasonList entries={row.skippedReasons} total={row.skipped} /></td>
               <td className="px-3 py-2" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{fmtPct(row.slowRate)}</td>
               <td className="px-3 py-2" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{seconds(row.avgTime)}</td>
             </tr>
@@ -55,7 +60,7 @@ function SectionReasonTable({ rows }) {
   );
 }
 
-function TimingTable({ rows }) {
+export function TimingTable({ rows }) {
   return (
     <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
       <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 700 }}>
@@ -82,7 +87,7 @@ function TimingTable({ rows }) {
   );
 }
 
-function AnalysisTrendChart({ rows }) {
+export function AnalysisTrendChart({ rows }) {
   const data = rows.map((row) => ({
     label: `${fmtDate(row.date)} - ${row.source}`,
     Accuracy: row.accuracy !== null && row.accuracy !== undefined ? +(row.accuracy * 100).toFixed(1) : null,
@@ -111,7 +116,7 @@ function AnalysisTrendChart({ rows }) {
   );
 }
 
-function TopicAccuracyTable({ rows }) {
+export function TopicAccuracyTable({ rows }) {
   const tagged = rows.filter((row) => row.attempted > 0);
   if (tagged.length === 0) {
     return <p className="text-sm" style={{ color: COLORS.inkMuted }}>Tag topics in Mock Analysis to unlock a per-topic accuracy breakdown.</p>;
@@ -141,7 +146,7 @@ function TopicAccuracyTable({ rows }) {
   );
 }
 
-function AnalysisBarChart({ rows }) {
+export function AnalysisBarChart({ rows }) {
   const data = rows.map((row) => ({
     section: row.section,
     Wrong: row.wrong,
@@ -168,53 +173,14 @@ function AnalysisBarChart({ rows }) {
   );
 }
 
-export default function DetailedAnalysisInsightsPanel({ analysis }) {
-  const empty = analysis.analyzedMockCount === 0
-    ? "Attach detailed analysis to any mock to unlock reason, timing, and recurring-pattern insights."
-    : null;
-
+export function DetailedStatCards({ analysis }) {
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <StatCard label="Analyzed mocks" value={analysis.analyzedMockCount} />
-        <StatCard label="Questions" value={analysis.questionCount} />
-        <StatCard label="Analysis acc" value={fmtPct(analysis.accuracy)} />
-        <StatCard label="Wrong" value={analysis.wrong} />
-        <StatCard label="Skipped" value={analysis.skipped} />
-      </div>
-
-      <ChartFrame title="Detailed analysis insights" note="Outcome reasons, timing, and recurring patterns" empty={empty}>
-        {analysis.insights.length > 0 ? (
-          <InsightList insights={analysis.insights} iconFor={detailedInsightIcon} />
-        ) : (
-          <p className="text-sm" style={{ color: COLORS.inkMuted }}>Analysis is attached, but there is not enough repeated signal yet.</p>
-        )}
-      </ChartFrame>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <ChartFrame title="Wrong, skipped, slow counts" empty={empty}>
-          <AnalysisBarChart rows={analysis.reasonRows} />
-        </ChartFrame>
-        <ChartFrame title="Section reason breakdown" empty={empty}>
-          <SectionReasonTable rows={analysis.reasonRows} />
-        </ChartFrame>
-      </div>
-
-      <ChartFrame
-        title="Timing by outcome"
-        note="Average seconds per question"
-        empty={empty || (!analysis.hasTimeData ? "We don't have time data yet — fill in Time Taken on any mock's analysis to unlock timing insights." : null)}
-      >
-        <TimingTable rows={analysis.timingRows} />
-      </ChartFrame>
-
-      <ChartFrame title="Accuracy, wrong & skipped over time" note="Across analyzed mocks" empty={empty}>
-        <AnalysisTrendChart rows={analysis.mockTrendRows} />
-      </ChartFrame>
-
-      <ChartFrame title="Topic accuracy breakdown" note="Every tagged topic, weakest first" empty={empty}>
-        <TopicAccuracyTable rows={analysis.topicRows} />
-      </ChartFrame>
-    </div>
+    <>
+      <StatCard label="Analyzed mocks" value={analysis.analyzedMockCount} />
+      <StatCard label="Questions" value={analysis.questionCount} />
+      <StatCard label="Analysis acc" value={fmtPct(analysis.accuracy)} />
+      <StatCard label="Wrong" value={analysis.wrong} />
+      <StatCard label="Skipped" value={analysis.skipped} />
+    </>
   );
 }
