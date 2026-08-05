@@ -100,53 +100,22 @@ export const SYLLABUS_SECTIONS = [
             frequency: null,
             note: "Underlying academic or disciplinary domain of RC passages.",
             questionTypes: [
-              "Humanities, Social Sciences, Science, Technology, Business, General – classify by core academic discipline rather than surface examples",
+              "Philosophy, History, Literature, Arts & Culture, Psychology, Economics, Politics & Society, Biology & Medicine, Physics & Chemistry, Technology, Environment, Mixed",
             ],
           },
-          // Humanities
-          { id: "varc-rc-philosophy", name: "Philosophy", category: "Humanities", questionTypes: ["Underlying philosophical arguments, ethics, epistemology, logic"] },
-          { id: "varc-rc-history", name: "History", category: "Humanities", questionTypes: ["Historical analysis, historiography, narrative analysis"] },
-          { id: "varc-rc-literature", name: "Literature", category: "Humanities", questionTypes: ["Literary criticism, author analysis, fiction/prose analysis"] },
-          { id: "varc-rc-art-architecture", name: "Art & Architecture", category: "Humanities", questionTypes: ["Art history, architectural theory, aesthetics"] },
-          { id: "varc-rc-linguistics", name: "Linguistics", category: "Humanities", questionTypes: ["Language evolution, syntax, semantics, socio-linguistics"] },
-          { id: "varc-rc-religion-mythology", name: "Religion & Mythology", category: "Humanities", questionTypes: ["Comparative religion, mythological frameworks, theology"] },
-
-          // Social Sciences
-          { id: "varc-rc-psychology", name: "Psychology", category: "Social Sciences", questionTypes: ["Cognitive science, behavioral psychology, human perception"] },
-          { id: "varc-rc-sociology", name: "Sociology", category: "Social Sciences", questionTypes: ["Social structures, cultural dynamics, systemic behavior"] },
-          { id: "varc-rc-economics", name: "Economics", category: "Social Sciences", questionTypes: ["Micro/macroeconomics, market mechanics, economic theory"] },
-          { id: "varc-rc-political-science", name: "Political Science", category: "Social Sciences", questionTypes: ["Political theory, governance models, international relations"] },
-          { id: "varc-rc-anthropology", name: "Anthropology", category: "Social Sciences", questionTypes: ["Human origin, evolution, cultural anthropology"] },
-          { id: "varc-rc-law", name: "Law", category: "Social Sciences", questionTypes: ["Jurisprudence, constitutional law, legal reasoning"] },
-          { id: "varc-rc-education", name: "Education", category: "Social Sciences", questionTypes: ["Pedagogy, educational philosophy, policy"] },
-
-          // Science
-          { id: "varc-rc-biology", name: "Biology", category: "Science", questionTypes: ["Evolution, genetics, ecology, cellular biology"] },
-          { id: "varc-rc-physics", name: "Physics", category: "Science", questionTypes: ["Quantum mechanics, relativity, thermodynamics, astrophysics"] },
-          { id: "varc-rc-chemistry", name: "Chemistry", category: "Science", questionTypes: ["Chemical processes, molecular structure, biochemistry"] },
-          { id: "varc-rc-astronomy-space", name: "Astronomy & Space", category: "Science", questionTypes: ["Cosmology, space exploration, planetary sciences"] },
-          { id: "varc-rc-medicine-healthcare", name: "Medicine & Healthcare", category: "Science", questionTypes: ["Medical research, immunology, public health"] },
-          { id: "varc-rc-neuroscience", name: "Neuroscience", category: "Science", questionTypes: ["Brain function, neurobiology, consciousness"] },
-          { id: "varc-rc-environmental-science", name: "Environmental Science", category: "Science", questionTypes: ["Climate change, conservation, biodiversity"] },
-          { id: "varc-rc-mathematics", name: "Mathematics", category: "Science", questionTypes: ["Mathematical philosophy, chaos theory, statistics"] },
-
-          // Technology
-          { id: "varc-rc-computer-science", name: "Computer Science", category: "Technology", questionTypes: ["Computation theory, algorithms, software engineering"] },
-          { id: "varc-rc-artificial-intelligence", name: "Artificial Intelligence", category: "Technology", questionTypes: ["Machine learning, neural networks, AI ethics"] },
-          { id: "varc-rc-engineering", name: "Engineering", category: "Technology", questionTypes: ["Robotics, material science, mechanical systems"] },
-          { id: "varc-rc-internet-digital-society", name: "Internet & Digital Society", category: "Technology", questionTypes: ["Cybersecurity, digital culture, information policy"] },
-
-          // Business
-          { id: "varc-rc-finance", name: "Finance", category: "Business", questionTypes: ["Capital markets, corporate finance, investing"] },
-          { id: "varc-rc-marketing", name: "Marketing", category: "Business", questionTypes: ["Consumer behavior, branding, advertising"] },
-          { id: "varc-rc-management", name: "Management", category: "Business", questionTypes: ["Organizational behavior, leadership, strategy"] },
-          { id: "varc-rc-entrepreneurship", name: "Entrepreneurship", category: "Business", questionTypes: ["Startups, venture capital, business model innovation"] },
-
-          // General
-          { id: "varc-rc-culture-society", name: "Culture & Society", category: "General", questionTypes: ["Pop culture, media studies, contemporary customs"] },
-          { id: "varc-rc-geography", name: "Geography", category: "General", questionTypes: ["Physical geography, geopolitics, demography"] },
-          { id: "varc-rc-current-affairs", name: "Current Affairs", category: "General", questionTypes: ["Global policy, recent world events, news analysis"] },
-          { id: "varc-rc-mixed-interdisciplinary", name: "Mixed / Interdisciplinary", category: "General", questionTypes: ["Cross-domain synthesis combining multiple academic fields"] },
+          // Passage Domains
+          { id: "varc-rc-philosophy", name: "Philosophy", category: "Passage Domains", questionTypes: ["Ethics, epistemology, logic, philosophical arguments, aesthetics"] },
+          { id: "varc-rc-history", name: "History", category: "Passage Domains", questionTypes: ["Historiography, historical events, narrative analysis"] },
+          { id: "varc-rc-literature", name: "Literature", category: "Passage Domains", questionTypes: ["Literary criticism, fiction, prose, author analysis, linguistics"] },
+          { id: "varc-rc-arts-culture", name: "Arts & Culture", category: "Passage Domains", questionTypes: ["Art history, aesthetics, architecture, culture & traditions"] },
+          { id: "varc-rc-psychology", name: "Psychology", category: "Passage Domains", questionTypes: ["Cognitive science, behavioral psychology, human perception"] },
+          { id: "varc-rc-economics", name: "Economics", category: "Passage Domains", questionTypes: ["Micro/macroeconomics, finance, marketing, management, entrepreneurship"] },
+          { id: "varc-rc-politics-society", name: "Politics & Society", category: "Passage Domains", questionTypes: ["Political science, sociology, law, governance, anthropology, education"] },
+          { id: "varc-rc-biology-medicine", name: "Biology & Medicine", category: "Passage Domains", questionTypes: ["Evolution, genetics, healthcare, neuroscience, medical research"] },
+          { id: "varc-rc-physics-chemistry", name: "Physics & Chemistry", category: "Passage Domains", questionTypes: ["Physical sciences, chemistry, astronomy & space, mathematics"] },
+          { id: "varc-rc-technology", name: "Technology", category: "Passage Domains", questionTypes: ["Computer science, AI, engineering, internet & digital society"] },
+          { id: "varc-rc-environment", name: "Environment", category: "Passage Domains", questionTypes: ["Climate change, ecology, conservation, environmental science & geography"] },
+          { id: "varc-rc-mixed", name: "Mixed", category: "Passage Domains", questionTypes: ["Interdisciplinary passages combining multiple academic fields"] },
         ],
       },
       {

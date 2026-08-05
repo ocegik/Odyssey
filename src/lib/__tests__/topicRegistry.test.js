@@ -39,9 +39,10 @@ describe("canonical topic registry", () => {
     ]);
     const rcChildren = getTopicChildren("varc-rc");
     expect(rcChildren.map((t) => t.id)).toContain("varc-rc-philosophy");
-    expect(rcChildren.map((t) => t.id)).toContain("varc-rc-economics");
-    expect(rcChildren.find((t) => t.id === "varc-rc-philosophy").category).toBe("Humanities");
-    expect(rcChildren.find((t) => t.id === "varc-rc-economics").category).toBe("Social Sciences");
+    expect(rcChildren.map((t) => t.id)).toContain("varc-rc-politics-society");
+    expect(rcChildren.map((t) => t.id)).toContain("varc-rc-biology-medicine");
+    expect(rcChildren.find((t) => t.id === "varc-rc-philosophy").name).toBe("Philosophy");
+    expect(rcChildren.find((t) => t.id === "varc-rc-politics-society").name).toBe("Politics & Society");
   });
 
   it("validates topic IDs against the analysis section", () => {
