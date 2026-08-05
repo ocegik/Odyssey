@@ -1,6 +1,6 @@
 import { SECTIONS } from "../constants";
 import { fmtNum, fmtPct } from "./format";
-import { getEffectiveTopic } from "./analysisModel";
+import { getEffectiveTopic, getEffectiveTopicRef } from "./analysisModel";
 import { inc, topEntry, topEntries, accuracyOf } from "./aggregate";
 
 const MIN_RECURRING_REASON_COUNT = 3;
@@ -38,6 +38,8 @@ export function flattenAnalysisQuestions(mocks) {
           blockType: block.type,
           blockName: block.name,
           topic: getEffectiveTopic(block, question),
+          topicRef: getEffectiveTopicRef(block, question),
+          topicId: getEffectiveTopicRef(block, question)?.topicId || null,
           // "Unreviewed" questions carry no information yet — excluded from
           // attempted (same as an actual Skipped) so a mock still mid-review
           // doesn't skew accuracy/topic/timing stats with placeholder rows.
@@ -75,8 +77,14 @@ function emptySectionSummary(section) {
   };
 }
 
-function topicStat(summary, topic) {
-  return summary.topicStats[topic] || (summary.topicStats[topic] = { attempted: 0, correct: 0 });
+function topicStat(summary, question) {
+  const key = question.topicId ? `id:${question.topicId}` : `legacy:${question.topic}`;
+  return summary.topicStats[key] || (summary.topicStats[key] = {
+    topic: question.topic,
+    topicId: question.topicId || null,
+    attempted: 0,
+    correct: 0,
+  });
 }
 
 function summarizeSection(section, questions) {
@@ -101,8 +109,8 @@ function summarizeSection(section, questions) {
     if (question.result === "Skipped") inc(summary.skippedReasons, question.outcomeReason);
     if (question.result === "Correct") inc(summary.correctReasons, question.outcomeReason);
 
-    if (question.topic) {
-      const stat = topicStat(summary, question.topic);
+    if (question.topic || question.topicId) {
+      const stat = topicStat(summary, question);
       if (question.attempted) stat.attempted += 1;
       if (question.result === "Correct") stat.correct += 1;
     }
@@ -193,7 +201,7 @@ function generateSectionInsights(sectionSummaries, questions) {
     }
 
     const topicEntries = Object.entries(summary.topicStats)
-      .map(([topic, stat]) => ({ topic, ...stat, accuracy: accuracyOf(stat.correct, stat.attempted) }))
+      .map(([, stat]) => ({ ...stat, accuracy: accuracyOf(stat.correct, stat.attempted) }))
       .filter((entry) => entry.attempted >= MIN_TOPIC_ATTEMPTS && entry.accuracy !== null);
     if (topicEntries.length > 0) {
       const weakestTopic = [...topicEntries].sort((a, b) => a.accuracy - b.accuracy)[0];
@@ -255,9 +263,10 @@ function buildTopicRows(sectionSummaries) {
   return SECTIONS.flatMap((section) => {
     const summary = sectionSummaries[section];
     return Object.entries(summary.topicStats)
-      .map(([topic, stat]) => ({
+      .map(([, stat]) => ({
         section,
-        topic,
+        topic: stat.topic,
+        topicId: stat.topicId,
         attempted: stat.attempted,
         correct: stat.correct,
         accuracy: accuracyOf(stat.correct, stat.attempted),

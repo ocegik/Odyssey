@@ -3,6 +3,8 @@ import { COLORS, FONT_IMPORT, THEME_COLORS } from "./constants";
 import { useMockEntries } from "./hooks/useMockEntries";
 import { useSettings, normalizeSettings, LAYOUT_WIDTH_OPTIONS } from "./hooks/useSettings";
 import { useSyllabus } from "./hooks/useSyllabus";
+import { buildTopicMetrics } from "./lib/topicMetrics";
+import { buildRevisionQueue } from "./lib/revisionQueue";
 import { useHashTab } from "./hooks/useHashTab";
 import { normalizeStoredMocks } from "./lib/mockStorage";
 import Header from "./components/layout/Header";
@@ -112,6 +114,7 @@ export default function CATMockTracker() {
 
   const {
     progress: syllabusProgress,
+    revisionEvents: syllabusRevisionEvents,
     expanded: syllabusExpanded,
     filters: syllabusFilters,
     syncStatus: syllabusSyncStatus,
@@ -124,7 +127,12 @@ export default function CATMockTracker() {
     setSearch: setSyllabusSearch,
     setStatusFilter: setSyllabusStatusFilter,
     setFrequencyFilter: setSyllabusFrequencyFilter,
+    exportState: exportSyllabusState,
+    replaceState: replaceSyllabusState,
   } = useSyllabus();
+
+  const topicMetrics = useMemo(() => buildTopicMetrics(mocks), [mocks]);
+  const revisionQueue = useMemo(() => buildRevisionQueue(mocks, syllabusRevisionEvents), [mocks, syllabusRevisionEvents]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -156,6 +164,7 @@ export default function CATMockTracker() {
       exportedAt: new Date().toISOString(),
       mocks: exportMocks(),
       settings,
+      learningState: exportSyllabusState(),
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -177,9 +186,13 @@ export default function CATMockTracker() {
     // block can't leave mocks replaced with the settings half untouched.
     normalizeStoredMocks(parsed.mocks);
     if (parsed.settings) normalizeSettings(parsed.settings);
+    if (parsed.learningState && typeof parsed.learningState !== "object") {
+      throw new Error('Backup "learningState" must be an object.');
+    }
 
     const count = importMocks(parsed.mocks);
     if (parsed.settings) replaceSettings(parsed.settings);
+    if (parsed.learningState) replaceSyllabusState(parsed.learningState);
     return count;
   };
 
@@ -247,6 +260,8 @@ export default function CATMockTracker() {
           <div className="flex flex-col gap-6" style={{ display: activeTab === "syllabus" ? "flex" : "none" }}>
             <SyllabusTab
               progress={syllabusProgress}
+              topicMetrics={topicMetrics}
+              revisionQueue={revisionQueue}
               expanded={syllabusExpanded}
               filters={syllabusFilters}
               onToggleMicroComplete={toggleMicroComplete}

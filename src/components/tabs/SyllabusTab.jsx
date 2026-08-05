@@ -8,7 +8,7 @@ import SyllabusToolbar from "../syllabus/SyllabusToolbar";
 import SyllabusSectionCard from "../syllabus/SyllabusSectionCard";
 
 export default function SyllabusTab({
-  progress, expanded, filters,
+  progress, topicMetrics, revisionQueue, expanded, filters,
   onToggleMicroComplete, onToggleSectionExpanded, onToggleMacroExpanded, onToggleMicroExpanded,
   onExpandAll, onCollapseAll, onSetSearch, onSetStatusFilter, onSetFrequencyFilter,
 }) {
@@ -22,7 +22,7 @@ export default function SyllabusTab({
 
   return (
     <div className="flex flex-col gap-4">
-      <SyllabusDashboard stats={stats} />
+      <SyllabusDashboard stats={stats} topicMetrics={topicMetrics} revisionQueue={revisionQueue} />
 
       <SyllabusToolbar
         filters={filters}
@@ -53,6 +53,7 @@ export default function SyllabusTab({
               expandedMacroIds={expanded.macros}
               expandedMicroIds={expanded.micros}
               progress={progress}
+              topicMetrics={topicMetrics}
               onToggleSectionExpand={onToggleSectionExpanded}
               onToggleMacroExpand={onToggleMacroExpanded}
               onToggleMicroExpand={onToggleMicroExpanded}

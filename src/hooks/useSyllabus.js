@@ -1,9 +1,11 @@
 import { useCallback } from "react";
+import { uid } from "../lib/format";
 import { ALL_MICRO_TOPICS, STATUS_FILTERS, FREQUENCY_BUCKETS, SYLLABUS_TREE } from "../lib/syllabusModel";
 import { useCloudSyncedState } from "./useCloudSyncedState";
 
 const STORAGE_KEY = "cat-mock-tracker:syllabus";
 const REMOTE_KEY = "syllabus";
+export const LEARNING_STATE_VERSION = 1;
 
 const DEFAULT_FILTERS = { search: "", status: "all", frequency: "all" };
 
@@ -32,16 +34,25 @@ function numberOrNull(value) {
 // is actually written to today.
 function normalizeMicroProgress(raw) {
   const source = raw && typeof raw === "object" ? raw : {};
+  const completionStatus = source.completionStatus === "completed"
+    ? "completed"
+    : source.completionStatus === "in_progress"
+      ? "in_progress"
+      : Boolean(source.completed) ? "completed" : "not_started";
+  const legacyMetrics = {};
+  ["mockAccuracy", "attempts", "priorityScore", "masteryLevel"].forEach((field) => {
+    if (source[field] !== undefined && source[field] !== null) legacyMetrics[field] = source[field];
+  });
+  if (Array.isArray(source.revisionHistory)) legacyMetrics.revisionHistory = source.revisionHistory;
   return {
-    completed: Boolean(source.completed),
+    // `completed` remains as a compatibility projection for existing UI and
+    // exports; completionStatus is the canonical field going forward.
+    completed: completionStatus === "completed",
+    completionStatus,
     completedAt: typeof source.completedAt === "string" ? source.completedAt : null,
-    mockAccuracy: numberOrNull(source.mockAccuracy),
-    attempts: Number.isFinite(source.attempts) ? source.attempts : 0,
-    priorityScore: numberOrNull(source.priorityScore),
-    revisionHistory: Array.isArray(source.revisionHistory) ? source.revisionHistory : [],
     notes: typeof source.notes === "string" ? source.notes : "",
     resources: Array.isArray(source.resources) ? source.resources : [],
-    masteryLevel: source.masteryLevel ?? null,
+    ...(Object.keys(legacyMetrics).length > 0 ? { legacyMetrics } : {}),
   };
 }
 
@@ -82,23 +93,46 @@ function normalizeFilters(raw) {
   };
 }
 
-function normalizeState(raw) {
+function normalizeRevisionEvents(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((event) => event && typeof event === "object" && typeof event.topicId === "string")
+    .map((event) => ({
+      id: typeof event.id === "string" ? event.id : uid().replace(/^e_/, "r_"),
+      topicId: event.topicId,
+      sourceQuestionId: typeof event.sourceQuestionId === "string" ? event.sourceQuestionId : null,
+      action: ["queued", "completed", "deferred", "dismissed"].includes(event.action) ? event.action : "queued",
+      occurredAt: typeof event.occurredAt === "string" ? event.occurredAt : new Date().toISOString(),
+      dueDate: typeof event.dueDate === "string" ? event.dueDate : null,
+      note: typeof event.note === "string" ? event.note : "",
+    }));
+}
+
+export function normalizeLearningState(raw) {
   const source = raw && typeof raw === "object" ? raw : {};
   return {
+    learningStateVersion: LEARNING_STATE_VERSION,
     progress: normalizeProgress(source.progress),
+    revisionEvents: normalizeRevisionEvents(source.revisionEvents),
     expanded: normalizeExpanded(source.expanded),
     filters: normalizeFilters(source.filters),
   };
 }
 
 function emptyState() {
-  return { progress: {}, expanded: defaultExpanded(), filters: DEFAULT_FILTERS };
+  return {
+    learningStateVersion: LEARNING_STATE_VERSION,
+    progress: {},
+    revisionEvents: [],
+    expanded: defaultExpanded(),
+    filters: DEFAULT_FILTERS,
+  };
 }
 
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? normalizeState(JSON.parse(raw)) : emptyState();
+    return raw ? normalizeLearningState(JSON.parse(raw)) : emptyState();
   } catch {
     return emptyState();
   }
@@ -113,13 +147,17 @@ export function useSyllabus() {
     storageKey: STORAGE_KEY,
     remoteKey: REMOTE_KEY,
     load: loadState,
-    normalize: normalizeState,
+    normalize: normalizeLearningState,
   });
 
   const updateMicroProgress = useCallback((microTopicId, patch) => {
     setState((prev) => {
       const current = normalizeMicroProgress(prev.progress[microTopicId]);
-      const next = normalizeMicroProgress({ ...current, ...patch });
+      const merged = { ...current, ...patch };
+      if (Object.prototype.hasOwnProperty.call(patch, "completed") && !Object.prototype.hasOwnProperty.call(patch, "completionStatus")) {
+        merged.completionStatus = patch.completed ? "completed" : "not_started";
+      }
+      const next = normalizeMicroProgress(merged);
       return { ...prev, progress: { ...prev.progress, [microTopicId]: next } };
     });
   }, []);
@@ -128,10 +166,25 @@ export function useSyllabus() {
     setState((prev) => {
       const current = normalizeMicroProgress(prev.progress[microTopicId]);
       const completed = !current.completed;
-      const next = { ...current, completed, completedAt: completed ? new Date().toISOString() : null };
+      const next = normalizeMicroProgress({
+        ...current,
+        completed,
+        completionStatus: completed ? "completed" : "not_started",
+        completedAt: completed ? new Date().toISOString() : null,
+      });
       return { ...prev, progress: { ...prev.progress, [microTopicId]: next } };
     });
   }, []);
+
+  const addRevisionEvent = useCallback((event) => {
+    setState((prev) => ({
+      ...prev,
+      revisionEvents: normalizeRevisionEvents([...prev.revisionEvents, event]),
+    }));
+  }, []);
+
+  const exportState = useCallback(() => state, [state]);
+  const replaceState = useCallback((raw) => setState(normalizeLearningState(raw)), []);
 
   const toggleSectionExpanded = useCallback((sectionId) => {
     setState((prev) => ({ ...prev, expanded: { ...prev.expanded, sections: toggleInList(prev.expanded.sections, sectionId) } }));
@@ -171,6 +224,8 @@ export function useSyllabus() {
 
   return {
     progress: state.progress,
+    revisionEvents: state.revisionEvents,
+    learningStateVersion: state.learningStateVersion,
     expanded: state.expanded,
     filters: state.filters,
     syncStatus,
@@ -185,5 +240,8 @@ export function useSyllabus() {
     setStatusFilter,
     setFrequencyFilter,
     resetFilters,
+    addRevisionEvent,
+    exportState,
+    replaceState,
   };
 }

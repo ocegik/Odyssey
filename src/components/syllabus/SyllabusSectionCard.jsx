@@ -6,6 +6,7 @@ import MacroTopicGroup from "./MacroTopicGroup";
 
 export default function SyllabusSectionCard({
   section, sectionStats, macroStats, isExpanded, expandedMacroIds, expandedMicroIds, progress,
+  topicMetrics,
   onToggleSectionExpand, onToggleMacroExpand, onToggleMicroExpand, onToggleMicroComplete,
 }) {
   const meta = SECTION_META[section.colorKey];
@@ -45,6 +46,7 @@ export default function SyllabusSectionCard({
               isExpanded={expandedMacroIds.includes(macro.id)}
               expandedMicroIds={expandedMicroIds}
               progress={progress}
+              topicMetrics={topicMetrics}
               onToggleExpand={onToggleMacroExpand}
               onToggleMicroExpand={onToggleMicroExpand}
               onToggleMicroComplete={onToggleMicroComplete}

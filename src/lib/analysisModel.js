@@ -1,8 +1,10 @@
 import { SECTIONS } from "../constants";
 import { uid } from "./format";
 import { accuracyOf } from "./aggregate";
+import { getTopicNode, TOPIC_NODES, isValidTagTopic } from "./topicRegistry";
+import { legacyLabelForTopicId, legacyTopicMappings, resolveTopicReference } from "./topicMigrations";
 
-export const ANALYSIS_SCHEMA_VERSION = 2;
+export const ANALYSIS_SCHEMA_VERSION = 3;
 
 /**
  * "Unreviewed" is distinct from "Skipped": it's the default for a question
@@ -39,11 +41,11 @@ export const OUTCOME_REASONS = {
     Skipped: ["Didn't Know Concept", "Couldn't Find Approach", "Too Time Consuming", "Strategic Skip", "Ran Out of Time"],
   },
 };
-export const TOPIC_OPTIONS = {
-  Quant: ["Arithmetic", "Algebra", "Geometry & Mensuration", "Number System", "Modern Math"],
-  DILR: ["Data Interpretation", "Data Sufficiency", "Puzzles & Arrangements", "Sets & Venn Diagrams", "Reasoning"],
-  VARC: ["Reading Comprehension", "Verbal Ability"],
-};
+// Backward-compatible labels for import documentation and old exports. This
+// is generated from the migration registry, not a second topic definition.
+export const TOPIC_OPTIONS = Object.fromEntries(
+  Object.entries(legacyTopicMappings()).map(([section, mappings]) => [section, Object.keys(mappings)])
+);
 
 const analysisId = () => uid().replace(/^e_/, "a_");
 const blockId = () => uid().replace(/^e_/, "b_");
@@ -75,10 +77,17 @@ function normalizeQuestionType(value) {
   return QUESTION_TYPES.find((type) => type.toUpperCase() === str.toUpperCase()) || str || "MCQ";
 }
 
-function normalizeTopic(section, value) {
+function normalizeTopic(section, value, topicRef = null) {
   const options = TOPIC_OPTIONS[section] || [];
   const str = asString(value).trim();
-  return options.find((topic) => topic.toLowerCase() === str.toLowerCase()) || "";
+  const option = options.find((topic) => topic.toLowerCase() === str.toLowerCase());
+  if (option) return option;
+  if (topicRef?.topicId) return legacyLabelForTopicId(topicRef.topicId);
+  return "";
+}
+
+function normalizeTopicRef(section, rawTopicRef, rawTopic) {
+  return resolveTopicReference(section, rawTopicRef, rawTopic);
 }
 
 /**
@@ -89,22 +98,36 @@ function normalizeTopic(section, value) {
  * existing tagged data isn't silently dropped.
  */
 export function getEffectiveTopic(block, question) {
-  if (!block) return question?.topic || "";
-  if (block.type === "set") return block.topic || question?.topic || "";
-  return question?.topic || "";
+  if (!block) return question?.topic || getTopicNode(question?.topicRef?.topicId)?.name || "";
+  if (block.type === "set") return block.topic || question?.topic || getTopicNode(block.topicRef?.topicId)?.name || "";
+  return question?.topic || getTopicNode(question?.topicRef?.topicId)?.name || "";
+}
+
+export function getEffectiveTopicRef(block, question) {
+  if (!block) return question?.topicRef || null;
+  if (block.type === "set") return block.topicRef || question?.topicRef || null;
+  return question?.topicRef || null;
+}
+
+export function getEffectiveTopicId(block, question) {
+  return getEffectiveTopicRef(block, question)?.topicId || null;
 }
 
 function normalizeQuestion(rawQuestion, idx, section) {
   const result = normalizeResult(rawQuestion.result);
   const reason = asString(rawQuestion.outcomeReason).trim();
   const allowedReasons = OUTCOME_REASONS[section]?.[result] || [];
+  const topicRef = normalizeTopicRef(section, rawQuestion.topicRef, rawQuestion.topic);
   return {
     id: rawQuestion.id || questionId(),
     questionNumber: Number(rawQuestion.questionNumber || idx + 1),
     result,
     outcomeReason: allowedReasons.includes(reason) ? reason : allowedReasons[0] || "",
     questionType: normalizeQuestionType(rawQuestion.questionType),
-    topic: normalizeTopic(section, rawQuestion.topic),
+    // `topic` remains as a compatibility display field until the picker is
+    // migrated. New code should use topicRef.topicId.
+    topic: normalizeTopic(section, rawQuestion.topic, topicRef),
+    topicRef,
     timeTaken: asNumberOrNull(rawQuestion.timeTaken),
     averageTime: asNumberOrNull(rawQuestion.averageTime),
     notes: asString(rawQuestion.notes),
@@ -114,11 +137,13 @@ function normalizeQuestion(rawQuestion, idx, section) {
 function normalizeBlock(rawBlock, idx, section) {
   const questions = Array.isArray(rawBlock.questions) ? rawBlock.questions : [];
   const type = asString(rawBlock.type) || "independent";
+  const topicRef = normalizeTopicRef(section, rawBlock.topicRef, rawBlock.topic);
   return {
     id: rawBlock.id || blockId(),
     type,
     name: asString(rawBlock.name),
-    topic: type === "set" ? normalizeTopic(section, rawBlock.topic) : "",
+    topic: type === "set" ? normalizeTopic(section, rawBlock.topic, topicRef) : "",
+    topicRef: type === "set" ? topicRef : null,
     questions: questions.map((question, questionIdx) => normalizeQuestion(question, questionIdx, section)),
   };
 }
@@ -263,6 +288,7 @@ function fillableQuestion(questionNumber) {
     outcomeReason: "",
     questionType: "MCQ",
     topic: "",
+    topicRef: null,
     timeTaken: null,
     averageTime: null,
     notes: "",
@@ -282,6 +308,7 @@ function blocksForTemplateSection(scoreSection) {
       type: block.type === "set" ? "set" : "independent",
       name: block.name || `${block.type === "set" ? "Set" : "Independent"} ${idx + 1}`,
       topic: "",
+      topicRef: null,
       questions: Array.from({ length: Math.max(0, end - start + 1) }, (_, questionIdx) => fillableQuestion(start + questionIdx)),
     };
   });
@@ -326,7 +353,12 @@ function buildTemplateInformation(mock, sections) {
       result: RESULT_VALUES,
       questionType: QUESTION_TYPES,
       blockType: ["set", "independent"],
-      topicsBySection: TOPIC_OPTIONS,
+      // Deprecated string labels accepted for migration only.
+      legacyTopicsBySection: TOPIC_OPTIONS,
+      topicIdsBySection: Object.fromEntries(SECTIONS.map((section) => [
+        section,
+        TOPIC_NODES.filter((topic) => topic.taggable && isValidTagTopic(topic.id, section)).map((topic) => topic.id),
+      ])),
       outcomeReasonsBySectionAndResult: OUTCOME_REASONS,
     },
     fieldRules: {
@@ -340,11 +372,11 @@ function buildTemplateInformation(mock, sections) {
       "section.topperScore": "Number, or null.",
       "section.notes": "String section-level notes.",
       "block.type": "Must be set or independent.",
-      "block.topic": "For set blocks, choose one topic from topicsBySection for that section, or leave blank.",
+      "block.topicRef": "For set blocks, use a canonical topicRef with a macro or leaf topicId, or leave blank. Legacy block.topic strings remain accepted.",
       "question.result": "Choose one of Correct, Wrong, Skipped, or Unreviewed.",
       "question.outcomeReason": "For Correct/Wrong/Skipped, choose one value from outcomeReasonsBySectionAndResult for that section/result. Leave blank for Unreviewed.",
       "question.questionType": "Choose MCQ or TITA.",
-      "question.topic": "For independent questions, choose one topic from topicsBySection for that section, or leave blank. Set questions inherit block.topic.",
+      "question.topicRef": "For independent questions, use a canonical topicRef with a topicId, or leave blank. Set questions inherit block.topicRef. Legacy question.topic strings remain accepted.",
       "question.timeTaken": "Seconds as a number, or null.",
       "question.averageTime": "Benchmark seconds as a number, or null.",
       "question.notes": "String question-level notes.",

@@ -2,7 +2,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { COLORS, TYPE } from "../../constants";
 import FrequencyBadge from "./FrequencyBadge";
 
-export default function MicroTopicRow({ microTopic, isCompleted, isExpanded, onToggleComplete, onToggleExpand }) {
+export default function MicroTopicRow({ microTopic, isCompleted, isExpanded, onToggleComplete, onToggleExpand, metric }) {
   const hasQuestionTypes = microTopic.questionTypes.length > 0;
 
   return (
@@ -31,6 +31,11 @@ export default function MicroTopicRow({ microTopic, isCompleted, isExpanded, onT
             {microTopic.name}
           </span>
           <FrequencyBadge frequency={microTopic.frequency} />
+          {metric?.attempted > 0 && (
+            <span className="text-xs" style={{ color: metric.weak ? COLORS.danger : COLORS.inkMuted }}>
+              Mock: {metric.correct}/{metric.attempted} · {Math.round(metric.accuracy * 100)}%
+            </span>
+          )}
           {microTopic.frequencyNote && (
             <span className="text-xs" style={{ color: COLORS.inkMuted }}>({microTopic.frequencyNote})</span>
           )}

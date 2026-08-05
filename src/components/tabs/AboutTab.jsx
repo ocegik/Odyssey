@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Check, ChevronDown, ChevronRight, Command, Copy, Download, Info, ShieldCheck, Sparkles, Bot } from "lucide-react";
 import { COLORS, SECTIONS, TYPE, SHADOW } from "../../constants";
-import { OUTCOME_REASONS, TOPIC_OPTIONS } from "../../lib/analysisModel";
+import { OUTCOME_REASONS } from "../../lib/analysisModel";
 
 const mono = { fontFamily: "'JetBrains Mono', monospace" };
 const kbd = {
@@ -54,13 +54,8 @@ function reasonList(section) {
     .join("\n");
 }
 
-function topicList(section) {
-  const topics = TOPIC_OPTIONS[section] || [];
-  return topics.length ? topics.map((t) => `"${t}"`).join(", ") : "(none defined for this section)";
-}
-
 /**
- * Assembled from the same OUTCOME_REASONS/TOPIC_OPTIONS/SECTIONS the app
+ * Assembled from the same OUTCOME_REASONS/SECTIONS the app
  * validates imports against, so this text can't silently drift out of sync
  * with what Import JSON actually accepts.
  */
@@ -130,7 +125,7 @@ Each section object:
 Each block:
   type       "set" | "independent", required
   name       string, e.g. "Set 1" or "Independent Questions"
-  topic      string, optional — ONLY meaningful when type is "set"; must be one of: ${SECTIONS.map((s) => `${s}: [${topicList(s)}]`).join("; ")}
+  topicRef   object, optional — ONLY meaningful when type is "set"; canonical form is { topicId, source, taxonomyVersion }. Legacy topic strings are still accepted during migration.
   questions  array, required
 
 Each question:
@@ -139,7 +134,7 @@ Each question:
   outcomeReason   string, required for Correct/Wrong/Skipped, not applicable for Unreviewed — MUST be exactly one of the allowed reasons for that section+result pair (case-sensitive; an unrecognized value silently falls back to the first allowed reason, which loses information, so pick precisely):
 ${SECTIONS.map((s) => `    ${s}:\n${reasonList(s)}`).join("\n")}
   questionType    "MCQ" | "TITA", required
-  topic           string, optional — for INDEPENDENT questions only (set questions inherit their block's topic); one of the topic lists above for that section
+  topicRef        object, optional — for INDEPENDENT questions only (set questions inherit their block's topicRef); topicId must be a canonical syllabus ID. Legacy topic strings remain accepted for backward compatibility.
   timeTaken       number (seconds), optional — leave out entirely if you don't know it, do not guess
   averageTime     number (seconds), optional — the benchmark/expected time for that question type, also fine to omit
   notes           string, optional

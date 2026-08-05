@@ -27,6 +27,10 @@ const MAX_SET_INSIGHTS = 8;
 const MAX_TOPIC_INSIGHTS = 10;
 const MAX_RECOMMENDATIONS = 5;
 
+function topicLookupKey(section, topicId, topic) {
+  return `${section}::${topicId ? `id:${topicId}` : `legacy:${topic}`}`;
+}
+
 function groupBy(items, keyFn) {
   const map = new Map();
   items.forEach((item) => {
@@ -72,6 +76,7 @@ export function buildSetRecords(questions) {
       blockId: sorted[0].blockId,
       blockName: sorted[0].blockName,
       topic: sorted[0].topic,
+      topicId: sorted[0].topicId || null,
       total: sorted.length,
       attempted: attemptedAll.length,
       correct: correctAll.length,
@@ -94,8 +99,10 @@ export function buildSetRecords(questions) {
 /* ------------------------------------------------------------------ */
 
 export function buildTopicRecords(questions) {
-  const tagged = questions.filter((q) => q.topic);
-  const groups = groupBy(tagged, (q) => `${q.section}::${q.topic}`);
+  const tagged = questions.filter((q) => q.topic || q.topicId);
+  const groups = groupBy(tagged, (q) => (
+    `${q.section}::${q.topicId ? `id:${q.topicId}` : `legacy:${q.topic}`}`
+  ));
   const records = [];
 
   groups.forEach((qs) => {
@@ -127,6 +134,7 @@ export function buildTopicRecords(questions) {
     records.push({
       section: qs[0].section,
       topic: qs[0].topic,
+      topicId: qs[0].topicId || null,
       total: qs.length,
       attempted: attempted.length,
       correct: correct.length,
@@ -232,7 +240,7 @@ function generateSetPatternInsights(setRecords, topicAccuracyMap) {
     }
 
     if (set.skipRate === 1 && set.topic) {
-      const historicalAcc = topicAccuracyMap.get(`${set.section}::${set.topic}`);
+      const historicalAcc = topicAccuracyMap.get(topicLookupKey(set.section, set.topicId, set.topic));
       if (historicalAcc !== undefined && historicalAcc !== null && historicalAcc >= MIN_HISTORICAL_ACCURACY_FOR_SELECTION_FLAG) {
         insights.push({
           id: `set-selection-${set.mockId}-${set.blockId}`,
@@ -476,7 +484,10 @@ export function buildAdvancedInsights(mocks) {
   const questions = flattenAnalysisQuestions(mocks);
   const setRecords = buildSetRecords(questions);
   const topicRecords = buildTopicRecords(questions);
-  const topicAccuracyMap = new Map(topicRecords.map((t) => [`${t.section}::${t.topic}`, t.accuracy]));
+  const topicAccuracyMap = new Map(topicRecords.map((t) => [
+    topicLookupKey(t.section, t.topicId, t.topic),
+    t.accuracy,
+  ]));
 
   const setInsights = [
     ...generateSetPatternInsights(setRecords, topicAccuracyMap),

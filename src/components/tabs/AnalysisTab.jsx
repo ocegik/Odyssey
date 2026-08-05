@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Save, ClipboardList, Plus, Upload, Download, ChevronDown, ChevronRight, Pencil, Trash2, X } from "lucide-react";
 import { COLORS, SECTIONS, TYPE, SHADOW } from "../../constants";
 import { fmtDate, fmtNum, fmtPct } from "../../lib/format";
-import { buildAnalysisSummary, makeSampleDetailedAnalysis, normalizeDetailedAnalysis, OUTCOME_REASONS, TOPIC_OPTIONS } from "../../lib/analysisModel";
+import { buildAnalysisSummary, makeSampleDetailedAnalysis, normalizeDetailedAnalysis, OUTCOME_REASONS } from "../../lib/analysisModel";
+import { getTopicNode, TOPIC_REGISTRY_VERSION } from "../../lib/topicRegistry";
 import { mockTotalMarks } from "../../lib/compute";
 import { reviewAnalysisAgainstMock } from "../../lib/analysisValidation";
 import {
@@ -19,6 +20,7 @@ import EmptyState from "../ui/EmptyState";
 import SectionBadge from "../ui/SectionBadge";
 import StatCard from "../ui/StatCard";
 import PerMockInsightsBlock from "../PerMockInsightsBlock";
+import TopicPicker from "../topics/TopicPicker";
 
 const clone = (value) => (value ? JSON.parse(JSON.stringify(value)) : null);
 const tempId = (prefix) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -47,6 +49,7 @@ function defaultQuestion(questionNumber, section) {
     outcomeReason: "",
     questionType: "MCQ",
     topic: "",
+    topicRef: null,
     timeTaken: null,
     averageTime: null,
     notes: "",
@@ -77,6 +80,7 @@ function buildAnalysisDraftFromMock(mock) {
         type: block.type || "independent",
         name: block.name || `${block.type === "set" ? "Set" : "Independent"} ${idx + 1}`,
         topic: "",
+        topicRef: null,
         questions: Array.from({ length: Math.max(0, end - start + 1) }, (_, questionIdx) => defaultQuestion(start + questionIdx, sectionName)),
       };
     });
@@ -175,6 +179,7 @@ function mergeDraftOntoMockStructure(mock, currentDraft) {
           return {
             ...block,
             topic: priorBlock?.topic || block.topic || "",
+            topicRef: priorBlock?.topicRef || block.topicRef || null,
             questions: block.questions.map((question) => {
               const priorQuestion = priorQuestions.get(Number(question.questionNumber));
               return priorQuestion ? { ...question, ...priorQuestion, questionNumber: question.questionNumber } : question;
@@ -422,11 +427,37 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
     });
   };
 
-  const setBlockTopic = (section, blockIdx) => (ev) => {
-    const value = ev.target.value;
+  const setQuestionTopic = (section, blockIdx, questionIdx) => (topicId) => {
+    setDraft((current) => {
+      const blocks = current.sections[section].blocks.map((block, bIdx) => {
+        if (bIdx !== blockIdx) return block;
+        return {
+          ...block,
+          questions: block.questions.map((question, qIdx) => (
+            qIdx === questionIdx
+              ? {
+                  ...question,
+                  topic: topicId ? getTopicNode(topicId)?.name || "" : "",
+                  topicRef: topicId ? { topicId, source: "user", taxonomyVersion: TOPIC_REGISTRY_VERSION } : null,
+                }
+              : question
+          )),
+        };
+      });
+      return { ...current, sections: { ...current.sections, [section]: { ...current.sections[section], blocks } } };
+    });
+  };
+
+  const setBlockTopic = (section, blockIdx) => (topicId) => {
     setDraft((current) => {
       const blocks = current.sections[section].blocks.map((block, bIdx) => (
-        bIdx === blockIdx ? { ...block, topic: value } : block
+        bIdx === blockIdx
+          ? {
+              ...block,
+              topic: topicId ? getTopicNode(topicId)?.name || "" : "",
+              topicRef: topicId ? { topicId, source: "user", taxonomyVersion: TOPIC_REGISTRY_VERSION } : null,
+            }
+          : block
       ));
       return {
         ...current,
@@ -828,14 +859,14 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                         {isSet && (
                           <div className="flex items-center gap-1.5 ml-auto">
                             <span className="text-xs" style={{ color: COLORS.inkMuted }}>Set topic:</span>
-                            <select
-                              value={block.topic || ""}
+                            <TopicPicker
+                              section={section}
+                              topicRef={block.topicRef}
+                              legacyTopic={block.topic}
                               onChange={setBlockTopic(section, blockIdx)}
-                              style={{ ...selectStyle(false), minWidth: 200, height: 36, fontSize: 13 }}
-                            >
-                              <option value="">-</option>
-                              {(TOPIC_OPTIONS[section] || []).map((topic) => <option key={topic} value={topic}>{topic}</option>)}
-                            </select>
+                              selectStyle={selectStyle}
+                              compact
+                            />
                           </div>
                         )}
                       </div>
@@ -873,10 +904,13 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
                                 </td>
                                 {!isSet && (
                                   <td className="px-3 py-2.5">
-                                    <select value={question.topic || ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "topic", ev.target.value)} style={{ ...selectStyle(false), minWidth: 200, height: 40, fontSize: 14 }}>
-                                      <option value="">-</option>
-                                      {(TOPIC_OPTIONS[section] || []).map((topic) => <option key={topic} value={topic}>{topic}</option>)}
-                                    </select>
+                                    <TopicPicker
+                                      section={section}
+                                      topicRef={question.topicRef}
+                                      legacyTopic={question.topic}
+                                      onChange={setQuestionTopic(section, blockIdx, questionIdx)}
+                                      selectStyle={selectStyle}
+                                    />
                                   </td>
                                 )}
                                 <td className="px-3 py-2.5">

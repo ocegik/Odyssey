@@ -6,6 +6,7 @@ import MicroTopicRow from "./MicroTopicRow";
 
 export default function MacroTopicGroup({
   macroTopic, stats, accentColor, isExpanded, expandedMicroIds, progress,
+  topicMetrics,
   onToggleExpand, onToggleMicroExpand, onToggleMicroComplete,
 }) {
   return (
@@ -40,6 +41,7 @@ export default function MacroTopicGroup({
               isExpanded={expandedMicroIds.includes(micro.id)}
               onToggleComplete={onToggleMicroComplete}
               onToggleExpand={onToggleMicroExpand}
+              metric={topicMetrics?.byTopicId?.[micro.id]}
             />
           ))}
         </div>

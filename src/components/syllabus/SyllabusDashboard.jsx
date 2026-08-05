@@ -4,15 +4,16 @@ import { SYLLABUS_TREE } from "../../lib/syllabusModel";
 import StatCard from "../ui/StatCard";
 import ProgressBar from "../ui/ProgressBar";
 
-export default function SyllabusDashboard({ stats }) {
+export default function SyllabusDashboard({ stats, topicMetrics, revisionQueue }) {
   const { overall, bySection } = stats;
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
         <StatCard label="Overall completion" value={`${overall.percent}%`} sub={`${overall.completed} of ${overall.total} micro topics`} accent={COLORS.primary} />
         <StatCard label="Topics completed" value={overall.completed} sub={`${overall.total - overall.completed} remaining`} accent={COLORS.good} />
         <StatCard label="Sections" value={SYLLABUS_TREE.length} sub="VARC · DILR · QA" accent={COLORS.info} />
+        <StatCard label="Revision queue" value={revisionQueue?.length || 0} sub={`${topicMetrics?.summary?.total || 0} tagged mock questions`} accent={COLORS.info} />
       </div>
 
       <div className="p-4 flex flex-col gap-3.5" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
