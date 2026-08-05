@@ -73,6 +73,7 @@ Accepts: one mock object, an array of mock objects, or { "mocks": [...] }.
 Mock object fields:
   date            string, required   e.g. "2026-07-20"
   source          string, required   exam/mock name, e.g. "SIMCAT 6" or "AIMCAT 2507"
+  overallPercentile number, required number from 0 to 100 from the mock report
   sections        array, required    one entry per section that has a score
   analysis        object, optional   a full Schema B object, if you already have question-level detail too
 
@@ -82,9 +83,7 @@ Each entry in "sections":
   totalQuestions  integer, required  >= 1
   attempted       integer, optional  0..totalQuestions — include if known, unlocks accuracy immediately
   correct         integer, optional  0..attempted — requires "attempted" to also be set
-  percentile        number, optional
-  topperScore       number, optional
-  topperPercentile  number, optional
+  percentile      number, optional
   notes             string, optional
   questionBlocks  array, optional    custom set/independent breakdown (see "blocks" in Schema B for shape:
                                      { "type": "set"|"independent", "name": "Set 1", "startQuestion": 1, "endQuestion": 5 });
@@ -95,6 +94,7 @@ Example:
 {
   "date": "2026-07-20",
   "source": "SIMCAT 6",
+  "overallPercentile": 92.4,
   "sections": [
     { "section": "VARC", "score": 42, "totalQuestions": 22, "attempted": 20, "correct": 15, "percentile": 92.4 },
     { "section": "DILR", "score": 30, "totalQuestions": 20, "attempted": 16, "correct": 11 },
@@ -112,13 +112,10 @@ Top-level object fields:
   mockName            string, optional, cosmetic label
   date                string, optional, cosmetic
   overallReflection    string, optional, free text
-  overallPercentile   number, optional
-  overallTopperScore  number, optional
   sections            object, required — keyed by section name (${SECTIONS.join(", ")})
 
 Each section object:
   percentile   number, optional
-  topperScore  number, optional
   notes        string, optional
   blocks       array, required — a "set" block is a shared passage/DI set several questions belong to; an "independent" block is one or more standalone questions
 

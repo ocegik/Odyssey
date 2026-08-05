@@ -24,13 +24,12 @@
 | Wrong TITA | number | Incorrect TITA (stored directly) |
 | Total Questions in Section | number | Section question count for that mock (varies by source — e.g. 22, 24, 25) |
 
-### 1.2 Optional Fields (skippable — 2-3 extra clicks if filled; app must not break or force input if left blank)
+### 1.2 Percentile Fields
 
 | Field | Type | Notes |
 |---|---|---|
-| Percentile | number \| null | Percentile in that mock's student pool |
-| Topper Score | number \| null | Highest score in that mock — gives a rough "how hard was this paper" signal |
-| Topper Percentile | number \| null | The topper's percentile for that mock, alongside their score |
+| Overall Percentile | number | Required, reported percentile in that mock's student pool |
+| Section Percentile | number \| null | Optional reported percentile for that section |
 
 ### 1.3 Detailed Analysis (optional, separate workflow, progressive)
 
@@ -54,8 +53,8 @@
 - Negative Marks Lost estimate = Wrong MCQ × (CAT negative marking value)
 - Rolling 5-mock average per section (smooths one-off bad days)
 - Weakest Section Flag — lowest rolling accuracy × attempt-rate combination
-- Percentile trend (only for entries where Percentile is filled)
-- Exam hardness indicator (only for entries where Topper Score is filled) — your score relative to topper, to contextualize whether a low mock score reflects a hard paper
+- Percentile trend using reported overall and section percentiles
+- Overall paper-difficulty signals compare your reported overall marks and percentile, keeping the cohort—not one extreme score—as the benchmark
 - **Score leak decomposition** (`src/lib/scoreLeak.js`) — splits a section's gap to a perfect score into three causes that each need a different fix:
   - `unattemptedCost` = unattempted × 3 (marks never contested → *attempt rate*)
   - `wrongCost` = wrong × 3 (contested and missed → *accuracy*)
@@ -63,7 +62,7 @@
 
   The three always sum exactly to `ceiling − marks`. `negativeCost` is derived from the **entered score**, so it needs no assumption about which wrong answers were MCQ vs TITA — the paper's real marking is already baked into the score you logged. Requires `totalQuestions`, `attempted`, `correct` and a score on the same section; it reports nothing rather than guessing from a partial row.
 
-**Overall percentile is an estimate unless reported.** Percentiles are ranks, so averaging three sectional percentiles does *not* give the overall percentile a real mock report would show. `src/lib/percentile.js` returns `{ value, estimated, sectionsUsed }` rather than a bare number, and every place that displays it (Latest mock, College targets, Percentile trend) says so. `latestKnownPercentile` also walks back to the most recent mock that *has* a percentile, so one mock logged without one doesn't blank the college comparison.
+**Overall percentile is always reported.** Percentiles are ranks, so the app records the actual overall percentile from the mock report and never derives it by averaging section percentiles. `latestKnownPercentile` walks back to the latest mock that has one so legacy records without it do not blank the college comparison.
 
 **Rule:** Any chart/stat depending on an optional field simply skips data points where that field is missing — it never blocks rendering of the rest of the dashboard.
 
@@ -78,7 +77,7 @@
 - Recommended workflow: keep `scores.json` inside the GitHub repo and commit it after each mock — this doubles as free version history/backup
 - `scores.json` stores explicit parent mock records; each mock owns its VARC, DILR, and Quant section records instead of inferring the relationship from shared date/source values
 - Detailed analysis is optional and stored under the parent mock's `analysis` field when attached
-- Old entries without the optional fields (Percentile, Topper Score) must remain valid on import — schema is additive, never breaking
+- Older saved entries without an overall percentile remain readable; enter the reported percentile when editing them to use overall percentile features.
 
 **Update (post-launch):** the app now also syncs to a Supabase table (`app_storage`) in the background, so data survives browser storage being cleared and isn't limited to one device. localStorage remains as a fast local cache; export/import still work the same way as a manual backup path. See `supabase/schema.sql` and `src/lib/cloudStore.js`.
 
@@ -98,8 +97,9 @@
   {
     "date": "2026-07-20",
     "source": "SIMCAT 6",
+    "overallPercentile": 92.4,
     "sections": [
-      { "section": "VARC", "score": 42, "totalQuestions": 22, "percentile": 91.2, "topperScore": 58, "topperPercentile": 99.1 },
+      { "section": "VARC", "score": 42, "totalQuestions": 22, "percentile": 91.2 },
       { "section": "DILR", "score": 30, "totalQuestions": 20 },
       { "section": "Quant", "score": 18, "totalQuestions": 22 }
     ]
@@ -125,7 +125,7 @@
   - Behind disclosure: gap to section targets, overall-marks chart, college targets
 - **Trends:**
   - Always on: section-wise marks trend, accuracy comparison, attempt-rate trend
-  - Behind disclosure: where your marks go + marks-per-attempt, percentile & paper difficulty, section shape (radar), consistency & sources
+  - Behind disclosure: where your marks go + marks-per-attempt, percentile trend, section shape (radar), consistency & sources
 - **Gap to section targets** (Overview) — the per-section target marks in Settings, compared against each section's rolling 5-mock average. Renders only when at least one target is set.
 - Section-wise trend lines over time (VARC / DILR / Quant on the same or separate charts) — primary "who's lagging" view
 - Accuracy comparison: overall / MCQ / TITA, both latest mock and rolling average, per section
@@ -133,7 +133,6 @@
 - Weakest-section auto-flag with a short explanatory note (e.g. "Quant TITA accuracy dropped over last 3 mocks")
 - Source-wise comparison (e.g. TIME vs IMS vs actual CAT mocks — useful if difficulty varies by source)
 - Percentile trend chart (renders only where percentile data exists)
-- Exam hardness indicator (renders only where topper score data exists)
 - **Mock Analysis insights:** detailed reason, timing, confidence, decision-quality, mistake, strength, weakness, and section-level pattern views from attached analysis
 
 
@@ -155,7 +154,7 @@
 Tabs are lazy-loaded and recharts is split into its own cached chunk (`vite.config.js`), taking the initial download from **1058 kB → 347 kB**. Overview's one chart is lazy too, so the numbers above it paint before recharts arrives.
 
 ### 5.2 Tests
-`npm test` (vitest) covers the scoring math where a silent wrong answer would be worst: the score-leak decomposition, `mockTotalMarks` null-vs-zero handling, the adaptive target, and percentile estimation/recency. Pure functions only — no DOM harness.
+`npm test` (vitest) covers the scoring math where a silent wrong answer would be worst: the score-leak decomposition, `mockTotalMarks` null-vs-zero handling, the adaptive target, and reported-percentile recency. Pure functions only — no DOM harness.
 
 ### 5.3 Persistence internals
 All three synced slices (mocks, settings, syllabus) share `src/hooks/useCloudSyncedState.js` rather than each carrying its own copy of the localStorage-mirror + fetch-reconcile + debounced-push dance. One behavioural rule worth knowing: **the initial remote fetch only replaces local state if the user hasn't edited anything while it was in flight.** Supabase can take seconds on a cold connection, and unconditionally applying the response — as each hook used to — silently discarded anything typed in the meantime.

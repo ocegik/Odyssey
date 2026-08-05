@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { avgOfLastN, bestMarks, computeAdaptiveTarget, mockTotalMarks } from "../compute";
+import { avgOfLastN, bestMarks, computeAdaptiveTarget, mockTotalMarks, overallPercentileVsMarksInsight } from "../compute";
 
 const mock = (sections, manualTotalMarks = null) => ({ manualTotalMarks, ...sections });
 const scored = (marks) => ({ totalMarks: marks });
@@ -62,5 +62,27 @@ describe("computeAdaptiveTarget", () => {
   it("falls back to the goal when there's no score to step from", () => {
     expect(computeAdaptiveTarget(null, 100)).toBe(100);
     expect(computeAdaptiveTarget(null, null)).toBeNull();
+  });
+});
+
+describe("overallPercentileVsMarksInsight", () => {
+  it("uses reported overall percentile with marks to identify a harder paper", () => {
+    const insight = overallPercentileVsMarksInsight([
+      { manualTotalMarks: 100, overallPercentile: 85 },
+      { manualTotalMarks: 90, overallPercentile: 91 },
+    ]);
+
+    expect(insight).toMatchObject({
+      id: "overall-percentile-vs-marks",
+      tone: "positive",
+    });
+    expect(insight.text).toContain("harder for the cohort");
+  });
+
+  it("does not infer an overall signal without reported overall percentiles", () => {
+    expect(overallPercentileVsMarksInsight([
+      { manualTotalMarks: 100, VARC: { percentile: 85 } },
+      { manualTotalMarks: 90, VARC: { percentile: 91 } },
+    ])).toBeNull();
   });
 });

@@ -17,7 +17,7 @@ import ChartFrame from "./ChartFrame";
  */
 export default function PercentileTrendChart({ data, targetPercentile }) {
   const empty = data.length === 0
-    ? "Log a percentile with a mock (under \"Add percentile, topper stats & notes\") to see this trend."
+    ? "Log a mock with its overall percentile to see this trend."
     : null;
 
   return (
@@ -99,13 +99,6 @@ export default function PercentileTrendChart({ data, targetPercentile }) {
             Overall
           </span>
         </div>
-
-        {data.some((row) => row.overallEstimated) && (
-          <p className="text-xs mt-2" style={{ color: COLORS.inkMuted }}>
-            Overall is averaged from sectional percentiles where a mock didn&apos;t report one — a stand-in, since
-            percentiles are ranks and don&apos;t truly average.
-          </p>
-        )}
       </div>
     </ChartFrame>
   );

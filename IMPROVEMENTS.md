@@ -139,7 +139,6 @@ But sectional percentiles are logged per mock and already flow into `buildPercen
 
 ### 2.7 Small correctness nits — **S**
 
-- `computeDerived` (`compute.js:17`): `e.topperScore && …` treats a topper score of `0` as absent. Use `Number.isFinite`.
 - `generateInsights` caps at `MAX_INSIGHTS = 4` with one insight per generator type — meaning at most 4 insights ever, from 4 generators, so the cap never actually binds. Either add generators or drop the cap; as written it reads as protection that isn't.
 - `rollingSeries` windows by *row count*, not time. Five mocks spread over three months average as readily as five in a fortnight. Worth at least a tooltip note; a `days`-bounded variant would be more honest for the pacing story.
 

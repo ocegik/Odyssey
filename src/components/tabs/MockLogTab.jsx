@@ -54,7 +54,7 @@ export default function MockLogTab({
     setMockForm(form);
     setEditingMockId(mockId);
     setFormErrors([]);
-    setShowExtras(form.sections.some((section) => section.percentile || section.topperScore || section.topperPercentile || section.notes));
+    setShowExtras(form.sections.some((section) => section.percentile || section.notes));
     formTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -188,10 +188,9 @@ export default function MockLogTab({
           Import adds mocks on top of what's already logged — it doesn't replace anything. Accepts one mock object, an array of
           mocks, or {"{"}"mocks": [...]{"}"}, each like{" "}
           <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-            {'{"date":"2026-07-20","source":"SIMCAT 6","sections":[{"section":"VARC","score":42,"totalQuestions":22,"attempted":20,"correct":15}]}'}
+            {'{"date":"2026-07-20","source":"SIMCAT 6","overallPercentile":92.4,"sections":[{"section":"VARC","score":42,"totalQuestions":22,"attempted":20,"correct":15}]}'}
           </code>
-          . <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>questionBlocks</code>, <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>percentile</code>,{" "}
-          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>topperScore</code>, <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>topperPercentile</code>,{" "}
+          . <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>overallPercentile</code> is required. <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>questionBlocks</code>, section <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>percentile</code>,{" "}
           <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>attempted</code>, and{" "}
           <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>correct</code> are optional per section — add attempted/correct to get accuracy and attempt rate right away, without needing a full Analysis first.
           Skipped an optional field or mistyped the date? Edit the mock later from its row menu in the table below.
@@ -204,7 +203,7 @@ export default function MockLogTab({
         )}
         {importMessage && !importError && <p className="text-sm" style={{ color: COLORS.good }}>{importMessage}</p>}
         <form onSubmit={submitMock} className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="flex flex-col gap-1.5">
               <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Mock date</label>
               <input type="date" value={mockForm.date} onChange={setField("date")} style={inputStyle(false)} />
@@ -212,6 +211,19 @@ export default function MockLogTab({
             <div className="flex flex-col gap-1.5">
               <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Mock / exam name</label>
               <input value={mockForm.source} onChange={setField("source")} placeholder="SIMCAT 6 / AIMCAT 2507" style={inputStyle(false)} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Overall marks</label>
+              <input
+                value={mockForm.sections.reduce((sum, section) => sum + (Number(section.score) || 0), 0)}
+                readOnly
+                aria-label="Overall marks calculated from section scores"
+                style={{ ...inputStyle(false), color: COLORS.inkMuted }}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Overall percentile</label>
+              <input type="number" min="0" max="100" step="0.01" required placeholder="e.g. 92.4" value={mockForm.overallPercentile} onChange={setField("overallPercentile")} style={inputStyle(false)} />
             </div>
           </div>
 
@@ -232,7 +244,7 @@ export default function MockLogTab({
               style={{ borderRadius: 8, color: COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}
             >
               {showExtras ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-              {showExtras ? "Hide percentile, topper stats & notes" : "Add percentile, topper stats & notes (optional)"}
+              {showExtras ? "Hide section percentiles & notes" : "Add section percentiles & notes (optional)"}
             </button>
           </div>
 
@@ -267,20 +279,12 @@ export default function MockLogTab({
                 </div>
 
                 {showExtras && (
-                <div className="animate-fade-up grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="animate-fade-up grid grid-cols-2 gap-3">
                   <div className="flex flex-col gap-1.5">
                     <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Percentile <span style={{ opacity: 0.6 }}>(optional)</span></label>
                     <input type="number" min="0" max="100" step="0.01" placeholder="—" value={section.percentile} onChange={setSectionField(sectionIdx, "percentile")} style={{ ...inputStyle(false), width: 110 }} />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Topper score <span style={{ opacity: 0.6 }}>(optional)</span></label>
-                    <input type="number" placeholder="—" value={section.topperScore} onChange={setSectionField(sectionIdx, "topperScore")} style={{ ...inputStyle(false), width: 110 }} />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Topper percentile <span style={{ opacity: 0.6 }}>(optional)</span></label>
-                    <input type="number" min="0" max="100" step="0.01" placeholder="—" value={section.topperPercentile} onChange={setSectionField(sectionIdx, "topperPercentile")} style={{ ...inputStyle(false), width: 110 }} />
-                  </div>
-                  <div className="flex flex-col gap-1.5 col-span-2 sm:col-span-1">
                     <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Notes <span style={{ opacity: 0.6 }}>(optional)</span></label>
                     <input placeholder="e.g. rushed the last set" value={section.notes} onChange={setSectionField(sectionIdx, "notes")} style={inputStyle(false)} />
                   </div>

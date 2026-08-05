@@ -3,7 +3,6 @@ import ChartFrame from "../charts/ChartFrame";
 import MultiSectionLineChart from "../charts/MultiSectionLineChart";
 import AccuracyComparisonChart from "../charts/AccuracyComparisonChart";
 import SectionRadarChart from "../charts/SectionRadarChart";
-import HardnessChart from "../charts/HardnessChart";
 import PercentileTrendChart from "../charts/PercentileTrendChart";
 import SourceComparisonChart from "../charts/SourceComparisonChart";
 import ScoreLeakPanel, { LEAK_WINDOW, scoreLeakSummary } from "../ScoreLeakPanel";
@@ -66,7 +65,6 @@ export default function TrendsTab({
   marksSeries,
   attemptRateSeries,
   marksPerAttemptSeries,
-  hardnessRatioSeries,
   percentileSeries,
   sectionStats,
   settings,
@@ -86,7 +84,6 @@ export default function TrendsTab({
 
   const radarData = useMemo(() => buildRadarData(sectionStats), [sectionStats]);
   const radarEmpty = SECTIONS.every((s) => !sectionStats[s]?.latest) ? "Log a few mocks to see section shape." : null;
-  const hardnessHasData = hardnessRatioSeries.some((row) => SECTIONS.some((s) => row[s] !== null && row[s] !== undefined));
   const consistency = useMemo(() => buildConsistencyStats(sectionStats), [sectionStats]);
   const leak = useMemo(() => aggregateScoreLeak(entriesWithComputed, LEAK_WINDOW), [entriesWithComputed]);
 
@@ -116,10 +113,9 @@ export default function TrendsTab({
         </div>
       </Disclosure>
 
-      <Disclosure id="trends.percentile" title="Percentile & paper difficulty" summary={percentileSummary(percentileSeries)}>
+      <Disclosure id="trends.percentile" title="Percentile trend" summary={percentileSummary(percentileSeries)}>
         <div className="flex flex-col gap-4 pt-4">
           <PercentileTrendChart data={percentileSeries} targetPercentile={settings?.overallTargetPercentile} />
-          <HardnessChart data={hardnessRatioSeries} empty={!hardnessHasData ? "Log a topper score with a mock to see this indicator." : null} />
         </div>
       </Disclosure>
 

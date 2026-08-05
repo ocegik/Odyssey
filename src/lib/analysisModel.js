@@ -155,7 +155,6 @@ function normalizeSection(rawSection, sectionName) {
     id: rawSection.id || uid(),
     createdAt: rawSection.createdAt || Date.now(),
     percentile: asNumberOrNull(rawSection.percentile),
-    topperScore: asNumberOrNull(rawSection.topperScore),
     notes: asString(rawSection.notes),
     blocks: blocks.map((block, blockIdx) => normalizeBlock(block, blockIdx, sectionName)),
   };
@@ -265,8 +264,6 @@ export function normalizeDetailedAnalysis(rawAnalysis, existing = null) {
     mockName: asString(analysisPayload.mockName),
     date: asString(analysisPayload.date),
     overallReflection: asString(analysisPayload.overallReflection),
-    overallPercentile: asNumberOrNull(analysisPayload.overallPercentile),
-    overallTopperScore: asNumberOrNull(analysisPayload.overallTopperScore),
     structureText: asString(analysisPayload.structureText),
     insightDimensions: [
       "recurringMistakes",
@@ -365,11 +362,8 @@ function buildTemplateInformation(mock, sections) {
       "analysis.mockName": "String. Usually the mock or exam name.",
       "analysis.date": "String in YYYY-MM-DD format.",
       "analysis.overallReflection": "String. Overall review notes.",
-      "analysis.overallPercentile": "Number from 0 to 100, or null.",
-      "analysis.overallTopperScore": "Number, or null.",
       "analysis.structureText": "String summary of the paper structure.",
       "section.percentile": "Number from 0 to 100, or null.",
-      "section.topperScore": "Number, or null.",
       "section.notes": "String section-level notes.",
       "block.type": "Must be set or independent.",
       "block.topicRef": "For set blocks, use a canonical topicRef with a macro or leaf topicId, or leave blank. Legacy block.topic strings remain accepted.",
@@ -414,7 +408,6 @@ export function makeSampleDetailedAnalysis(mock) {
     sections[sectionName] = {
       section: sectionName,
       percentile: scoreSection.percentile ?? null,
-      topperScore: scoreSection.topperScore ?? null,
       notes: "",
       blocks: blocksForTemplateSection(scoreSection),
     };
@@ -425,8 +418,6 @@ export function makeSampleDetailedAnalysis(mock) {
     mockName: mock.source,
     date: mock.date,
     overallReflection: "",
-    overallPercentile: null,
-    overallTopperScore: null,
     structureText: buildStructureText(mock, sections),
     sections,
   };

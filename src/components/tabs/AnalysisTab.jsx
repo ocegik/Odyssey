@@ -89,7 +89,6 @@ function buildAnalysisDraftFromMock(mock) {
       id: tempId("s"),
       createdAt: Date.now(),
       percentile: sectionData.percentile ?? null,
-      topperScore: sectionData.topperScore ?? null,
       notes: "",
       blocks,
     };
@@ -100,8 +99,6 @@ function buildAnalysisDraftFromMock(mock) {
     mockName: mock.source,
     date: mock.date,
     overallReflection: "",
-    overallPercentile: null,
-    overallTopperScore: null,
     structureText: SECTIONS
       .filter((section) => sections[section])
       .map((section) => {
@@ -125,8 +122,6 @@ function mockFromStructurePayload(mock, payload) {
       attempted: section.attempted ?? null,
       correct: section.correct ?? null,
       percentile: section.percentile ?? null,
-      topperScore: section.topperScore ?? null,
-      topperPercentile: section.topperPercentile ?? null,
       notes: section.notes || "",
       questionSetCount: section.questionSetCount,
       questionBlocks: section.questionBlocks,
@@ -155,8 +150,6 @@ function mergeDraftOntoMockStructure(mock, currentDraft) {
     mockName: currentDraft.mockName || next.mockName,
     date: currentDraft.date || next.date,
     overallReflection: currentDraft.overallReflection || "",
-    overallPercentile: currentDraft.overallPercentile ?? next.overallPercentile,
-    overallTopperScore: currentDraft.overallTopperScore ?? next.overallTopperScore,
     sections: SECTIONS.reduce((acc, sectionName) => {
       const nextSection = next.sections[sectionName];
       if (!nextSection) return acc;

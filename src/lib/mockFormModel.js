@@ -52,8 +52,6 @@ const DEFAULT_SECTIONS = [
     attempted: "",
     correct: "",
     percentile: "",
-    topperScore: "",
-    topperPercentile: "",
     notes: "",
     questionBlocks: [
       { id: blockId(), type: "set", name: "Set 1", startQuestion: 1, endQuestion: 5 },
@@ -70,8 +68,6 @@ const DEFAULT_SECTIONS = [
     attempted: "",
     correct: "",
     percentile: "",
-    topperScore: "",
-    topperPercentile: "",
     notes: "",
     questionBlocks: [
       { id: blockId(), type: "set", name: "Set 1", startQuestion: 1, endQuestion: 5 },
@@ -87,8 +83,6 @@ const DEFAULT_SECTIONS = [
     attempted: "",
     correct: "",
     percentile: "",
-    topperScore: "",
-    topperPercentile: "",
     notes: "",
     questionBlocks: [
       { id: blockId(), type: "independent", name: "Independent Questions", startQuestion: 1, endQuestion: 22 },
@@ -100,6 +94,7 @@ export function emptyMockForm() {
   return {
     date: today(),
     source: "",
+    overallPercentile: "",
     sections: DEFAULT_SECTIONS.map((section) => ({
       ...section,
       questionBlocks: section.questionBlocks.map((block) => ({ ...block, id: blockId() })),
@@ -113,6 +108,7 @@ export function mockToForm(mock) {
   return {
     date: mock.date,
     source: mock.source,
+    overallPercentile: numToFormValue(mock.overallPercentile),
     sections: DEFAULT_SECTIONS.map((defaultSection) => {
       const existing = mock[defaultSection.section] || mock.sections?.[defaultSection.section];
       if (!existing) {
@@ -126,8 +122,6 @@ export function mockToForm(mock) {
         attempted: numToFormValue(existing.attempted),
         correct: numToFormValue(existing.correct),
         percentile: numToFormValue(existing.percentile),
-        topperScore: numToFormValue(existing.topperScore),
-        topperPercentile: numToFormValue(existing.topperPercentile),
         notes: existing.notes || "",
         questionBlocks: questionBlocks.map((block) => ({ ...block, id: block.id || blockId() })),
       };
@@ -139,6 +133,9 @@ export function validateMockForm(form) {
   const errors = [];
   if (!form.date) errors.push("Enter the mock date.");
   if (!form.source.trim()) errors.push("Enter the mock or exam name.");
+  if (!Number.isFinite(Number(form.overallPercentile)) || form.overallPercentile === "" || Number(form.overallPercentile) < 0 || Number(form.overallPercentile) > 100) {
+    errors.push("Enter the overall percentile as a number between 0 and 100.");
+  }
   form.sections.forEach((section) => {
     const score = Number(section.score);
     if (!Number.isFinite(score)) errors.push(`${section.section}: enter the logged score.`);
@@ -159,13 +156,6 @@ export function validateMockForm(form) {
     if (section.percentile !== "" && (!Number.isFinite(Number(section.percentile)) || Number(section.percentile) < 0 || Number(section.percentile) > 100)) {
       errors.push(`${section.section}: percentile must be a number between 0 and 100.`);
     }
-    if (section.topperScore !== "" && !Number.isFinite(Number(section.topperScore))) {
-      errors.push(`${section.section}: topper score must be a number.`);
-    }
-    if (section.topperPercentile !== "" && (!Number.isFinite(Number(section.topperPercentile)) || Number(section.topperPercentile) < 0 || Number(section.topperPercentile) > 100)) {
-      errors.push(`${section.section}: topper percentile must be a number between 0 and 100.`);
-    }
-
     errors.push(...validateSectionBlockCoverage(section));
   });
   return errors;
@@ -179,8 +169,6 @@ export function mockFormToPayload(form) {
     attempted: section.attempted === "" ? undefined : Number(section.attempted),
     correct: section.correct === "" ? undefined : Number(section.correct),
     percentile: section.percentile === "" ? undefined : Number(section.percentile),
-    topperScore: section.topperScore === "" ? undefined : Number(section.topperScore),
-    topperPercentile: section.topperPercentile === "" ? undefined : Number(section.topperPercentile),
     notes: section.notes || undefined,
     questionSetCount: section.questionBlocks.filter((block) => block.type === "set").length,
     questionBlocks: section.questionBlocks.map((block) => ({
@@ -194,6 +182,7 @@ export function mockFormToPayload(form) {
     date: form.date,
     source: form.source.trim(),
     totalMarks: sections.reduce((sum, section) => sum + section.manualTotalMarks, 0),
+    overallPercentile: Number(form.overallPercentile),
     sections,
   };
 }

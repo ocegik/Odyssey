@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { SECTIONS } from "../constants";
-import { computeDerived, byDateAsc, rollingSeries, buildMockPivot, buildSeries, generateInsights, analyzeWeakest } from "../lib/compute";
+import { computeDerived, byDateAsc, rollingSeries, buildMockPivot, buildSeries, generateInsights, overallPercentileVsMarksInsight, analyzeWeakest } from "../lib/compute";
 import { buildPercentileSeries } from "../lib/percentile";
 import { normalizeStoredMocks, toRaw } from "../lib/mockStorage";
 import { makeSampleData } from "../lib/sampleData";
@@ -73,10 +73,16 @@ export function useMockEntries() {
     return out;
   }, [entriesWithComputed]);
 
-  const insights = useMemo(() => generateInsights(sectionStats), [sectionStats]);
+  const mocks = useMemo(() => buildMockPivot(mockViews), [mockViews]);
+  const insights = useMemo(() => {
+    const overallInsight = overallPercentileVsMarksInsight(mocks);
+    return [...generateInsights(sectionStats), overallInsight]
+      .filter(Boolean)
+      .sort((a, b) => b.significance - a.significance)
+      .slice(0, 4);
+  }, [mocks, sectionStats]);
   const weakestAnalysis = useMemo(() => analyzeWeakest(entriesWithComputed), [entriesWithComputed]);
 
-  const mocks = useMemo(() => buildMockPivot(mockViews), [mockViews]);
   const marksSeries = useMemo(() => buildSeries(mocks, (e) => e.totalMarks), [mocks]);
   const attemptRateSeries = useMemo(
     () => buildSeries(mocks, (e) => (e.attemptRate !== null ? +(e.attemptRate * 100).toFixed(1) : null)),
@@ -84,10 +90,6 @@ export function useMockEntries() {
   );
   const marksPerAttemptSeries = useMemo(
     () => buildSeries(mocks, (e) => (e.marksPerAttempt !== null ? +e.marksPerAttempt.toFixed(2) : null)),
-    [mocks]
-  );
-  const hardnessRatioSeries = useMemo(
-    () => buildSeries(mocks, (e) => (e.hardnessRatio !== null && e.hardnessRatio !== undefined ? +(e.hardnessRatio * 100).toFixed(1) : null)),
     [mocks]
   );
   const percentileSeries = useMemo(() => buildPercentileSeries(mocks), [mocks]);
@@ -155,7 +157,7 @@ export function useMockEntries() {
 
   return {
     sectionStats, insights, weakestAnalysis, mocks, entriesWithComputed,
-    marksSeries, attemptRateSeries, marksPerAttemptSeries, hardnessRatioSeries, percentileSeries,
+    marksSeries, attemptRateSeries, marksPerAttemptSeries, percentileSeries,
     toast, syncStatus, lastSyncedAt,
     addScoreOnlyAnalysis, editMock, attachAnalysis, loadSample, deleteMock,
     importMocks, exportMocks, importScoreOnlyMocks,

@@ -14,9 +14,8 @@ export function computeDerived(e) {
   const overallAccuracy = accuracyOf(e.correct, attempted);
   const attemptRate = attempted !== null && e.totalQuestions > 0 ? attempted / e.totalQuestions : null;
   const marksPerAttempt = attempted > 0 && totalMarks !== null ? totalMarks / attempted : null;
-  const hardnessRatio = e.topperScore && totalMarks !== null ? totalMarks / e.topperScore : null;
   return {
-    ...e, attempted, unattempted, totalMarks, overallAccuracy, attemptRate, marksPerAttempt, hardnessRatio,
+    ...e, attempted, unattempted, totalMarks, overallAccuracy, attemptRate, marksPerAttempt,
   };
 }
 
@@ -266,6 +265,44 @@ export function generateInsights(sectionStats) {
     .filter(Boolean);
 
   return winners.sort((a, b) => b.significance - a.significance).slice(0, MAX_INSIGHTS);
+}
+
+/**
+ * Overall marks and the user's reported cohort rank together distinguish a
+ * change in personal performance from a change in paper difficulty. A single
+ * highest score cannot make that distinction reliably.
+ */
+export function overallPercentileVsMarksInsight(mocks) {
+  const comparable = mocks.filter((mock) => (
+    Number.isFinite(mockTotalMarks(mock)) && Number.isFinite(mock.overallPercentile)
+  ));
+  if (comparable.length < 2) return null;
+
+  const previous = comparable[comparable.length - 2];
+  const latest = comparable[comparable.length - 1];
+  const percentileDelta = latest.overallPercentile - previous.overallPercentile;
+  const marksDelta = mockTotalMarks(latest) - mockTotalMarks(previous);
+  if (Math.abs(percentileDelta) < PERCENTILE_VS_MARKS_MIN_PCTL_DELTA) return null;
+
+  if (percentileDelta > 0 && marksDelta < 0) {
+    return {
+      id: "overall-percentile-vs-marks",
+      section: "Overall",
+      tone: "positive",
+      significance: Math.min(1, Math.abs(percentileDelta) / 15),
+      text: `Overall percentile improved (${fmtNum(previous.overallPercentile, 1)} → ${fmtNum(latest.overallPercentile, 1)}) despite lower marks — this paper was likely harder for the cohort.`,
+    };
+  }
+  if (percentileDelta < 0 && marksDelta > 0) {
+    return {
+      id: "overall-percentile-vs-marks",
+      section: "Overall",
+      tone: "negative",
+      significance: Math.min(1, Math.abs(percentileDelta) / 15),
+      text: `Overall marks improved, but percentile fell (${fmtNum(previous.overallPercentile, 1)} → ${fmtNum(latest.overallPercentile, 1)}) — this paper was likely easier for the cohort.`,
+    };
+  }
+  return null;
 }
 
 /* ------------------------------------------------------------------ */

@@ -29,10 +29,11 @@ export function makeSampleData() {
         attempted, correct, manualTotalMarks: correct * 3 - wrong,
         totalQuestions: p.qs,
         percentile: Math.random() > 0.3 ? Math.round((40 + (sec === "Quant" ? -10 : 10) + m * 1.5 + (Math.random() - 0.5) * 10) * 10) / 10 : null,
-        topperScore: Math.random() > 0.4 ? Math.round(p.qs * 2.6 + Math.random() * 8) : null,
-        topperPercentile: Math.random() > 0.5 ? Math.round((97 + Math.random() * 2.9) * 100) / 100 : null,
       });
     });
   }
-  return normalizeMockDataset(out);
+  return normalizeMockDataset(out).map((mock, index) => ({
+    ...mock,
+    overallPercentile: Math.round((52 + index * 1.6 + (Math.random() - 0.5) * 8) * 10) / 10,
+  }));
 }

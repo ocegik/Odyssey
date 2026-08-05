@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { latestKnownPercentile } from "../percentile";
 
 describe("latestKnownPercentile", () => {
-  const withPercentile = (label, value) => ({ label, VARC: { percentile: value } });
+  const withPercentile = (label, value) => ({ label, overallPercentile: value });
   const withoutPercentile = (label) => ({ label });
 
   it("walks back to the most recent mock that actually has a percentile", () => {

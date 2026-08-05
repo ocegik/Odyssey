@@ -2,10 +2,10 @@ import { SECTIONS } from "../constants";
 import { uid } from "./format";
 import { normalizeDetailedAnalysis } from "./analysisModel";
 
-export const DATASET_VERSION = 2;
+export const DATASET_VERSION = 3;
 
 const SECTION_INPUT_FIELDS = [
-  "attempted", "correct", "totalQuestions", "percentile", "topperScore", "topperPercentile", "notes",
+  "attempted", "correct", "totalQuestions", "percentile", "notes",
   "manualTotalMarks", "questionSetCount", "questionBlocks",
 ];
 
@@ -63,8 +63,6 @@ function normalizeSectionPayload(item, idx, parentMockId) {
     correct: numberOrNull(item.correct),
     totalQuestions,
     percentile: numberOrNull(item.percentile),
-    topperScore: numberOrNull(item.topperScore),
-    topperPercentile: numberOrNull(item.topperPercentile),
     manualTotalMarks: numberOrNull(item.manualTotalMarks),
     questionSetCount: numberOrNull(item.questionSetCount) ?? questionBlocks.filter((block) => block.type === "set").length,
     questionBlocks,
@@ -103,6 +101,7 @@ function normalizeMock(rawMock, idx) {
     date: rawMock.date,
     source: String(rawMock.source),
     manualTotalMarks: numberOrNull(rawMock.manualTotalMarks),
+    overallPercentile: numberOrNull(rawMock.overallPercentile ?? rawMock.analysis?.overallPercentile),
     sections,
     analysis: rawMock.analysis ? normalizeDetailedAnalysis(rawMock.analysis) : null,
   };
@@ -183,6 +182,7 @@ export function toMockDataset(mocks) {
       date: mock.date,
       source: mock.source,
       manualTotalMarks: mock.manualTotalMarks ?? null,
+      overallPercentile: mock.overallPercentile ?? null,
       analysis: mock.analysis || null,
       sections: SECTIONS.reduce((acc, section) => {
         if (mock.sections[section]) acc[section] = sectionToRaw(mock.sections[section]);
@@ -227,8 +227,6 @@ export function addScoreOnlyMock(mocks, payload) {
       questionBlocks: section.questionBlocks,
       totalQuestions: section.totalQuestions || 0,
       percentile: section.percentile,
-      topperScore: section.topperScore,
-      topperPercentile: section.topperPercentile,
       notes: section.notes || "",
     }, idx, id);
   });
@@ -241,6 +239,7 @@ export function addScoreOnlyMock(mocks, payload) {
       date: payload.date,
       source: payload.source,
       manualTotalMarks: numberOrNull(payload.totalMarks),
+      overallPercentile: numberOrNull(payload.overallPercentile),
       sections,
       analysis: payload.analysis ? normalizeDetailedAnalysis(payload.analysis) : null,
     },
@@ -273,8 +272,6 @@ export function updateScoreOnlyMock(mocks, mockId, payload) {
       questionBlocks: section.questionBlocks,
       totalQuestions: section.totalQuestions || 0,
       percentile: section.percentile,
-      topperScore: section.topperScore,
-      topperPercentile: section.topperPercentile,
       notes: section.notes || "",
     }, idx, mockId);
   });
@@ -286,6 +283,7 @@ export function updateScoreOnlyMock(mocks, mockId, payload) {
           date: payload.date,
           source: payload.source,
           manualTotalMarks: numberOrNull(payload.totalMarks),
+          overallPercentile: numberOrNull(payload.overallPercentile),
           sections,
         }
       : mock
@@ -394,8 +392,6 @@ function normalizeImportSection(raw, label) {
     questionBlocks: hasCustomBlocks ? raw.questionBlocks : undefined,
     questionSetCount: raw.questionSetCount,
     percentile: raw.percentile,
-    topperScore: raw.topperScore,
-    topperPercentile: raw.topperPercentile,
     notes: raw.notes,
   };
 }
@@ -405,6 +401,11 @@ function normalizeImportMock(raw, idx) {
   if (!raw || typeof raw !== "object") throw new Error(`${label}: must be a JSON object.`);
   if (!raw.date) throw new Error(`${label}: missing "date".`);
   if (!raw.source) throw new Error(`${label}: missing "source".`);
+
+  const overallPercentile = Number(raw.overallPercentile);
+  if (raw.overallPercentile === "" || !Number.isFinite(overallPercentile) || overallPercentile < 0 || overallPercentile > 100) {
+    throw new Error(`${label}: "overallPercentile" must be a number between 0 and 100.`);
+  }
 
   const sectionList = sectionListFromImport(raw.sections);
   if (sectionList.length === 0) throw new Error(`${label} (${raw.date} ${raw.source}): "sections" must include at least one section.`);
@@ -417,6 +418,7 @@ function normalizeImportMock(raw, idx) {
     date: raw.date,
     source: String(raw.source).trim(),
     totalMarks,
+    overallPercentile,
     sections,
     analysis: raw.analysis || undefined,
   };

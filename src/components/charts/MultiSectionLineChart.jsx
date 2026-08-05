@@ -5,9 +5,8 @@ import SectionLegend from "./SectionLegend";
 /**
  * Optional `targets` prop: { VARC: number|null, DILR: number|null, Quant: number|null }.
  * Draws one dashed ReferenceLine per section that has a target set — same
- * ReferenceLine pattern HardnessChart uses for its "Topper" line, just
- * per-section instead of a single fixed value, and colored to match each
- * section's line so multiple target lines stay distinguishable.
+ * Target lines are colored to match each section so multiple targets stay
+ * distinguishable.
  */
 export default function MultiSectionLineChart({ data, suffix = "", domain, targets, referenceLines = [] }) {
   return (

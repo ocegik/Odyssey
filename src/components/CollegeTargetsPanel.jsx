@@ -3,7 +3,6 @@ import { ChevronDown, ChevronRight, GraduationCap } from "lucide-react";
 import { COLORS, TYPE, SHADOW } from "../constants";
 import { fmtNum } from "../lib/format";
 import { COLLEGE_CUTOFFS, COLLEGE_TYPE_META, reachStatus } from "../lib/collegeCutoffs";
-import { percentileCaveat } from "../lib/percentile";
 
 const STATUS_META = {
   reach: { label: "Within reach", color: COLORS.good },
@@ -70,17 +69,10 @@ function CollegeRow({ college, currentPercentile, expanded, onToggle }) {
   );
 }
 
-/**
- * `percentile` is the object from lib/percentile.js, not a bare number: a
- * shortlist built on an *estimated* overall percentile (averaged sectionals)
- * can be off by a lot, and that caveat has to travel with the number to the
- * one screen where someone might act on it.
- */
 export default function CollegeTargetsPanel({ percentile }) {
   const [expandedName, setExpandedName] = useState(null);
   const [showAll, setShowAll] = useState(false);
   const currentPercentile = percentile ? percentile.value : null;
-  const caveat = percentileCaveat(percentile);
   // `mocksAgo` is set when the number came from an older mock (see
   // latestKnownPercentile) — saying so beats implying it's current.
   const asOf = percentile?.mocksAgo > 0
@@ -120,16 +112,10 @@ export default function CollegeTargetsPanel({ percentile }) {
         </div>
         <span className="text-xs" style={{ color: COLORS.inkMuted }}>
           {currentPercentile !== null && currentPercentile !== undefined
-            ? `${reachCount} of ${sorted.length} within reach at your ${asOf} ${fmtNum(currentPercentile, 2)}%ile${percentile?.estimated ? " (est.)" : ""}`
-            : "Log a mock with a percentile to compare — showing required percentiles for now"}
+            ? `${reachCount} of ${sorted.length} within reach at your ${asOf} ${fmtNum(currentPercentile, 2)}%ile`
+            : "Log a mock with an overall percentile to compare — showing required percentiles for now"}
         </span>
       </div>
-
-      {caveat && (
-        <p className="text-xs px-4 pb-3 leading-relaxed" style={{ color: COLORS.inkMuted }}>
-          {caveat} — treat this shortlist as directional, not a prediction.
-        </p>
-      )}
 
       <div>
         {visible.map((college) => (

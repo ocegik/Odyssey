@@ -3,7 +3,7 @@ import { ClipboardCheck, Lightbulb } from "lucide-react";
 import { COLORS, SECTIONS, SHADOW, TYPE } from "../../constants";
 import { fmtDate, fmtNum, fmtPct } from "../../lib/format";
 import { computePacing, mockTotalMarks, computeAdaptiveTarget, avgOfLastN, bestMarks } from "../../lib/compute";
-import { latestKnownPercentile, mockOverallPercentile, percentileCaveat } from "../../lib/percentile";
+import { latestKnownPercentile, mockOverallPercentile } from "../../lib/percentile";
 import { computeSyllabusStats, getHighFrequencyRemaining, getLeastCompletedMacroTopics } from "../../lib/syllabusModel";
 import SectionBadge from "../ui/SectionBadge";
 import ChartFrame from "../charts/ChartFrame";
@@ -47,7 +47,6 @@ function LatestMockSpotlight({ mocks }) {
   const prevMarks = prev ? mockTotalMarks(prev) : null;
   const delta = marks !== null && prevMarks !== null ? marks - prevMarks : null;
   const percentile = mockOverallPercentile(latest);
-  const caveat = percentileCaveat(percentile);
 
   return (
     <div className="p-5 flex flex-col gap-4" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
@@ -74,14 +73,12 @@ function LatestMockSpotlight({ mocks }) {
         {percentile !== null && (
           <div className="flex flex-col gap-1">
             <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>
-              Percentile{percentile.estimated && <span style={{ opacity: 0.7 }}> (est.)</span>}
+              Overall percentile
             </span>
             <strong style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 20, color: COLORS.ink }}>{fmtNum(percentile.value, 2)}%ile</strong>
           </div>
         )}
       </div>
-
-      {caveat && <span className="text-xs" style={{ color: COLORS.inkMuted }}>{caveat}.</span>}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {SECTIONS.map((section) => {
@@ -108,8 +105,8 @@ function LatestMockSpotlight({ mocks }) {
 export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionStats, settings, syllabusProgress, onOpenSyllabus }) {
   const graphData = buildOverallMarksData(mocks);
   const latestMock = mocks.length > 0 ? mocks[mocks.length - 1] : null;
-  // Not mockOverallPercentile(latestMock): percentile is optional per mock,
-  // and one mock logged without it shouldn't blank the college comparison.
+  // Walk back to the latest logged overall percentile so a legacy record
+  // without one does not blank the college comparison.
   const currentPercentile = latestKnownPercentile(mocks);
   const pacing = computePacing(mocks, settings?.catTargetDate);
   const lastMarks = latestMock ? mockTotalMarks(latestMock) : null;
