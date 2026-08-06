@@ -16,7 +16,7 @@ import {
   AnalysisBarChart,
   DetailedStatCards,
 } from "../DetailedAnalysisInsightsPanel";
-import { AdvancedStatCards, RecommendationList } from "../AdvancedInsightsPanel";
+import { RecommendationList } from "../AdvancedInsightsPanel";
 import ChartFrame from "../charts/ChartFrame";
 import InsightList from "../charts/InsightList";
 import TopSignals from "../charts/TopSignals";
@@ -227,6 +227,15 @@ function recentSummary(highlights) {
     : "Last 5 analyzed mocks, compared against all-time patterns.";
 }
 
+function patternDisclosureSummary(insights, noneText) {
+  if (insights.length === 0) return noneText;
+  return insights[0].text;
+}
+
+function countLabel(count, noun) {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
 export default function AnalysisInsightsDataTab({ mocks }) {
   const [rangeMode, setRangeMode] = useState("all");
   const [specificMockId, setSpecificMockId] = useState(null);
@@ -291,9 +300,8 @@ export default function AnalysisInsightsDataTab({ mocks }) {
           <TopSignals signals={topSignals} />
 
           <GroupHeading>Overall performance</GroupHeading>
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             <DetailedStatCards analysis={analysis} />
-            <AdvancedStatCards analysis={advanced} />
           </div>
           <ChartFrame title="Accuracy, wrong & skipped over time" note="Across analyzed mocks in this range">
             <AnalysisTrendChart rows={analysis.mockTrendRows} />
@@ -302,37 +310,51 @@ export default function AnalysisInsightsDataTab({ mocks }) {
           <GroupHeading>Recommendations</GroupHeading>
           <ChartFrame
             title="Recommendations"
-            note="Evidence-based next steps, tied to the pattern that triggered them"
+            note={advanced.recommendations.length === 0 ? "Evidence-based next steps, tied to the pattern that triggered them" : `${countLabel(advanced.recommendations.length, "evidence-based next step")}, tied to the pattern that triggered them`}
             empty={advanced.recommendations.length === 0 ? "No actionable recommendations yet." : null}
           >
             <RecommendationList recommendations={advanced.recommendations} />
           </ChartFrame>
 
-          <GroupHeading>Section & set insights</GroupHeading>
-          <ChartFrame
-            title="Section & set-level patterns"
-            note="Ranked by impact"
-            empty={sectionSetInsights.length === 0 ? "Analysis is attached, but there is not enough repeated signal beyond what's shown in Top Signals." : null}
-          >
-            <InsightList insights={sectionSetInsights} iconFor={detailedInsightIcon} showHero={false} />
-          </ChartFrame>
-          <ChartFrame title="Section reason breakdown" note="Accuracy, wrong/skip drivers, and timing by section">
-            <SectionReasonTable rows={analysis.reasonRows} />
-          </ChartFrame>
-
-          <GroupHeading>Topic & Passage Domain insights</GroupHeading>
-          <ChartFrame
-            title="Topic & domain patterns"
-            note="Guessing, concept gaps, timing, and trend by topic/domain"
-            empty={topicInsightsRemaining.length === 0 ? "No strong topic/domain patterns yet — tag more questions and log a few more mocks." : null}
-          >
-            <InsightList insights={topicInsightsRemaining} showHero={false} />
-          </ChartFrame>
-          <ChartFrame title="Topic & domain accuracy breakdown" note="Every tagged topic and domain, weakest first">
-            <TopicAccuracyTable rows={analysis.topicRows} />
-          </ChartFrame>
-
           <GroupHeading>Explore deeper</GroupHeading>
+          <Disclosure
+            id="insights.sectionSet"
+            title="Section & set-level patterns"
+            summary={patternDisclosureSummary(sectionSetInsights, "No additional patterns beyond top signals.")}
+          >
+            <div className="flex flex-col gap-4">
+              <ChartFrame
+                title="Patterns"
+                note={`${countLabel(advanced.setInsights.length, "set pattern")} found · ranked by impact`}
+                empty={sectionSetInsights.length === 0 ? "Analysis is attached, but there is not enough repeated signal beyond what's shown in Top Signals." : null}
+              >
+                <InsightList insights={sectionSetInsights} iconFor={detailedInsightIcon} showHero={false} />
+              </ChartFrame>
+              <ChartFrame title="Section reason breakdown" note="Accuracy, wrong/skip drivers, and timing by section">
+                <SectionReasonTable rows={analysis.reasonRows} />
+              </ChartFrame>
+            </div>
+          </Disclosure>
+
+          <Disclosure
+            id="insights.topicDomain"
+            title="Topic & domain patterns"
+            summary={patternDisclosureSummary(topicInsightsRemaining, "No strong topic/domain patterns yet — tag more questions and log a few more mocks.")}
+          >
+            <div className="flex flex-col gap-4">
+              <ChartFrame
+                title="Patterns"
+                note={`${countLabel(advanced.topicInsights.length, "topic insight")} found · guessing, concept gaps, timing, and trend`}
+                empty={topicInsightsRemaining.length === 0 ? "No strong topic/domain patterns yet — tag more questions and log a few more mocks." : null}
+              >
+                <InsightList insights={topicInsightsRemaining} showHero={false} />
+              </ChartFrame>
+              <ChartFrame title="Topic & domain accuracy breakdown" note="Every tagged topic and domain, weakest first">
+                <TopicAccuracyTable rows={analysis.topicRows} />
+              </ChartFrame>
+            </div>
+          </Disclosure>
+
           <Disclosure id="insights.timing" title="Timing & decision-making" summary={timingSummary(analysis)}>
             <div className="flex flex-col gap-4">
               <ChartFrame

@@ -173,14 +173,32 @@ export function AnalysisBarChart({ rows }) {
   );
 }
 
+/* Accuracy is the one stat worth reacting to at a glance, so it gets a
+   semantic accent instead of the neutral ink every other count uses. */
+function accuracyAccent(accuracy) {
+  if (accuracy === null || accuracy === undefined) return COLORS.ink;
+  if (accuracy >= 0.6) return COLORS.good;
+  if (accuracy >= 0.4) return COLORS.warn;
+  return COLORS.danger;
+}
+
 export function DetailedStatCards({ analysis }) {
+  const correct = analysis.attempted - analysis.wrong;
+  const wrongRate = analysis.attempted > 0 ? analysis.wrong / analysis.attempted : null;
+  const skipRate = analysis.questionCount > 0 ? analysis.skipped / analysis.questionCount : null;
+
   return (
     <>
       <StatCard label="Analyzed mocks" value={analysis.analyzedMockCount} />
       <StatCard label="Questions" value={analysis.questionCount} />
-      <StatCard label="Analysis acc" value={fmtPct(analysis.accuracy)} />
-      <StatCard label="Wrong" value={analysis.wrong} />
-      <StatCard label="Skipped" value={analysis.skipped} />
+      <StatCard
+        label="Analysis acc"
+        value={fmtPct(analysis.accuracy)}
+        accent={accuracyAccent(analysis.accuracy)}
+        sub={`${correct}/${analysis.attempted} correct`}
+      />
+      <StatCard label="Wrong" value={analysis.wrong} accent={COLORS.danger} sub={wrongRate !== null ? `${fmtPct(wrongRate)} of attempted` : undefined} />
+      <StatCard label="Skipped" value={analysis.skipped} accent={COLORS.warn} sub={skipRate !== null ? `${fmtPct(skipRate)} of questions` : undefined} />
     </>
   );
 }

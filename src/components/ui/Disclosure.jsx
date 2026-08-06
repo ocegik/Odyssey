@@ -28,12 +28,12 @@ export default function Disclosure({ id, title, summary, defaultOpen = false, ch
         className="theme-hover w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left"
         style={{ background: "transparent", border: "none", borderRadius: 12 }}
       >
-        <span className="flex items-center gap-2 min-w-0">
+        <span className="flex items-center gap-2 shrink-0">
           <Chevron size={15} style={{ color: COLORS.inkMuted, flexShrink: 0 }} />
-          <span style={TYPE.chartTitle}>{title}</span>
+          <span style={{ ...TYPE.chartTitle, whiteSpace: "nowrap" }}>{title}</span>
         </span>
         {summary && (
-          <span className="text-xs truncate text-right" style={{ color: COLORS.inkMuted }}>
+          <span className="text-xs truncate text-right hidden sm:block min-w-0" style={{ color: COLORS.inkMuted }}>
             {summary}
           </span>
         )}

@@ -1,7 +1,6 @@
 import { Lightbulb } from "lucide-react";
 import { COLORS } from "../constants";
 import SectionBadge from "./ui/SectionBadge";
-import StatCard from "./ui/StatCard";
 
 function RecommendationCard({ recommendation }) {
   return (
@@ -15,16 +14,6 @@ function RecommendationCard({ recommendation }) {
         <p className="text-sm" style={{ color: COLORS.ink, lineHeight: 1.45 }}>{recommendation.text}</p>
       </div>
     </div>
-  );
-}
-
-export function AdvancedStatCards({ analysis }) {
-  return (
-    <>
-      <StatCard label="Set patterns found" value={analysis.setInsights.length} />
-      <StatCard label="Topic insights" value={analysis.topicInsights.length} />
-      <StatCard label="Recommendations" value={analysis.recommendations.length} />
-    </>
   );
 }
 
