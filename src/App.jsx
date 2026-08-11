@@ -1,7 +1,11 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { COLORS, FONT_IMPORT, THEME_COLORS } from "./constants";
 import { useMockEntries } from "./hooks/useMockEntries";
-import { useSettings, normalizeSettings, LAYOUT_WIDTH_OPTIONS } from "./hooks/useSettings";
+import {
+  useSettings,
+  normalizeSettings,
+  LAYOUT_WIDTH_OPTIONS,
+} from "./hooks/useSettings";
 import { useSyllabus } from "./hooks/useSyllabus";
 import { buildTopicMetrics } from "./lib/topicMetrics";
 import { buildRevisionQueue } from "./lib/revisionQueue";
@@ -18,11 +22,14 @@ import OverviewTab from "./components/tabs/OverviewTab";
    download all of recharts and the full syllabus dataset before seeing
    anything, on an app that's opened for a 10-second score check most days. */
 const SyllabusTab = lazy(() => import("./components/tabs/SyllabusTab"));
+const QuickMath = lazy(() => import("./components/tabs/QuickMath"));
 const MockLogTab = lazy(() => import("./components/tabs/MockLogTab"));
 const TrendsTab = lazy(() => import("./components/tabs/TrendsTab"));
 const AboutTab = lazy(() => import("./components/tabs/AboutTab"));
 const AnalysisTab = lazy(() => import("./components/tabs/AnalysisTab"));
-const AnalysisInsightsDataTab = lazy(() => import("./components/tabs/AnalysisInsightsDataTab"));
+const AnalysisInsightsDataTab = lazy(
+  () => import("./components/tabs/AnalysisInsightsDataTab"),
+);
 const SettingsTab = lazy(() => import("./components/tabs/SettingsTab"));
 
 const THEME_STORAGE_KEY = "cat-mock-tracker:theme";
@@ -45,7 +52,10 @@ function selectChevronDataURI(strokeColor) {
 }
 
 function themeVariableCSS(themeName, values) {
-  const selector = themeName === "light" ? ":root, [data-theme=\"light\"]" : "[data-theme=\"dark\"]";
+  const selector =
+    themeName === "light"
+      ? ':root, [data-theme="light"]'
+      : '[data-theme="dark"]';
   return `
     ${selector} {
       --color-bg: ${values.bg};
@@ -93,11 +103,25 @@ export default function CATMockTracker() {
   const [theme, setTheme] = useState(loadThemePreference);
 
   const {
-    sectionStats, insights, weakestAnalysis, mocks, entriesWithComputed,
-    marksSeries, attemptRateSeries, marksPerAttemptSeries, percentileSeries,
-    toast, syncStatus: mocksSyncStatus,
-    addScoreOnlyAnalysis, editMock, attachAnalysis, loadSample, deleteMock,
-    importMocks, exportMocks, importScoreOnlyMocks,
+    sectionStats,
+    insights,
+    weakestAnalysis,
+    mocks,
+    entriesWithComputed,
+    marksSeries,
+    attemptRateSeries,
+    marksPerAttemptSeries,
+    percentileSeries,
+    toast,
+    syncStatus: mocksSyncStatus,
+    addScoreOnlyAnalysis,
+    editMock,
+    attachAnalysis,
+    loadSample,
+    deleteMock,
+    importMocks,
+    exportMocks,
+    importScoreOnlyMocks,
   } = useMockEntries();
 
   const {
@@ -132,7 +156,10 @@ export default function CATMockTracker() {
   } = useSyllabus();
 
   const topicMetrics = useMemo(() => buildTopicMetrics(mocks), [mocks]);
-  const revisionQueue = useMemo(() => buildRevisionQueue(mocks, syllabusRevisionEvents), [mocks, syllabusRevisionEvents]);
+  const revisionQueue = useMemo(
+    () => buildRevisionQueue(mocks, syllabusRevisionEvents),
+    [mocks, syllabusRevisionEvents],
+  );
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -149,7 +176,9 @@ export default function CATMockTracker() {
      useHashTab without passing handleTabChange, and keying off the effect
      covers all of them. */
   useEffect(() => {
-    setVisitedTabs((prev) => (prev.has(activeTab) ? prev : new Set(prev).add(activeTab)));
+    setVisitedTabs((prev) =>
+      prev.has(activeTab) ? prev : new Set(prev).add(activeTab),
+    );
   }, [activeTab]);
 
   const handleTabChange = (key) => setActiveTab(key);
@@ -166,7 +195,9 @@ export default function CATMockTracker() {
       settings,
       learningState: exportSyllabusState(),
     };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -178,7 +209,9 @@ export default function CATMockTracker() {
   const handleImportData = (raw) => {
     const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-      throw new Error('Backup file must be a JSON object with a "mocks" field.');
+      throw new Error(
+        'Backup file must be a JSON object with a "mocks" field.',
+      );
     }
     if (!parsed.mocks) throw new Error('Backup JSON is missing "mocks".');
 
@@ -197,7 +230,16 @@ export default function CATMockTracker() {
   };
 
   return (
-    <div data-theme={theme} style={{ background: COLORS.bg, minHeight: "100%", color: COLORS.ink, fontFamily: "'Inter', sans-serif" }} className="w-full">
+    <div
+      data-theme={theme}
+      style={{
+        background: COLORS.bg,
+        minHeight: "100%",
+        color: COLORS.ink,
+        fontFamily: "'Inter', sans-serif",
+      }}
+      className="w-full"
+    >
       <style>{`
         ${FONT_IMPORT}
         ${themeVariableCSS("light", THEME_COLORS.light)}
@@ -227,12 +269,22 @@ export default function CATMockTracker() {
 
       <div
         className="mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6"
-        style={{ maxWidth: LAYOUT_WIDTH_OPTIONS.find((opt) => opt.key === settings.layoutWidth)?.px ?? LAYOUT_WIDTH_OPTIONS[1].px }}
+        style={{
+          maxWidth:
+            LAYOUT_WIDTH_OPTIONS.find((opt) => opt.key === settings.layoutWidth)
+              ?.px ?? LAYOUT_WIDTH_OPTIONS[1].px,
+        }}
       >
         <Header
           theme={theme}
-          onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
-          syncStatuses={[mocksSyncStatus, settingsSyncStatus, syllabusSyncStatus]}
+          onToggleTheme={() =>
+            setTheme((current) => (current === "dark" ? "light" : "dark"))
+          }
+          syncStatuses={[
+            mocksSyncStatus,
+            settingsSyncStatus,
+            syllabusSyncStatus,
+          ]}
         />
 
         <TabNav activeTab={activeTab} onChange={handleTabChange} />
@@ -242,112 +294,146 @@ export default function CATMockTracker() {
             the whole subtree every time, which re-ran every chart's resize
             measurement and all aggregate computations on every visit. */}
         <Suspense fallback={<TabFallback />}>
-        {visitedTabs.has("overview") && (
-          <div className="flex flex-col gap-6" style={{ display: activeTab === "overview" ? "flex" : "none" }}>
-            <OverviewTab
-              mocks={mocks}
-              insights={insights}
-              weakestAnalysis={weakestAnalysis}
-              sectionStats={sectionStats}
-              settings={settings}
-              syllabusProgress={syllabusProgress}
-              onOpenSyllabus={() => handleTabChange("syllabus")}
-            />
-          </div>
-        )}
+          {visitedTabs.has("overview") && (
+            <div
+              className="flex flex-col gap-6"
+              style={{ display: activeTab === "overview" ? "flex" : "none" }}
+            >
+              <OverviewTab
+                mocks={mocks}
+                insights={insights}
+                weakestAnalysis={weakestAnalysis}
+                sectionStats={sectionStats}
+                settings={settings}
+                syllabusProgress={syllabusProgress}
+                onOpenSyllabus={() => handleTabChange("syllabus")}
+              />
+            </div>
+          )}
+          {visitedTabs.has("quickMath") && (
+            <div
+              className="flex flex-col gap-6"
+              style={{ display: activeTab === "quickMath" ? "flex" : "none" }}
+            >
+              <QuickMath />
+            </div>
+          )}
 
-        {visitedTabs.has("syllabus") && (
-          <div className="flex flex-col gap-6" style={{ display: activeTab === "syllabus" ? "flex" : "none" }}>
-            <SyllabusTab
-              progress={syllabusProgress}
-              topicMetrics={topicMetrics}
-              revisionQueue={revisionQueue}
-              expanded={syllabusExpanded}
-              filters={syllabusFilters}
-              onToggleMicroComplete={toggleMicroComplete}
-              onToggleSectionExpanded={toggleSectionExpanded}
-              onToggleMacroExpanded={toggleMacroExpanded}
-              onToggleMicroExpanded={toggleMicroExpanded}
-              onExpandAll={expandAllSyllabus}
-              onCollapseAll={collapseAllSyllabus}
-              onSetSearch={setSyllabusSearch}
-              onSetStatusFilter={setSyllabusStatusFilter}
-              onSetFrequencyFilter={setSyllabusFrequencyFilter}
-            />
-          </div>
-        )}
+          {visitedTabs.has("syllabus") && (
+            <div
+              className="flex flex-col gap-6"
+              style={{ display: activeTab === "syllabus" ? "flex" : "none" }}
+            >
+              <SyllabusTab
+                progress={syllabusProgress}
+                topicMetrics={topicMetrics}
+                revisionQueue={revisionQueue}
+                expanded={syllabusExpanded}
+                filters={syllabusFilters}
+                onToggleMicroComplete={toggleMicroComplete}
+                onToggleSectionExpanded={toggleSectionExpanded}
+                onToggleMacroExpanded={toggleMacroExpanded}
+                onToggleMicroExpanded={toggleMicroExpanded}
+                onExpandAll={expandAllSyllabus}
+                onCollapseAll={collapseAllSyllabus}
+                onSetSearch={setSyllabusSearch}
+                onSetStatusFilter={setSyllabusStatusFilter}
+                onSetFrequencyFilter={setSyllabusFrequencyFilter}
+              />
+            </div>
+          )}
 
-        {visitedTabs.has("log") && (
-          <div className="flex flex-col gap-6" style={{ display: activeTab === "log" ? "flex" : "none" }}>
-            <MockLogTab
-              mocks={mocks}
-              settings={settings}
-              onLoadSample={loadSample}
-              onOpenAnalysis={handleOpenAnalysis}
-              onCreateMock={addScoreOnlyAnalysis}
-              onEditMock={editMock}
-              onDeleteMock={deleteMock}
-              onImportMocks={importScoreOnlyMocks}
-            />
-          </div>
-        )}
+          {visitedTabs.has("log") && (
+            <div
+              className="flex flex-col gap-6"
+              style={{ display: activeTab === "log" ? "flex" : "none" }}
+            >
+              <MockLogTab
+                mocks={mocks}
+                settings={settings}
+                onLoadSample={loadSample}
+                onOpenAnalysis={handleOpenAnalysis}
+                onCreateMock={addScoreOnlyAnalysis}
+                onEditMock={editMock}
+                onDeleteMock={deleteMock}
+                onImportMocks={importScoreOnlyMocks}
+              />
+            </div>
+          )}
 
-        {visitedTabs.has("analysis") && (
-          <div className="flex flex-col gap-6" style={{ display: activeTab === "analysis" ? "flex" : "none" }}>
-            <AnalysisTab
-              mocks={mocks}
-              selectedMockId={analysisMockId}
-              settings={settings}
-              onSelectMock={setAnalysisMockId}
-              onSaveAnalysis={attachAnalysis}
-              onEditMock={editMock}
-            />
-          </div>
-        )}
+          {visitedTabs.has("analysis") && (
+            <div
+              className="flex flex-col gap-6"
+              style={{ display: activeTab === "analysis" ? "flex" : "none" }}
+            >
+              <AnalysisTab
+                mocks={mocks}
+                selectedMockId={analysisMockId}
+                settings={settings}
+                onSelectMock={setAnalysisMockId}
+                onSaveAnalysis={attachAnalysis}
+                onEditMock={editMock}
+              />
+            </div>
+          )}
 
-        {visitedTabs.has("analysisInsights") && (
-          <div className="flex flex-col gap-6" style={{ display: activeTab === "analysisInsights" ? "flex" : "none" }}>
-            <AnalysisInsightsDataTab mocks={mocks} />
-          </div>
-        )}
+          {visitedTabs.has("analysisInsights") && (
+            <div
+              className="flex flex-col gap-6"
+              style={{
+                display: activeTab === "analysisInsights" ? "flex" : "none",
+              }}
+            >
+              <AnalysisInsightsDataTab mocks={mocks} />
+            </div>
+          )}
 
-        {visitedTabs.has("trends") && (
-          <div className="flex flex-col gap-6" style={{ display: activeTab === "trends" ? "flex" : "none" }}>
-            <TrendsTab
-              mocks={mocks}
-              entriesWithComputed={entriesWithComputed}
-              marksSeries={marksSeries}
-              attemptRateSeries={attemptRateSeries}
-              marksPerAttemptSeries={marksPerAttemptSeries}
-              percentileSeries={percentileSeries}
-              sectionStats={sectionStats}
-              settings={settings}
-            />
-          </div>
-        )}
+          {visitedTabs.has("trends") && (
+            <div
+              className="flex flex-col gap-6"
+              style={{ display: activeTab === "trends" ? "flex" : "none" }}
+            >
+              <TrendsTab
+                mocks={mocks}
+                entriesWithComputed={entriesWithComputed}
+                marksSeries={marksSeries}
+                attemptRateSeries={attemptRateSeries}
+                marksPerAttemptSeries={marksPerAttemptSeries}
+                percentileSeries={percentileSeries}
+                sectionStats={sectionStats}
+                settings={settings}
+              />
+            </div>
+          )}
 
-        {visitedTabs.has("settings") && (
-          <div className="flex flex-col gap-6" style={{ display: activeTab === "settings" ? "flex" : "none" }}>
-            <SettingsTab
-              settings={settings}
-              mocks={mocks}
-              onUpdateProfile={updateProfile}
-              onUpdateSectionTarget={updateSectionTarget}
-              onAddScheduleEntry={addScheduleEntry}
-              onUpdateScheduleEntry={updateScheduleEntry}
-              onDeleteScheduleEntry={deleteScheduleEntry}
-              onImportScheduleEntries={importScheduleEntries}
-              onExportData={handleExportData}
-              onImportData={handleImportData}
-            />
-          </div>
-        )}
+          {visitedTabs.has("settings") && (
+            <div
+              className="flex flex-col gap-6"
+              style={{ display: activeTab === "settings" ? "flex" : "none" }}
+            >
+              <SettingsTab
+                settings={settings}
+                mocks={mocks}
+                onUpdateProfile={updateProfile}
+                onUpdateSectionTarget={updateSectionTarget}
+                onAddScheduleEntry={addScheduleEntry}
+                onUpdateScheduleEntry={updateScheduleEntry}
+                onDeleteScheduleEntry={deleteScheduleEntry}
+                onImportScheduleEntries={importScheduleEntries}
+                onExportData={handleExportData}
+                onImportData={handleImportData}
+              />
+            </div>
+          )}
 
-        {visitedTabs.has("about") && (
-          <div className="flex flex-col gap-6" style={{ display: activeTab === "about" ? "flex" : "none" }}>
-            <AboutTab />
-          </div>
-        )}
+          {visitedTabs.has("about") && (
+            <div
+              className="flex flex-col gap-6"
+              style={{ display: activeTab === "about" ? "flex" : "none" }}
+            >
+              <AboutTab />
+            </div>
+          )}
         </Suspense>
       </div>
 
@@ -357,7 +443,9 @@ export default function CATMockTracker() {
         onNavigate={handleTabChange}
         onOpenAnalysis={handleOpenAnalysis}
         onExport={handleExportData}
-        onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
+        onToggleTheme={() =>
+          setTheme((current) => (current === "dark" ? "light" : "dark"))
+        }
       />
 
       <Toast toast={toast} />

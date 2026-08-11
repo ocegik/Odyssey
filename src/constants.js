@@ -1,4 +1,14 @@
-import { BarChart3, ClipboardList, LineChart as LineChartIcon, LayoutDashboard, Info, FileSearch, ListChecks, Settings } from "lucide-react";
+import {
+  BarChart3,
+  ClipboardList,
+  LineChart as LineChartIcon,
+  LayoutDashboard,
+  Info,
+  FileSearch,
+  ListChecks,
+  Settings,
+  CloudLightning,
+} from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  Design tokens                                                      */
@@ -96,10 +106,30 @@ export const THEME_COLORS = {
 /* Reusable typography tiers so every panel/card/chart heading shares one
    consistent scale instead of relying on unset browser defaults. */
 export const TYPE = {
-  pageTitle: { fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: "21px", letterSpacing: "-0.01em" },
-  panelTitle: { fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: "16px", letterSpacing: "-0.005em" },
-  chartTitle: { fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: "14px" },
-  label: { fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: "11px", letterSpacing: "0.06em", textTransform: "uppercase" },
+  pageTitle: {
+    fontFamily: "'Space Grotesk', sans-serif",
+    fontWeight: 700,
+    fontSize: "21px",
+    letterSpacing: "-0.01em",
+  },
+  panelTitle: {
+    fontFamily: "'Space Grotesk', sans-serif",
+    fontWeight: 700,
+    fontSize: "16px",
+    letterSpacing: "-0.005em",
+  },
+  chartTitle: {
+    fontFamily: "'Space Grotesk', sans-serif",
+    fontWeight: 600,
+    fontSize: "14px",
+  },
+  label: {
+    fontFamily: "'Inter', sans-serif",
+    fontWeight: 600,
+    fontSize: "11px",
+    letterSpacing: "0.06em",
+    textTransform: "uppercase",
+  },
 };
 
 /* Single subtle elevation used on flat surfaces — kept intentionally faint. */
@@ -115,6 +145,7 @@ export const SECTION_META = {
 
 export const TABS = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
+  { key: "quickMath", label: "Quick Math", icon: CloudLightning },
   { key: "syllabus", label: "Syllabus", icon: ListChecks },
   { key: "log", label: "Mock log", icon: ClipboardList },
   { key: "analysis", label: "Mock analysis", icon: FileSearch },
