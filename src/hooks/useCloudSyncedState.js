@@ -32,6 +32,7 @@ export function useCloudSyncedState({
   serialize = (v) => v,
   fetchRemote = fetchRemoteValue,
   saveRemote = saveRemoteValue,
+  saveInitialState = true,
 }) {
   const [state, setState] = useState(load);
   const [status, setStatus] = useState(supabase ? SYNC_STATUS.loading : SYNC_STATUS.local);
@@ -97,6 +98,10 @@ export function useCloudSyncedState({
   // Debounced push, coalescing rapid edits (typing) into one write.
   useEffect(() => {
     if (!supabase || !remoteReady) return undefined;
+    // Normalized tables can be wired before legacy app_storage is migrated.
+    // In that case the caller can wait for a real user mutation rather than
+    // treating its local cache as an implicit migration on first load.
+    if (!saveInitialState && !dirtyBeforeReconcile.current) return undefined;
 
     setStatus(SYNC_STATUS.saving);
     if (saveTimer.current) clearTimeout(saveTimer.current);

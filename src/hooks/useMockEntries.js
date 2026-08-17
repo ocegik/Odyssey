@@ -3,6 +3,7 @@ import { SECTIONS } from "../constants";
 import { computeDerived, byDateAsc, rollingSeries, buildMockPivot, buildSeries, generateInsights, overallPercentileVsMarksInsight, analyzeWeakest } from "../lib/compute";
 import { buildPercentileSeries } from "../lib/percentile";
 import { normalizeStoredMocks, toRaw } from "../lib/mockStorage";
+import { fetchRemoteMocks, saveRemoteMocks } from "../lib/cloudStore";
 import { makeSampleData } from "../lib/sampleData";
 import { useCloudSyncedState } from "./useCloudSyncedState";
 import {
@@ -20,6 +21,11 @@ import {
    It's a fast local cache; Supabase (see cloudStore.js) is the durable copy. */
 const STORAGE_KEY = "cat-mock-tracker:entries";
 const REMOTE_KEY = "entries";
+
+// Mocks use public.mocks + public.sections rather than the legacy entries
+// blob. Keep these adapters module-stable so the first reconcile runs once.
+const fetchMocksFromTables = () => fetchRemoteMocks();
+const saveMocksToTables = (_remoteKey, value) => saveRemoteMocks(value);
 
 function loadStoredMocks() {
   try {
@@ -50,6 +56,11 @@ export function useMockEntries() {
     load: loadStoredMocks,
     normalize: normalizeStoredMocks,
     serialize: toRaw,
+    fetchRemote: fetchMocksFromTables,
+    saveRemote: saveMocksToTables,
+    // Do not copy an existing local/app_storage cache into the new tables on
+    // load. A user mutation is the first normalized-table write for this slice.
+    saveInitialState: false,
   });
 
   const [toast, setToast] = useState(null);

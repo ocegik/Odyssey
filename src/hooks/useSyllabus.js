@@ -1,11 +1,17 @@
 import { useCallback } from "react";
 import { uid } from "../lib/format";
 import { ALL_MICRO_TOPICS, STATUS_FILTERS, FREQUENCY_BUCKETS, SYLLABUS_TREE } from "../lib/syllabusModel";
+import { fetchRemoteSyllabus, saveRemoteSyllabus } from "../lib/cloudStore";
 import { useCloudSyncedState } from "./useCloudSyncedState";
 
 const STORAGE_KEY = "cat-mock-tracker:syllabus";
 const REMOTE_KEY = "syllabus";
 export const LEARNING_STATE_VERSION = 1;
+
+// Keep the shared hook's (remoteKey, value) interface while syllabus uses
+// its normalized per-topic table instead of app_storage.
+const fetchSyllabusFromTable = () => fetchRemoteSyllabus();
+const saveSyllabusToTable = (_remoteKey, value) => saveRemoteSyllabus(value);
 
 const DEFAULT_FILTERS = { search: "", status: "all", frequency: "all" };
 
@@ -148,6 +154,8 @@ export function useSyllabus() {
     remoteKey: REMOTE_KEY,
     load: loadState,
     normalize: normalizeLearningState,
+    fetchRemote: fetchSyllabusFromTable,
+    saveRemote: saveSyllabusToTable,
   });
 
   const updateMicroProgress = useCallback((microTopicId, patch) => {
