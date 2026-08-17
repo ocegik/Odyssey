@@ -126,6 +126,10 @@ function timestampForDatabase(value) {
   return Number.isFinite(milliseconds) ? new Date(milliseconds).toISOString() : undefined;
 }
 
+function stringOrEmpty(value) {
+  return typeof value === "string" ? value : "";
+}
+
 /**
  * Converts the normalized, one-row-per-topic syllabus data back into the
  * learning-state shape consumed by useSyllabus. View-only fields (filters and
@@ -250,9 +254,61 @@ function sectionRowToRaw(section, mockId) {
 }
 
 /**
- * Reassembles the normalized mocks + sections records into the versioned blob
- * useMockEntries already stores locally. Analysis deliberately stays null for
- * this slice; it will move to public.analysis separately.
+ * Reshapes a detailed-analysis row into the document shape used by the app.
+ * The typed columns keep the fields we may query later easy to access, while
+ * the question/block tree stays together in `document` for now.
+ */
+export function analysisRowToDetailedAnalysis(row) {
+  if (!row || typeof row !== "object") return null;
+
+  const document = jsonObject(row.document);
+  const createdAt = timestampToMilliseconds(row.created_at);
+  const updatedAt = timestampToMilliseconds(row.updated_at);
+
+  return {
+    id: row.id,
+    ...(createdAt !== undefined ? { createdAt } : {}),
+    ...(updatedAt !== undefined ? { updatedAt } : {}),
+    schemaVersion: numberOrNull(row.schema_version) ?? 3,
+    sourceFormat: stringOrEmpty(row.source_format) || "detailed-analysis-json",
+    mockName: stringOrEmpty(document.mockName),
+    date: stringOrEmpty(document.date),
+    overallReflection: stringOrEmpty(row.overall_reflection),
+    structureText: stringOrEmpty(row.structure_text),
+    insightDimensions: Array.isArray(document.insightDimensions) ? document.insightDimensions : [],
+    sections: jsonObject(document.sections),
+    summary: jsonObject(row.summary),
+  };
+}
+
+/**
+ * Reshapes the app's existing analysis document into its single linked DB row.
+ * `mock_id` is the database parent ID; the app's legacy mock ID remains only
+ * on the parent row and never crosses this relationship boundary.
+ */
+export function detailedAnalysisToRow(analysis, databaseMockId, userId) {
+  const createdAt = timestampForDatabase(analysis.createdAt);
+  return {
+    user_id: userId,
+    mock_id: databaseMockId,
+    schema_version: numberOrNull(analysis.schemaVersion) ?? 3,
+    source_format: stringOrEmpty(analysis.sourceFormat) || "detailed-analysis-json",
+    overall_reflection: stringOrEmpty(analysis.overallReflection),
+    structure_text: stringOrEmpty(analysis.structureText),
+    document: {
+      mockName: stringOrEmpty(analysis.mockName),
+      date: stringOrEmpty(analysis.date),
+      insightDimensions: Array.isArray(analysis.insightDimensions) ? analysis.insightDimensions : [],
+      sections: jsonObject(analysis.sections),
+    },
+    summary: jsonObject(analysis.summary),
+    ...(createdAt ? { created_at: createdAt } : {}),
+  };
+}
+
+/**
+ * Reassembles normalized mock, section, and optional analysis records into
+ * the versioned blob useMockEntries already stores locally.
  */
 export function mockRowsToDataset(rows) {
   return {
@@ -261,6 +317,9 @@ export function mockRowsToDataset(rows) {
       const id = row.legacy_mock_id || row.id;
       const createdAt = timestampToMilliseconds(row.created_at);
       const sections = Array.isArray(row.sections) ? row.sections : [];
+      // PostgREST represents the child relationship as an array even though
+      // the database unique constraint guarantees at most one row per mock.
+      const analysisRow = Array.isArray(row.analysis) ? row.analysis[0] : row.analysis;
 
       return {
         id,
@@ -269,7 +328,7 @@ export function mockRowsToDataset(rows) {
         source: row.source,
         manualTotalMarks: numberOrNull(row.manual_total_marks),
         overallPercentile: numberOrNull(row.overall_percentile),
-        analysis: null,
+        analysis: analysisRowToDetailedAnalysis(analysisRow),
         sections: sections.reduce((result, section) => {
           if (section?.section_name) result[section.section_name] = sectionRowToRaw(section, id);
           return result;
@@ -321,7 +380,7 @@ export async function fetchRemoteMocks() {
   if (!supabase) return null;
   const { data, error } = await supabase
     .from("mocks")
-    .select("id, legacy_mock_id, mock_date, source, manual_total_marks, overall_percentile, created_at, sections(id, section_name, attempted, correct, total_questions, percentile, manual_total_marks, question_set_count, question_blocks, notes, created_at)")
+    .select("id, legacy_mock_id, mock_date, source, manual_total_marks, overall_percentile, created_at, sections(id, section_name, attempted, correct, total_questions, percentile, manual_total_marks, question_set_count, question_blocks, notes, created_at), analysis(id, schema_version, source_format, overall_reflection, structure_text, document, summary, created_at, updated_at)")
     .order("mock_date", { ascending: true })
     .order("created_at", { ascending: true });
 
@@ -376,6 +435,25 @@ export async function saveRemoteMocks(value) {
         .upsert(sectionRows, { onConflict: "mock_id,section_name" });
       if (sectionsError) {
         console.error("Supabase save failed for mock sections:", sectionsError.message);
+        return false;
+      }
+    }
+
+    if (mock.analysis) {
+      const { error: analysisError } = await supabase
+        .from("analysis")
+        .upsert(detailedAnalysisToRow(mock.analysis, parent.id, user.id), { onConflict: "mock_id" });
+      if (analysisError) {
+        console.error("Supabase save failed for mock analysis:", analysisError.message);
+        return false;
+      }
+    } else {
+      const { error: removedAnalysisError } = await supabase
+        .from("analysis")
+        .delete()
+        .eq("mock_id", parent.id);
+      if (removedAnalysisError) {
+        console.error("Supabase cleanup failed for mock analysis:", removedAnalysisError.message);
         return false;
       }
     }

@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { COLORS, FONT_IMPORT, THEME_COLORS } from "./constants";
 import { useMockEntries } from "./hooks/useMockEntries";
 import {
@@ -103,6 +103,7 @@ export default function CATMockTracker() {
   const [analysisMockId, setAnalysisMockId] = useState(null);
   const [theme, setTheme] = useState(loadThemePreference);
   const auth = useAuth();
+  const previousUserId = useRef(auth.user?.id ?? null);
 
   const {
     sectionStats,
@@ -124,7 +125,8 @@ export default function CATMockTracker() {
     importMocks,
     exportMocks,
     importScoreOnlyMocks,
-  } = useMockEntries();
+    clearMocksAndAnalysisCache,
+  } = useMockEntries({ userId: auth.user?.id });
 
   const {
     settings,
@@ -136,7 +138,8 @@ export default function CATMockTracker() {
     deleteScheduleEntry,
     importScheduleEntries,
     replaceSettings,
-  } = useSettings();
+    clearSettingsCache,
+  } = useSettings({ userId: auth.user?.id });
 
   const {
     progress: syllabusProgress,
@@ -155,7 +158,8 @@ export default function CATMockTracker() {
     setFrequencyFilter: setSyllabusFrequencyFilter,
     exportState: exportSyllabusState,
     replaceState: replaceSyllabusState,
-  } = useSyllabus();
+    clearSyllabusCache,
+  } = useSyllabus({ userId: auth.user?.id });
 
   const topicMetrics = useMemo(() => buildTopicMetrics(mocks), [mocks]);
   const revisionQueue = useMemo(
@@ -184,6 +188,27 @@ export default function CATMockTracker() {
   }, [activeTab]);
 
   const handleTabChange = (key) => setActiveTab(key);
+
+  // The normalized analysis row is part of the mock cache in memory. Clear
+  // that alongside every other account-scoped slice as soon as logout finishes
+  // so another person using this browser never sees a previous account flash.
+  const clearAccountData = useCallback(() => {
+    clearMocksAndAnalysisCache();
+    clearSettingsCache();
+    clearSyllabusCache();
+    setAnalysisMockId(null);
+  }, [clearMocksAndAnalysisCache, clearSettingsCache, clearSyllabusCache]);
+
+  // Also cover expiry, a sign-out from another tab, and a direct account
+  // switch. AuthControl clears immediately for its own button; this observer
+  // makes the cache boundary hold for every Supabase auth-state transition.
+  useEffect(() => {
+    const currentUserId = auth.user?.id ?? null;
+    if (previousUserId.current && previousUserId.current !== currentUserId) {
+      clearAccountData();
+    }
+    previousUserId.current = currentUserId;
+  }, [auth.user?.id, clearAccountData]);
 
   const handleOpenAnalysis = (mockId) => {
     setAnalysisMockId(mockId);
@@ -288,6 +313,7 @@ export default function CATMockTracker() {
             syllabusSyncStatus,
           ]}
           auth={auth}
+          onSignedOut={clearAccountData}
         />
 
         <TabNav activeTab={activeTab} onChange={handleTabChange} />

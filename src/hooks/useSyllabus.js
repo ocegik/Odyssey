@@ -148,14 +148,16 @@ function toggleInList(list, id) {
   return list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
 }
 
-export function useSyllabus() {
-  const { state, setState, status: syncStatus } = useCloudSyncedState({
+export function useSyllabus({ userId } = {}) {
+  const { state, setState, clearState: clearSyllabusCache, status: syncStatus } = useCloudSyncedState({
     storageKey: STORAGE_KEY,
     remoteKey: REMOTE_KEY,
     load: loadState,
+    empty: emptyState,
     normalize: normalizeLearningState,
     fetchRemote: fetchSyllabusFromTable,
     saveRemote: saveSyllabusToTable,
+    userId,
   });
 
   const updateMicroProgress = useCallback((microTopicId, patch) => {
@@ -251,5 +253,6 @@ export function useSyllabus() {
     addRevisionEvent,
     exportState,
     replaceState,
+    clearSyllabusCache,
   };
 }

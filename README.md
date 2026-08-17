@@ -71,17 +71,15 @@
 ## 3. Persistence Model
 
 - The app is a **static site** — no custom server is required
-- Data lives in-browser (React state) while the app is open
-- **Export**: after adding/editing entries, export a `scores.json` file
-- **Import**: on next use, import that same `scores.json` back in — this file is the single source of truth
-- Recommended workflow: keep `scores.json` inside the GitHub repo and commit it after each mock — this doubles as free version history/backup
+- Data is held in browser state while the app is open and, for signed-in users, synced to private Supabase tables
+- **Export**: after adding/editing entries, export a backup JSON file
+- **Import**: restore that backup JSON if needed; it is a manual recovery path, not the live source of truth
+- Recommended workflow: keep periodic exports somewhere safe if you want an independent offline backup
 - `scores.json` stores explicit parent mock records; each mock owns its VARC, DILR, and Quant section records instead of inferring the relationship from shared date/source values
 - Detailed analysis is optional and stored under the parent mock's `analysis` field when attached
 - Older saved entries without an overall percentile remain readable; enter the reported percentile when editing them to use overall percentile features.
 
-**Update (post-launch):** the app now also syncs to a Supabase table (`app_storage`) in the background, so data survives browser storage being cleared and isn't limited to one device. localStorage remains as a fast local cache; export/import still work the same way as a manual backup path. See `supabase/schema.sql` and `src/lib/cloudStore.js`.
-
-**Phase 1 foundation:** email/password account controls and a private, normalized Supabase schema have been added alongside the existing cloud store. They do not yet alter the live data path: `app_storage` is untouched and the dashboard still uses it. See [`docs/PHASE_1_FOUNDATION.md`](docs/PHASE_1_FOUNDATION.md) and `supabase/phase-1-foundation.sql` for the exact schema, RLS model, and Supabase setup steps.
+**Cloud sync:** when signed in, the app stores private data in normalized Supabase tables: `mocks`/`sections`, one optional `analysis` row per mock, `settings`, and `syllabus`. localStorage is only a fast browser cache; signing out clears all account-scoped cached and in-memory data before another person can use the same browser. Export/import remain available as a manual backup path. The old `app_storage` table is untouched and is not the active application data path. See [`docs/PHASE_1_FOUNDATION.md`](docs/PHASE_1_FOUNDATION.md), `supabase/phase-1-foundation.sql`, and `src/lib/cloudStore.js`.
 
 **JSON import comes in two flavors — don't confuse them:**
 - **Settings → Data Backup** (`onImportData` in `src/App.jsx`) is a **replace**: it wipes every mock and setting on this device and restores exactly what's in the backup file. This is the `scores.json` / full-export workflow above.

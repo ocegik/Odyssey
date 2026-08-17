@@ -13,7 +13,7 @@ function LogoMark() {
   );
 }
 
-export default function Header({ theme, onToggleTheme, syncStatuses, auth }) {
+export default function Header({ theme, onToggleTheme, syncStatuses, auth, onSignedOut }) {
   const ThemeIcon = theme === "dark" ? Sun : Moon;
   return (
     <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -29,7 +29,7 @@ export default function Header({ theme, onToggleTheme, syncStatuses, auth }) {
       </div>
       <div className="flex gap-2 flex-wrap items-center">
         <SyncBadge statuses={syncStatuses} />
-        <AuthControl auth={auth} />
+        <AuthControl auth={auth} onSignedOut={onSignedOut} />
         <button onClick={onToggleTheme} className="theme-hover flex items-center gap-1.5 px-3 py-2 text-sm"
           style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.ink, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>
           <ThemeIcon size={14} /> {theme === "dark" ? "Light" : "Dark"}

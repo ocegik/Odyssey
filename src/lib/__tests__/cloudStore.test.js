@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { learningStateToSyllabusRows, mockRowsToDataset, syllabusRowsToLearningState } from "../cloudStore";
+import {
+  analysisRowToDetailedAnalysis,
+  detailedAnalysisToRow,
+  learningStateToSyllabusRows,
+  mockRowsToDataset,
+  syllabusRowsToLearningState,
+} from "../cloudStore";
 
 describe("syllabus cloud storage mapping", () => {
   it("maps the learning-state blob to one row per topic and back", () => {
@@ -102,6 +108,60 @@ describe("mock cloud storage mapping", () => {
           },
         },
       }],
+    });
+  });
+
+  it("maps the optional one-to-one analysis row to and from the app document", () => {
+    const analysis = {
+      id: "a_local",
+      createdAt: Date.parse("2026-08-17T10:02:00.000Z"),
+      schemaVersion: 3,
+      sourceFormat: "in-app-structured-analysis",
+      mockName: "SIMCAT 7",
+      date: "2026-08-17",
+      overallReflection: "Slow on the last RC.",
+      structureText: "4 RCs and 8 VA questions",
+      insightDimensions: ["timeManagement"],
+      sections: { VARC: { section: "VARC", blocks: [] } },
+      summary: { totalQuestions: 0, unreviewed: 0 },
+    };
+
+    expect(detailedAnalysisToRow(analysis, "db-mock", "user-123")).toEqual({
+      user_id: "user-123",
+      mock_id: "db-mock",
+      schema_version: 3,
+      source_format: "in-app-structured-analysis",
+      overall_reflection: "Slow on the last RC.",
+      structure_text: "4 RCs and 8 VA questions",
+      document: {
+        mockName: "SIMCAT 7",
+        date: "2026-08-17",
+        insightDimensions: ["timeManagement"],
+        sections: { VARC: { section: "VARC", blocks: [] } },
+      },
+      summary: { totalQuestions: 0, unreviewed: 0 },
+      created_at: "2026-08-17T10:02:00.000Z",
+    });
+
+    expect(analysisRowToDetailedAnalysis({
+      id: "db-analysis",
+      schema_version: 3,
+      source_format: "in-app-structured-analysis",
+      overall_reflection: "Slow on the last RC.",
+      structure_text: "4 RCs and 8 VA questions",
+      document: {
+        mockName: "SIMCAT 7",
+        date: "2026-08-17",
+        insightDimensions: ["timeManagement"],
+        sections: { VARC: { section: "VARC", blocks: [] } },
+      },
+      summary: { totalQuestions: 0, unreviewed: 0 },
+      created_at: "2026-08-17T10:02:00.000Z",
+      updated_at: "2026-08-17T10:03:00.000Z",
+    })).toEqual({
+      ...analysis,
+      id: "db-analysis",
+      updatedAt: Date.parse("2026-08-17T10:03:00.000Z"),
     });
   });
 });

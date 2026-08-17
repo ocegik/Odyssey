@@ -28,14 +28,16 @@ export function useCloudSyncedState({
   storageKey,
   remoteKey,
   load,
+  empty,
   normalize,
   serialize = (v) => v,
   fetchRemote = fetchRemoteValue,
   saveRemote = saveRemoteValue,
   saveInitialState = true,
+  userId = null,
 }) {
   const [state, setState] = useState(load);
-  const [status, setStatus] = useState(supabase ? SYNC_STATUS.loading : SYNC_STATUS.local);
+  const [status, setStatus] = useState(supabase && userId ? SYNC_STATUS.loading : SYNC_STATUS.local);
   const [lastSyncedAt, setLastSyncedAt] = useState(null);
 
   // State, not a ref: flipping it has to re-run the push effect below, which
@@ -43,6 +45,20 @@ export function useCloudSyncedState({
   const [remoteReady, setRemoteReady] = useState(false);
   const dirtyBeforeReconcile = useRef(false);
   const saveTimer = useRef(null);
+
+  const clearState = useCallback(() => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    dirtyBeforeReconcile.current = false;
+    setRemoteReady(false);
+    setLastSyncedAt(null);
+    setStatus(SYNC_STATUS.local);
+    setState(normalize(empty()));
+    try {
+      localStorage.removeItem(storageKey);
+    } catch {
+      // The in-memory state has still been cleared if browser storage is unavailable.
+    }
+  }, [empty, normalize, storageKey]);
 
   // Local cache write — synchronous and never blocks the UI.
   useEffect(() => {
@@ -69,8 +85,14 @@ export function useCloudSyncedState({
 
   // First-load reconcile: remote wins, unless local was edited while waiting.
   useEffect(() => {
-    if (!supabase) return undefined;
+    if (!supabase || !userId) {
+      setRemoteReady(false);
+      setStatus(SYNC_STATUS.local);
+      return undefined;
+    }
     let cancelled = false;
+
+    setStatus(SYNC_STATUS.loading);
 
     fetchRemote(remoteKey)
       .then((remote) => {
@@ -93,11 +115,11 @@ export function useCloudSyncedState({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchRemote, remoteKey]);
+  }, [fetchRemote, remoteKey, userId]);
 
   // Debounced push, coalescing rapid edits (typing) into one write.
   useEffect(() => {
-    if (!supabase || !remoteReady) return undefined;
+    if (!supabase || !userId || !remoteReady) return undefined;
     // Normalized tables can be wired before legacy app_storage is migrated.
     // In that case the caller can wait for a real user mutation rather than
     // treating its local cache as an implicit migration on first load.
@@ -114,10 +136,10 @@ export function useCloudSyncedState({
 
     return () => clearTimeout(saveTimer.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, remoteKey, remoteReady, saveRemote]);
+  }, [state, remoteKey, remoteReady, saveRemote, userId]);
 
   /* `setState` (raw) is exposed for replacing state from a source that isn't
      a user edit in this tab — currently unused, but kept distinct so the
      dirty-tracking above stays meaningful. */
-  return { state, setState: setSyncedState, status, lastSyncedAt };
+  return { state, setState: setSyncedState, clearState, status, lastSyncedAt };
 }

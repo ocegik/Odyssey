@@ -36,6 +36,7 @@ const EMPTY_SETTINGS = {
   mockSchedule: [],
   layoutWidth: DEFAULT_LAYOUT_WIDTH,
 };
+const emptySettings = () => ({ ...EMPTY_SETTINGS, sectionTargetMarks: { ...EMPTY_SECTION_TARGETS } });
 
 function numberOrNull(value) {
   if (value === "" || value === null || value === undefined) return null;
@@ -145,16 +146,18 @@ function parseScheduleImport(raw) {
   return entries.map(normalizeScheduleEntry);
 }
 
-export function useSettings() {
-  const { state: settings, setState: setSettings, status: syncStatus } = useCloudSyncedState({
+export function useSettings({ userId } = {}) {
+  const { state: settings, setState: setSettings, clearState: clearSettingsCache, status: syncStatus } = useCloudSyncedState({
     storageKey: STORAGE_KEY,
     remoteKey: REMOTE_KEY,
     load: loadSettings,
+    empty: emptySettings,
     normalize: normalizeSettings,
     // This adapter preserves the shared hook's (remoteKey, value) contract;
     // only settings use the new per-user table in this phase.
     fetchRemote: fetchSettingsFromTable,
     saveRemote: saveSettingsToTable,
+    userId,
   });
 
   const updateProfile = useCallback((patch) => {
@@ -222,5 +225,6 @@ export function useSettings() {
     deleteScheduleEntry,
     importScheduleEntries,
     replaceSettings,
+    clearSettingsCache,
   };
 }

@@ -19,7 +19,7 @@ const inputStyle = {
   fontSize: 13,
 };
 
-export default function AuthControl({ auth }) {
+export default function AuthControl({ auth, onSignedOut }) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState("signin");
   const [email, setEmail] = useState("");
@@ -65,6 +65,7 @@ export default function AuthControl({ auth }) {
     setError("");
     try {
       await auth.signOut();
+      onSignedOut?.();
       close();
     } catch (err) {
       setError(err.message || "Could not sign out.");
@@ -114,7 +115,7 @@ export default function AuthControl({ auth }) {
                 <p className="mt-0.5 break-all text-xs" style={{ color: COLORS.inkMuted }}>{auth.user.email}</p>
               </div>
               <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>
-                Your current dashboard data still uses the existing storage path. Private account data will be connected in a later migration.
+                Your mocks, detailed analysis, settings, and syllabus progress are stored privately for this account. Signing out clears this browser's account data immediately.
               </p>
               {error && <p className="text-xs" role="alert" style={{ color: COLORS.danger }}>{error}</p>}
               <button

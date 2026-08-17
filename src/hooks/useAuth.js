@@ -6,9 +6,9 @@ const INITIAL_STATE = supabase
   : { status: "unavailable", user: null };
 
 /**
- * Authentication is deliberately independent from the legacy cloud-sync
- * hooks. Phase 1 establishes accounts only; it must not change where the
- * current app data reads or writes.
+ * Authentication owns the active account. The normalized storage hooks use
+ * that account ID as their query boundary, while App clears their local and
+ * in-memory state whenever the account changes or signs out.
  */
 export function useAuth() {
   const [authState, setAuthState] = useState(INITIAL_STATE);

@@ -1,12 +1,10 @@
-# Phase 1 — authenticated storage foundation
+# Authenticated normalized storage
 
 ## Scope and safety boundary
 
-This phase adds a private, normalized schema next to the legacy `app_storage` table and adds an optional email/password account UI. It does **not** migrate, copy, read from, write to, revoke access from, or change policies on `app_storage`. The existing local-first cloud-sync hooks continue using it exactly as before, including for signed-in people.
+The app uses private normalized tables for signed-in people: `mocks` with `sections`, one optional `analysis` row per mock, `settings`, and `syllabus`. It does **not** migrate, copy, read from, write to, revoke access from, or change policies on the legacy `app_storage` table. The reserved `mocks.legacy_mock_id` remains available for a separately planned, controlled legacy-data import.
 
-The later migration must be a separate phase with its own backup, idempotency, reconciliation, cutover, and rollback plan. The reserved `mocks.legacy_mock_id` is the future mapping key for that work.
-
-## Canonical future schema
+## Canonical schema
 
 | Table | Ownership and purpose | Main fields |
 | --- | --- | --- |
@@ -36,9 +34,9 @@ There is deliberately no anon policy for these tables. The existing public `app_
 
 ## What the UI does now
 
-The header lets a person create an email/password account, sign in, and sign out. It does not gate the dashboard and it does not switch the app’s persistence implementation. This is intentional: authentication can be verified independently before any existing data path changes.
+The header lets a person create an email/password account, sign in, and sign out. The signed-in account scopes every normalized-table read and write. Browser cache and in-memory state for mocks, analysis, settings, and syllabus are cleared at logout (and on any account change) to prevent a previous account’s data appearing for the next browser user.
 
-## Phase 2 migration prerequisites
+## Legacy `app_storage` import prerequisites
 
 Before changing the live storage path, prepare an explicit migration that:
 

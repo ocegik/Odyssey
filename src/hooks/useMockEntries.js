@@ -26,6 +26,7 @@ const REMOTE_KEY = "entries";
 // blob. Keep these adapters module-stable so the first reconcile runs once.
 const fetchMocksFromTables = () => fetchRemoteMocks();
 const saveMocksToTables = (_remoteKey, value) => saveRemoteMocks(value);
+const emptyMocks = () => [];
 
 function loadStoredMocks() {
   try {
@@ -44,16 +45,18 @@ function loadStoredMocks() {
  * Keeping this in one hook means UI components never touch raw state —
  * they just call the functions this returns.
  */
-export function useMockEntries() {
+export function useMockEntries({ userId } = {}) {
   const {
     state: mockRecords,
     setState: setMockRecords,
+    clearState: clearMockCache,
     status: syncStatus,
     lastSyncedAt,
   } = useCloudSyncedState({
     storageKey: STORAGE_KEY,
     remoteKey: REMOTE_KEY,
     load: loadStoredMocks,
+    empty: emptyMocks,
     normalize: normalizeStoredMocks,
     serialize: toRaw,
     fetchRemote: fetchMocksFromTables,
@@ -61,6 +64,7 @@ export function useMockEntries() {
     // Do not copy an existing local/app_storage cache into the new tables on
     // load. A user mutation is the first normalized-table write for this slice.
     saveInitialState: false,
+    userId,
   });
 
   const [toast, setToast] = useState(null);
@@ -172,5 +176,8 @@ export function useMockEntries() {
     toast, syncStatus, lastSyncedAt,
     addScoreOnlyAnalysis, editMock, attachAnalysis, loadSample, deleteMock,
     importMocks, exportMocks, importScoreOnlyMocks,
+    // Detailed analysis is an optional child row of each mock, so this shares
+    // the same in-memory dataset/cache rather than maintaining a second copy.
+    clearMocksAndAnalysisCache: clearMockCache,
   };
 }
