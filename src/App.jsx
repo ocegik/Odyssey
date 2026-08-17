@@ -143,6 +143,7 @@ export default function CATMockTracker() {
     deleteScheduleEntry,
     importScheduleEntries,
     replaceSettings,
+    recordQuickMathResult,
     clearSettingsCache,
   } = useSettings({ userId: auth.user?.id });
 
@@ -365,7 +366,10 @@ export default function CATMockTracker() {
               className="flex flex-col gap-6"
               style={{ display: activeTab === "quickMath" ? "flex" : "none" }}
             >
-              <QuickMath />
+              <QuickMath
+                progress={settings.quickMathProgress}
+                onRecordResult={recordQuickMathResult}
+              />
             </div>
           )}
 

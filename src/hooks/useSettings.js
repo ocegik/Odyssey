@@ -3,6 +3,11 @@ import { SECTIONS } from "../constants";
 import { uid } from "../lib/format";
 import { fetchRemoteSettings, saveRemoteSettings } from "../lib/cloudStore";
 import { useCloudSyncedState } from "./useCloudSyncedState";
+import {
+  emptyQuickMathProgress,
+  normalizeQuickMathProgress,
+  recordQuickMathResult as addQuickMathResult,
+} from "../lib/quickMath";
 
 const STORAGE_KEY = "cat-mock-tracker:settings";
 const REMOTE_KEY = "settings";
@@ -35,8 +40,13 @@ const EMPTY_SETTINGS = {
   sectionTargetMarks: EMPTY_SECTION_TARGETS,
   mockSchedule: [],
   layoutWidth: DEFAULT_LAYOUT_WIDTH,
+  quickMathProgress: emptyQuickMathProgress(),
 };
-const emptySettings = () => ({ ...EMPTY_SETTINGS, sectionTargetMarks: { ...EMPTY_SECTION_TARGETS } });
+const emptySettings = () => ({
+  ...EMPTY_SETTINGS,
+  sectionTargetMarks: { ...EMPTY_SECTION_TARGETS },
+  quickMathProgress: emptyQuickMathProgress(),
+});
 
 function numberOrNull(value) {
   if (value === "" || value === null || value === undefined) return null;
@@ -118,6 +128,7 @@ export function normalizeSettings(raw) {
     sectionTargetMarks: normalizeSectionTargets(profile.sectionTargetMarks),
     mockSchedule: rawSchedule.map(normalizeScheduleEntry).sort((a, b) => a.date.localeCompare(b.date)),
     layoutWidth: LAYOUT_WIDTH_OPTIONS.some((opt) => opt.key === profile.layoutWidth) ? profile.layoutWidth : DEFAULT_LAYOUT_WIDTH,
+    quickMathProgress: normalizeQuickMathProgress(profile.quickMathProgress),
   };
 }
 
@@ -199,6 +210,13 @@ export function useSettings({ userId } = {}) {
     }));
   }, []);
 
+  const recordQuickMathResult = useCallback((result) => {
+    setSettings((prev) => ({
+      ...prev,
+      quickMathProgress: addQuickMathResult(prev.quickMathProgress, result),
+    }));
+  }, []);
+
   const importScheduleEntries = useCallback((raw) => {
     const incoming = parseScheduleImport(raw).map((entry) => ({ ...entry, id: uid() }));
     setSettings((prev) => ({
@@ -223,6 +241,7 @@ export function useSettings({ userId } = {}) {
     addScheduleEntry,
     updateScheduleEntry,
     deleteScheduleEntry,
+    recordQuickMathResult,
     importScheduleEntries,
     replaceSettings,
     clearSettingsCache,
