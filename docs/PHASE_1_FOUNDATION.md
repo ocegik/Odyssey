@@ -23,6 +23,12 @@ An `auth.users` trigger creates the corresponding empty `profiles` row for every
 
 Every new table has RLS enabled. Only the `authenticated` role is granted access, and each policy requires the row’s owner ID to equal `auth.uid()`. Child `sections` and `analysis` records also have a composite foreign key to their owning `mocks` row, preventing cross-account attachment at the database level.
 
+## Admin dashboard
+
+Run [`supabase/admin-dashboard.sql`](../supabase/admin-dashboard.sql) after the foundation migration to enable `/admin`. It adds `profiles.role` (default `user`) and a mirrored, non-sensitive profile email used only by the account-level table. Promote an administrator in the SQL editor with `update public.profiles set role = 'admin' where email = '…';`.
+
+The database policies are the boundary: admins receive read-only cross-user access to `profiles`, `mocks`, and `sections` only. `analysis`, `settings`, and `syllabus` remain owner-only. Browser access is also guarded and the normal navigation shows the Admin link only after the signed-in profile reports `role = 'admin'`.
+
 There is deliberately no anon policy for these tables. The existing public `app_storage` policy remains unchanged during this phase and is out of scope.
 
 ## Applying the foundation

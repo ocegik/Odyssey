@@ -31,6 +31,8 @@ $$;
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
+  email text not null default '',
+  role text not null default 'user' check (role in ('user', 'admin')),
   display_name text not null default '',
   timezone text not null default 'UTC',
   created_at timestamptz not null default timezone('utc', now()),
@@ -46,9 +48,26 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, display_name)
-  values (new.id, coalesce(new.raw_user_meta_data ->> 'display_name', ''))
-  on conflict (id) do nothing;
+  insert into public.profiles (id, email, display_name)
+  values (
+    new.id,
+    coalesce(new.email, ''),
+    coalesce(new.raw_user_meta_data ->> 'display_name', '')
+  )
+  on conflict (id) do update set email = excluded.email;
+  return new;
+end;
+$$;
+
+-- Keep the dashboard's non-sensitive account identifier aligned if a person
+-- changes their sign-in email in Supabase Auth.
+create or replace function public.sync_profile_email()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  update public.profiles set email = coalesce(new.email, '') where id = new.id;
   return new;
 end;
 $$;
@@ -57,6 +76,11 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+drop trigger if exists on_auth_user_email_updated on auth.users;
+create trigger on_auth_user_email_updated
+  after update of email on auth.users
+  for each row execute procedure public.sync_profile_email();
 
 -- A parent mock. legacy_mock_id is reserved solely for a future controlled
 -- app_storage migration, so an imported client id can be made idempotent.
@@ -186,9 +210,32 @@ alter table public.analysis enable row level security;
 alter table public.settings enable row level security;
 alter table public.syllabus enable row level security;
 
+-- This helper runs as the schema owner so the RLS policies can determine an
+-- account's role without recursively querying profiles under the caller's
+-- row policy. It grants no table access on its own.
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'admin'
+  );
+$$;
+
 drop policy if exists "Users manage their own profile" on public.profiles;
-create policy "Users manage their own profile" on public.profiles
-  for all to authenticated using (id = auth.uid()) with check (id = auth.uid());
+drop policy if exists "Users read their own profile" on public.profiles;
+drop policy if exists "Users update their own profile" on public.profiles;
+drop policy if exists "Admins read all profiles" on public.profiles;
+create policy "Users read their own profile" on public.profiles
+  for select to authenticated using (id = auth.uid());
+create policy "Users update their own profile" on public.profiles
+  for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
+create policy "Admins read all profiles" on public.profiles
+  for select to authenticated using (public.is_admin());
 
 drop policy if exists "Users manage their own mocks" on public.mocks;
 create policy "Users manage their own mocks" on public.mocks
@@ -210,5 +257,20 @@ drop policy if exists "Users manage their own syllabus" on public.syllabus;
 create policy "Users manage their own syllabus" on public.syllabus
   for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
-grant select, insert, update, delete on public.profiles, public.mocks, public.sections,
+-- Administrators may read only the account and mock metadata required for the
+-- aggregate dashboard. Analysis, settings, and syllabus stay owner-only.
+drop policy if exists "Admins read all mocks" on public.mocks;
+create policy "Admins read all mocks" on public.mocks
+  for select to authenticated using (public.is_admin());
+drop policy if exists "Admins read all sections" on public.sections;
+create policy "Admins read all sections" on public.sections
+  for select to authenticated using (public.is_admin());
+
+grant select, insert, update, delete on public.mocks, public.sections,
   public.analysis, public.settings, public.syllabus to authenticated;
+
+-- A role must never be self-assigned through the browser. The auth trigger
+-- creates profiles; signed-in people may change only their display metadata.
+revoke insert, update, delete on public.profiles from authenticated;
+grant select on public.profiles to authenticated;
+grant update (display_name, timezone) on public.profiles to authenticated;
