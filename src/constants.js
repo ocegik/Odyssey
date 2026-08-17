@@ -6,7 +6,6 @@ import {
   FileSearch,
   ListChecks,
   UserRound,
-  CloudLightning,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -144,7 +143,6 @@ export const SECTION_META = {
 
 export const TABS = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
-  { key: "quickMath", label: "Quick Math", icon: CloudLightning },
   { key: "syllabus", label: "Syllabus", icon: ListChecks },
   { key: "log", label: "Mock log", icon: ClipboardList },
   { key: "analysis", label: "Mock analysis", icon: FileSearch },

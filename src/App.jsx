@@ -358,6 +358,7 @@ export default function CATMockTracker() {
                 settings={settings}
                 syllabusProgress={syllabusProgress}
                 onOpenSyllabus={() => handleTabChange("syllabus")}
+                onOpenQuickMath={() => handleTabChange("quickMath")}
               />
             </div>
           )}

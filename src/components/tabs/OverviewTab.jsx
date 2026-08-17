@@ -1,5 +1,5 @@
 import { Suspense, lazy, useMemo } from "react";
-import { ClipboardCheck, Lightbulb } from "lucide-react";
+import { ArrowRight, ClipboardCheck, Flame, Lightbulb, Sparkles } from "lucide-react";
 import { COLORS, SECTIONS, SHADOW, TYPE } from "../../constants";
 import { fmtDate, fmtNum, fmtPct } from "../../lib/format";
 import { computePacing, mockTotalMarks, computeAdaptiveTarget, avgOfLastN, bestMarks } from "../../lib/compute";
@@ -15,6 +15,7 @@ import SyllabusSnapshotCard from "../SyllabusSnapshotCard";
 import SectionTargetPanel, { buildTargetRows, targetGapSummary } from "../SectionTargetPanel";
 import Disclosure from "../ui/Disclosure";
 import { countWithinReach } from "../../lib/collegeCutoffs";
+import { QUICK_MATH_LEVELS, accuracy, getLevelProgress, isLevelUnlocked, normalizeQuickMathProgress } from "../../lib/quickMath";
 
 const OverallMarksChart = lazy(() => import("../charts/OverallMarksChart"));
 
@@ -102,7 +103,69 @@ function LatestMockSpotlight({ mocks }) {
   );
 }
 
-export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionStats, settings, syllabusProgress, onOpenSyllabus }) {
+function QuickMathCard({ progress: rawProgress, onOpenQuickMath }) {
+  const progress = normalizeQuickMathProgress(rawProgress);
+  const currentLevel = [...QUICK_MATH_LEVELS]
+    .reverse()
+    .find((level) => isLevelUnlocked(progress, level.id)) || QUICK_MATH_LEVELS[0];
+  const levelProgress = getLevelProgress(progress, currentLevel.id);
+
+  return (
+    <section
+      className="p-5 sm:p-6"
+      style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}
+    >
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <div className="flex items-center gap-2">
+            <Sparkles size={16} style={{ color: COLORS.primary }} />
+            <h2 style={TYPE.panelTitle}>Quick Math</h2>
+          </div>
+          <p className="mt-1 text-sm leading-5" style={{ color: COLORS.inkMuted }}>
+            {progress.totalAnswered
+              ? `You’re practicing at ${currentLevel.label} level. Keep your streak going.`
+              : "Build calculation speed with level-based mental-math drills."}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onOpenQuickMath}
+          className="flex items-center gap-2 px-3.5 py-2 text-sm"
+          style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}
+        >
+          Practice <ArrowRight size={15} />
+        </button>
+      </div>
+
+      <div className="mt-5 grid grid-cols-3 gap-3">
+        <div className="p-3" style={{ background: COLORS.surface2, borderRadius: 8 }}>
+          <div style={{ ...TYPE.label, color: COLORS.inkMuted }}>Level</div>
+          <div className="mt-1 text-sm" style={{ color: COLORS.ink, fontWeight: 700 }}>{currentLevel.label}</div>
+        </div>
+        <div className="p-3" style={{ background: COLORS.surface2, borderRadius: 8 }}>
+          <div style={{ ...TYPE.label, color: COLORS.inkMuted }}>Accuracy</div>
+          <div className="mt-1 text-sm" style={{ color: COLORS.ink, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}>
+            {accuracy(progress.correct, progress.totalAnswered)}%
+          </div>
+        </div>
+        <div className="p-3" style={{ background: COLORS.surface2, borderRadius: 8 }}>
+          <div style={{ ...TYPE.label, color: COLORS.inkMuted }}>Streak</div>
+          <div className="mt-1 flex items-center gap-1 text-sm" style={{ color: COLORS.ink, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}>
+            <Flame size={15} style={{ color: COLORS.warn }} /> {progress.currentStreak}
+          </div>
+        </div>
+      </div>
+
+      {progress.totalAnswered > 0 && (
+        <p className="mt-3 text-xs" style={{ color: COLORS.inkMuted }}>
+          {levelProgress.correct} correct answers in {currentLevel.label} · {progress.xp} XP earned
+        </p>
+      )}
+    </section>
+  );
+}
+
+export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionStats, settings, syllabusProgress, onOpenSyllabus, onOpenQuickMath }) {
   const graphData = buildOverallMarksData(mocks);
   const latestMock = mocks.length > 0 ? mocks[mocks.length - 1] : null;
   // Walk back to the latest logged overall percentile so a legacy record
@@ -138,6 +201,11 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionS
         avgLast3={avgLast3}
         bestMarksValue={bestMarksValue}
         pacing={pacing}
+      />
+
+      <QuickMathCard
+        progress={settings?.quickMathProgress}
+        onOpenQuickMath={onOpenQuickMath}
       />
 
       <LatestMockSpotlight mocks={mocks} />

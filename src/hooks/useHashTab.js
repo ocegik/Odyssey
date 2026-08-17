@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { TABS } from "../constants";
 
-const VALID_TABS = TABS.map((tab) => tab.key);
+// Quick Math deliberately has no navigation-tab entry: Overview is its
+// launcher, while this route remains directly addressable and keeps the full
+// focused practice experience out of the dashboard nav.
+const VALID_TABS = [...TABS.map((tab) => tab.key), "quickMath"];
 const LEGACY_TAB_ALIASES = {
   settings: "account",
   profile: "account",
