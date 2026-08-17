@@ -27,14 +27,27 @@ export default function Onboarding({ onComplete }) {
   const [index, setIndex] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [profile, setProfile] = useState({
+    displayName: "",
+    username: "",
+    catTargetYear: String(new Date().getFullYear()),
+  });
   const slide = slides[index];
   const Icon = slide.icon;
+  const targetYears = Array.from({ length: 6 }, (_, offset) => new Date().getFullYear() + offset);
+
+  const setProfileField = (field) => (event) => {
+    const value = field === "username"
+      ? event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "")
+      : event.target.value;
+    setProfile((current) => ({ ...current, [field]: value }));
+  };
 
   const finish = async () => {
     setBusy(true);
     setError("");
     try {
-      await onComplete();
+      await onComplete(profile);
     } catch (err) {
       setError(err.message || "Could not save your onboarding choice. Please try again.");
       setBusy(false);
@@ -48,7 +61,7 @@ export default function Onboarding({ onComplete }) {
         <div className="p-6 sm:p-10">
           <div className="mb-10 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: COLORS.primary, fontFamily: "'Space Grotesk', sans-serif" }}><Grid3X3 size={16} /> Odyssey</div>
-            <button type="button" onClick={finish} disabled={busy} className="text-sm font-semibold underline underline-offset-4 disabled:opacity-60" style={{ color: COLORS.inkMuted }}>Skip setup</button>
+            <span className="text-sm font-semibold" style={{ color: COLORS.inkMuted }}>Step {index + 1} of {slides.length}</span>
           </div>
           <div className="grid h-12 w-12 place-items-center rounded-xl" style={{ background: COLORS.primary + "18", color: COLORS.primary }}><Icon size={25} /></div>
           <p className="mt-8 text-sm font-semibold uppercase tracking-widest" style={{ color: COLORS.primary }}>{slide.eyebrow}</p>
@@ -56,6 +69,25 @@ export default function Onboarding({ onComplete }) {
           <p className="mt-5 max-w-xl text-base leading-relaxed sm:text-lg" style={{ color: COLORS.inkMuted }}>{slide.text}</p>
           {index === 0 && <div className="mt-8 grid grid-cols-3 gap-3"><Pill label="VARC" /><Pill label="DILR" /><Pill label="Quant" /></div>}
           {index === 1 && <div className="mt-8 flex flex-wrap gap-2"><Pill label="Accuracy" /><Pill label="Attempt rate" /><Pill label="MCQ vs TITA" /></div>}
+          {index === slides.length - 1 && (
+            <div className="mt-8 grid gap-4 rounded-xl border p-4 sm:grid-cols-2" style={{ borderColor: COLORS.border, background: COLORS.surface2 }}>
+              <label className="flex flex-col gap-1.5 text-sm font-semibold sm:col-span-2">
+                Your name
+                <input autoComplete="name" maxLength={80} required value={profile.displayName} onChange={setProfileField("displayName")} placeholder="e.g. Aditi Sharma" style={inputStyle} />
+              </label>
+              <label className="flex flex-col gap-1.5 text-sm font-semibold">
+                Unique username
+                <input autoComplete="username" minLength={3} maxLength={24} pattern="[a-z0-9_]{3,24}" required value={profile.username} onChange={setProfileField("username")} placeholder="e.g. aditi_cat26" style={inputStyle} />
+                <span className="text-xs font-normal" style={{ color: COLORS.inkMuted }}>3–24 lowercase letters, numbers, or underscores.</span>
+              </label>
+              <label className="flex flex-col gap-1.5 text-sm font-semibold">
+                CAT target year
+                <select value={profile.catTargetYear} onChange={setProfileField("catTargetYear")} style={inputStyle}>
+                  {targetYears.map((year) => <option key={year} value={year}>{year}</option>)}
+                </select>
+              </label>
+            </div>
+          )}
           {error && <p role="alert" className="mt-6 text-sm" style={{ color: COLORS.danger }}>{error}</p>}
           <div className="mt-12 flex items-center justify-between gap-3">
             <div className="flex gap-2" aria-label={`Step ${index + 1} of ${slides.length}`}>{slides.map((_, dotIndex) => <CircleDot key={dotIndex} size={index === dotIndex ? 17 : 14} style={{ color: index === dotIndex ? COLORS.primary : COLORS.border }} />)}</div>
@@ -71,6 +103,16 @@ export default function Onboarding({ onComplete }) {
     </main>
   );
 }
+
+const inputStyle = {
+  width: "100%",
+  border: `1px solid ${COLORS.border}`,
+  borderRadius: 9,
+  background: COLORS.surface,
+  color: COLORS.ink,
+  padding: "10px 11px",
+  fontSize: 14,
+};
 
 function Pill({ label }) {
   return <span className="rounded-lg border px-3 py-2 text-sm font-semibold" style={{ borderColor: COLORS.border, background: COLORS.surface2, color: COLORS.ink }}>{label}</span>;

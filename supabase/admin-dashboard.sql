@@ -9,6 +9,26 @@ alter table public.profiles
   add column if not exists role text not null default 'user';
 alter table public.profiles
   add column if not exists onboarding_completed boolean not null default false;
+alter table public.profiles
+  add column if not exists username text;
+alter table public.profiles
+  add column if not exists cat_target_year smallint;
+
+alter table public.profiles
+  drop constraint if exists profiles_cat_target_year_check;
+alter table public.profiles
+  add constraint profiles_cat_target_year_check
+  check (cat_target_year is null or cat_target_year between 2020 and 2100);
+
+alter table public.profiles
+  drop constraint if exists profiles_username_check;
+alter table public.profiles
+  add constraint profiles_username_check
+  check (username is null or username ~ '^[a-z0-9_]{3,24}$');
+
+create unique index if not exists profiles_username_unique_idx
+  on public.profiles (lower(username))
+  where username is not null;
 
 alter table public.profiles
   drop constraint if exists profiles_role_check;
@@ -87,7 +107,7 @@ create policy "Admins read all sections" on public.sections
 
 revoke insert, update, delete on public.profiles from authenticated;
 grant select on public.profiles to authenticated;
-grant update (display_name, timezone, onboarding_completed) on public.profiles to authenticated;
+grant update (display_name, username, cat_target_year, timezone, onboarding_completed) on public.profiles to authenticated;
 
 -- Promote the intended account manually, once, after checking the address:
 -- update public.profiles set role = 'admin' where email = 'admin@example.com';

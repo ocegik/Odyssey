@@ -8,7 +8,7 @@ The app uses private normalized tables for signed-in people: `mocks` with `secti
 
 | Table | Ownership and purpose | Main fields |
 | --- | --- | --- |
-| `profiles` | One-to-one with `auth.users`; identity display metadata | `id`, `display_name`, `timezone` |
+| `profiles` | One-to-one with `auth.users`; identity and onboarding metadata | `id`, `display_name`, `username`, `cat_target_year`, `timezone` |
 | `mocks` | A user’s parent mock record | `mock_date`, `source`, `manual_total_marks`, `overall_percentile`, `legacy_mock_id` |
 | `sections` | One score-level VARC/DILR/Quant record per mock | counts, score, percentile, `question_blocks`, notes |
 | `analysis` | Optional detailed review document, one per mock | version, reflection, structure text, question/block `document`, computed `summary` |
