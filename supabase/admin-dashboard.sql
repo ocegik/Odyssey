@@ -7,6 +7,8 @@ alter table public.profiles
   add column if not exists email text not null default '';
 alter table public.profiles
   add column if not exists role text not null default 'user';
+alter table public.profiles
+  add column if not exists onboarding_completed boolean not null default false;
 
 alter table public.profiles
   drop constraint if exists profiles_role_check;
@@ -85,7 +87,7 @@ create policy "Admins read all sections" on public.sections
 
 revoke insert, update, delete on public.profiles from authenticated;
 grant select on public.profiles to authenticated;
-grant update (display_name, timezone) on public.profiles to authenticated;
+grant update (display_name, timezone, onboarding_completed) on public.profiles to authenticated;
 
 -- Promote the intended account manually, once, after checking the address:
 -- update public.profiles set role = 'admin' where email = 'admin@example.com';

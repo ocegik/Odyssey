@@ -35,6 +35,7 @@ create table if not exists public.profiles (
   role text not null default 'user' check (role in ('user', 'admin')),
   display_name text not null default '',
   timezone text not null default 'UTC',
+  onboarding_completed boolean not null default false,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
@@ -273,4 +274,4 @@ grant select, insert, update, delete on public.mocks, public.sections,
 -- creates profiles; signed-in people may change only their display metadata.
 revoke insert, update, delete on public.profiles from authenticated;
 grant select on public.profiles to authenticated;
-grant update (display_name, timezone) on public.profiles to authenticated;
+grant update (display_name, timezone, onboarding_completed) on public.profiles to authenticated;

@@ -29,6 +29,8 @@ Run [`supabase/admin-dashboard.sql`](../supabase/admin-dashboard.sql) after the 
 
 The database policies are the boundary: admins receive read-only cross-user access to `profiles`, `mocks`, and `sections` only. `analysis`, `settings`, and `syllabus` remain owner-only. Browser access is also guarded and the normal navigation shows the Admin link only after the signed-in profile reports `role = 'admin'`.
 
+For the first-run product experience, also run [`supabase/onboarding.sql`](../supabase/onboarding.sql). It adds the `profiles.onboarding_completed` flag, automatically treats accounts created before the feature as completed, and leaves new signups at `false`.
+
 The included `vercel.json` rewrites `/admin` to the Vite app shell. Keep this file in the deployment so opening or refreshing the admin URL does not produce a host-level 404.
 
 There is deliberately no anon policy for these tables. The existing public `app_storage` policy remains unchanged during this phase and is out of scope.

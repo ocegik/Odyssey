@@ -11,6 +11,7 @@ import { buildTopicMetrics } from "./lib/topicMetrics";
 import { buildRevisionQueue } from "./lib/revisionQueue";
 import { useHashTab } from "./hooks/useHashTab";
 import { useAuth } from "./hooks/useAuth";
+import { useOnboarding } from "./hooks/useOnboarding";
 import { useAdminRole } from "./hooks/useAdminRole";
 import { normalizeStoredMocks } from "./lib/mockStorage";
 import Header from "./components/layout/Header";
@@ -18,6 +19,8 @@ import TabNav from "./components/layout/TabNav";
 import Toast from "./components/ui/Toast";
 import CommandPalette from "./components/CommandPalette";
 import OverviewTab from "./components/tabs/OverviewTab";
+import AuthLanding from "./components/AuthLanding";
+import Onboarding from "./components/Onboarding";
 
 /* Overview is the landing tab and stays in the main bundle. Everything else
    is split out: the heavy chart/analysis tabs used to force every visitor to
@@ -104,6 +107,7 @@ export default function CATMockTracker() {
   const [analysisMockId, setAnalysisMockId] = useState(null);
   const [theme, setTheme] = useState(loadThemePreference);
   const auth = useAuth();
+  const onboarding = useOnboarding(auth.user?.id);
   const admin = useAdminRole(auth.user?.id);
   const previousUserId = useRef(auth.user?.id ?? null);
 
@@ -257,6 +261,22 @@ export default function CATMockTracker() {
     if (parsed.learningState) replaceSyllabusState(parsed.learningState);
     return count;
   };
+
+  if (auth.status === "loading") {
+    return <div className="grid min-h-screen place-items-center text-sm" style={{ background: COLORS.bg, color: COLORS.inkMuted }}>Checking your account…</div>;
+  }
+
+  if (!auth.user) {
+    return <AuthLanding auth={auth} />;
+  }
+
+  if (onboarding.status === "loading") {
+    return <div className="grid min-h-screen place-items-center text-sm" style={{ background: COLORS.bg, color: COLORS.inkMuted }}>Preparing your workspace…</div>;
+  }
+
+  if (!onboarding.completed) {
+    return <Onboarding onComplete={onboarding.complete} />;
+  }
 
   return (
     <div
