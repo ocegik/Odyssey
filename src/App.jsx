@@ -95,6 +95,39 @@ function themeVariableCSS(themeName, values) {
   `;
 }
 
+/* The signed-out and onboarding routes use the same token-based components as
+   the dashboard. Keep the tokens and base controls available before the main
+   workspace mounts so those routes are not rendered as a separate visual
+   system (or left with unresolved CSS variables). */
+function GlobalThemeStyles() {
+  return <style>{`
+    ${FONT_IMPORT}
+    ${themeVariableCSS("light", THEME_COLORS.light)}
+    ${themeVariableCSS("dark", THEME_COLORS.dark)}
+    * { box-sizing: border-box; }
+    *, *::before, *::after { transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, box-shadow 200ms ease; }
+    html, body, #root { background: ${COLORS.bg}; }
+    input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px ${COLORS.bg}, 0 0 0 5px ${COLORS.focusRing};
+    }
+    button { cursor: pointer; transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, opacity 120ms ease, box-shadow 120ms ease, transform 100ms ease; }
+    input, select, textarea { transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease; }
+    .theme-hover { transition: background-color 120ms ease; }
+    .theme-hover:hover { background: ${COLORS.hover} !important; }
+    [data-theme="dark"] .hover\\:bg-black\\/5:hover,
+    [data-theme="dark"] .hover\\:bg-black\\/\\[0\\.03\\]:hover,
+    [data-theme="dark"] .hover\\:bg-black\\/\\[0\\.025\\]:hover,
+    [data-theme="dark"] .hover\\:bg-black\\/\\[0\\.04\\]:hover,
+    [data-theme="dark"] .hover\\:bg-black\\/\\[0\\.05\\]:hover,
+    [data-theme="dark"] .hover\\:bg-\\[\\#FBFBF8\\]:hover {
+      background-color: ${COLORS.hover} !important;
+    }
+    ::-webkit-scrollbar { height: 8px; width: 8px; }
+    ::-webkit-scrollbar-thumb { background: ${COLORS.border}; border-radius: 4px; }
+  `}</style>;
+}
+
 /* Tabs render inside <Suspense>; a chunk fetch is fast enough that a spinner
    would flash more than it would inform, so this just holds the height. */
 function TabFallback() {
@@ -264,19 +297,19 @@ export default function CATMockTracker() {
   };
 
   if (auth.status === "loading") {
-    return <div className="grid min-h-screen place-items-center text-sm" style={{ background: COLORS.bg, color: COLORS.inkMuted }}>Checking your account…</div>;
+    return <><GlobalThemeStyles /><div className="grid min-h-screen place-items-center text-sm" style={{ background: COLORS.bg, color: COLORS.inkMuted }}>Checking your account…</div></>;
   }
 
   if (!auth.user) {
-    return <AuthLanding auth={auth} />;
+    return <><GlobalThemeStyles /><AuthLanding auth={auth} /></>;
   }
 
   if (onboarding.status === "loading") {
-    return <div className="grid min-h-screen place-items-center text-sm" style={{ background: COLORS.bg, color: COLORS.inkMuted }}>Preparing your workspace…</div>;
+    return <><GlobalThemeStyles /><div className="grid min-h-screen place-items-center text-sm" style={{ background: COLORS.bg, color: COLORS.inkMuted }}>Preparing your workspace…</div></>;
   }
 
   if (!onboarding.completed) {
-    return <Onboarding onComplete={onboarding.complete} />;
+    return <><GlobalThemeStyles /><Onboarding onComplete={onboarding.complete} /></>;
   }
 
   return (
@@ -290,32 +323,7 @@ export default function CATMockTracker() {
       }}
       className="w-full"
     >
-      <style>{`
-        ${FONT_IMPORT}
-        ${themeVariableCSS("light", THEME_COLORS.light)}
-        ${themeVariableCSS("dark", THEME_COLORS.dark)}
-        * { box-sizing: border-box; }
-        *, *::before, *::after { transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, box-shadow 200ms ease; }
-        html, body, #root { background: ${COLORS.bg}; }
-        input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
-          outline: none;
-          box-shadow: 0 0 0 3px ${COLORS.bg}, 0 0 0 5px ${COLORS.focusRing};
-        }
-        button { cursor: pointer; transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, opacity 120ms ease, box-shadow 120ms ease, transform 100ms ease; }
-        input, select, textarea { transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease; }
-        .theme-hover { transition: background-color 120ms ease; }
-        .theme-hover:hover { background: ${COLORS.hover} !important; }
-        [data-theme="dark"] .hover\\:bg-black\\/5:hover,
-        [data-theme="dark"] .hover\\:bg-black\\/\\[0\\.03\\]:hover,
-        [data-theme="dark"] .hover\\:bg-black\\/\\[0\\.025\\]:hover,
-        [data-theme="dark"] .hover\\:bg-black\\/\\[0\\.04\\]:hover,
-        [data-theme="dark"] .hover\\:bg-black\\/\\[0\\.05\\]:hover,
-        [data-theme="dark"] .hover\\:bg-\\[\\#FBFBF8\\]:hover {
-          background-color: ${COLORS.hover} !important;
-        }
-        ::-webkit-scrollbar { height: 8px; width: 8px; }
-        ::-webkit-scrollbar-thumb { background: ${COLORS.border}; border-radius: 4px; }
-      `}</style>
+      <GlobalThemeStyles />
 
       <div
         className="mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6"
