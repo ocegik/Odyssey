@@ -27,6 +27,7 @@ import Onboarding from "./components/Onboarding";
    download all of recharts and the full syllabus dataset before seeing
    anything, on an app that's opened for a 10-second score check most days. */
 const SyllabusTab = lazy(() => import("./components/tabs/SyllabusTab"));
+const CommunityTab = lazy(() => import("./components/tabs/CommunityTab"));
 const QuickMath = lazy(() => import("./components/tabs/QuickMath"));
 const MockLogTab = lazy(() => import("./components/tabs/MockLogTab"));
 const TrendsTab = lazy(() => import("./components/tabs/TrendsTab"));
@@ -370,6 +371,19 @@ export default function CATMockTracker() {
               <QuickMath
                 progress={settings.quickMathProgress}
                 onRecordResult={recordQuickMathResult}
+              />
+            </div>
+          )}
+
+          {visitedTabs.has("community") && (
+            <div
+              className="flex flex-col gap-6"
+              style={{ display: activeTab === "community" ? "flex" : "none" }}
+            >
+              <CommunityTab
+                mocks={mocks}
+                syllabusProgress={syllabusProgress}
+                quickMathProgress={settings.quickMathProgress}
               />
             </div>
           )}

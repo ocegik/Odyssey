@@ -3,6 +3,7 @@ import {
   ClipboardList,
   LineChart as LineChartIcon,
   LayoutDashboard,
+  UsersRound,
   FileSearch,
   ListChecks,
   UserRound,
@@ -143,6 +144,7 @@ export const SECTION_META = {
 
 export const TABS = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
+  { key: "community", label: "Community", icon: UsersRound },
   { key: "syllabus", label: "Syllabus", icon: ListChecks },
   { key: "log", label: "Mock log", icon: ClipboardList },
   { key: "analysis", label: "Mock analysis", icon: FileSearch },
