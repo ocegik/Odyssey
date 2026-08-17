@@ -24,7 +24,15 @@ export const SYNC_STATUS = {
  * unconditionally applying the response — as each hook used to — silently
  * threw away anything typed in the meantime.
  */
-export function useCloudSyncedState({ storageKey, remoteKey, load, normalize, serialize = (v) => v }) {
+export function useCloudSyncedState({
+  storageKey,
+  remoteKey,
+  load,
+  normalize,
+  serialize = (v) => v,
+  fetchRemote = fetchRemoteValue,
+  saveRemote = saveRemoteValue,
+}) {
   const [state, setState] = useState(load);
   const [status, setStatus] = useState(supabase ? SYNC_STATUS.loading : SYNC_STATUS.local);
   const [lastSyncedAt, setLastSyncedAt] = useState(null);
@@ -63,7 +71,7 @@ export function useCloudSyncedState({ storageKey, remoteKey, load, normalize, se
     if (!supabase) return undefined;
     let cancelled = false;
 
-    fetchRemoteValue(remoteKey)
+    fetchRemote(remoteKey)
       .then((remote) => {
         if (cancelled) return;
         if (remote && !dirtyBeforeReconcile.current) {
@@ -84,7 +92,7 @@ export function useCloudSyncedState({ storageKey, remoteKey, load, normalize, se
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [remoteKey]);
+  }, [fetchRemote, remoteKey]);
 
   // Debounced push, coalescing rapid edits (typing) into one write.
   useEffect(() => {
@@ -93,7 +101,7 @@ export function useCloudSyncedState({ storageKey, remoteKey, load, normalize, se
     setStatus(SYNC_STATUS.saving);
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      saveRemoteValue(remoteKey, serialize(state)).then((ok) => {
+      saveRemote(remoteKey, serialize(state)).then((ok) => {
         setStatus(ok ? SYNC_STATUS.synced : SYNC_STATUS.error);
         if (ok) setLastSyncedAt(Date.now());
       });
@@ -101,7 +109,7 @@ export function useCloudSyncedState({ storageKey, remoteKey, load, normalize, se
 
     return () => clearTimeout(saveTimer.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, remoteKey, remoteReady]);
+  }, [state, remoteKey, remoteReady, saveRemote]);
 
   /* `setState` (raw) is exposed for replacing state from a source that isn't
      a user edit in this tab — currently unused, but kept distinct so the

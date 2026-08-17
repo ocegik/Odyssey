@@ -1,10 +1,17 @@
 import { useCallback } from "react";
 import { SECTIONS } from "../constants";
 import { uid } from "../lib/format";
+import { fetchRemoteSettings, saveRemoteSettings } from "../lib/cloudStore";
 import { useCloudSyncedState } from "./useCloudSyncedState";
 
 const STORAGE_KEY = "cat-mock-tracker:settings";
 const REMOTE_KEY = "settings";
+
+// The shared sync hook uses (remoteKey, value); the settings table functions
+// only need the settings payload. Keep these adapters module-stable so the
+// initial remote reconcile does not restart on every render.
+const fetchSettingsFromTable = () => fetchRemoteSettings();
+const saveSettingsToTable = (_remoteKey, value) => saveRemoteSettings(value);
 
 const EMPTY_SECTION_TARGETS = SECTIONS.reduce((acc, section) => {
   acc[section] = null;
@@ -144,6 +151,10 @@ export function useSettings() {
     remoteKey: REMOTE_KEY,
     load: loadSettings,
     normalize: normalizeSettings,
+    // This adapter preserves the shared hook's (remoteKey, value) contract;
+    // only settings use the new per-user table in this phase.
+    fetchRemote: fetchSettingsFromTable,
+    saveRemote: saveSettingsToTable,
   });
 
   const updateProfile = useCallback((patch) => {
