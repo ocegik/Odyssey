@@ -68,9 +68,9 @@
 
 ---
 
-## 3. Persistence Model (no backend/database)
+## 3. Persistence Model
 
-- The app is a **static site** — no server, no login, no database
+- The app is a **static site** — no custom server is required
 - Data lives in-browser (React state) while the app is open
 - **Export**: after adding/editing entries, export a `scores.json` file
 - **Import**: on next use, import that same `scores.json` back in — this file is the single source of truth
@@ -80,6 +80,8 @@
 - Older saved entries without an overall percentile remain readable; enter the reported percentile when editing them to use overall percentile features.
 
 **Update (post-launch):** the app now also syncs to a Supabase table (`app_storage`) in the background, so data survives browser storage being cleared and isn't limited to one device. localStorage remains as a fast local cache; export/import still work the same way as a manual backup path. See `supabase/schema.sql` and `src/lib/cloudStore.js`.
+
+**Phase 1 foundation:** email/password account controls and a private, normalized Supabase schema have been added alongside the existing cloud store. They do not yet alter the live data path: `app_storage` is untouched and the dashboard still uses it. See [`docs/PHASE_1_FOUNDATION.md`](docs/PHASE_1_FOUNDATION.md) and `supabase/phase-1-foundation.sql` for the exact schema, RLS model, and Supabase setup steps.
 
 **JSON import comes in two flavors — don't confuse them:**
 - **Settings → Data Backup** (`onImportData` in `src/App.jsx`) is a **replace**: it wipes every mock and setting on this device and restores exactly what's in the backup file. This is the `scores.json` / full-export workflow above.
@@ -147,7 +149,7 @@
 - **React** (single-file component to start, ports cleanly to a full project)
 - **Recharts** for all charts/trend lines
 - **JSON** for data storage/import/export (no xlsx, no database)
-- No backend, no auth, no server-side code — fully static
+- Supabase provides browser-based cloud sync and optional email/password accounts; there is no custom server-side code
 - Deployment: GitHub repo → Vercel (free tier), via a standard Vite + React scaffold
 
 ### 5.1 Bundle

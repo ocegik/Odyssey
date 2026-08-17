@@ -10,6 +10,7 @@ import { useSyllabus } from "./hooks/useSyllabus";
 import { buildTopicMetrics } from "./lib/topicMetrics";
 import { buildRevisionQueue } from "./lib/revisionQueue";
 import { useHashTab } from "./hooks/useHashTab";
+import { useAuth } from "./hooks/useAuth";
 import { normalizeStoredMocks } from "./lib/mockStorage";
 import Header from "./components/layout/Header";
 import TabNav from "./components/layout/TabNav";
@@ -101,6 +102,7 @@ export default function CATMockTracker() {
   const [visitedTabs, setVisitedTabs] = useState(() => new Set([activeTab]));
   const [analysisMockId, setAnalysisMockId] = useState(null);
   const [theme, setTheme] = useState(loadThemePreference);
+  const auth = useAuth();
 
   const {
     sectionStats,
@@ -285,6 +287,7 @@ export default function CATMockTracker() {
             settingsSyncStatus,
             syllabusSyncStatus,
           ]}
+          auth={auth}
         />
 
         <TabNav activeTab={activeTab} onChange={handleTabChange} />
