@@ -83,7 +83,7 @@ export default class ErrorBoundary extends Component {
           </div>
 
           <p className="text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>
-            Your logged mocks and settings are still saved on this device — this is a display problem, not lost data.
+            Your logged mocks and preferences are still saved on this device — this is a display problem, not lost data.
             Download a backup first, then reload. If it keeps crashing, the backup file has everything needed to
             restore into a fresh session.
           </p>

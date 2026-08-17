@@ -77,9 +77,9 @@ export default function TrendsTab({
   const sectionTargets = settings?.sectionTargetMarks || {};
   const hasSectionTargets = SECTIONS.some((s) => sectionTargets[s] !== null && sectionTargets[s] !== undefined);
   const marksTrendNote = hasSectionTargets
-    ? "Dashed lines are per-section Settings targets"
+    ? "Dashed lines are per-section Account targets"
     : targetLines.length
-      ? "Dashed line is the Settings target score"
+      ? "Dashed line is the Account target score"
       : "Primary view for spotting who's lagging";
 
   const radarData = useMemo(() => buildRadarData(sectionStats), [sectionStats]);

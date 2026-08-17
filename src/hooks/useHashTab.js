@@ -2,10 +2,15 @@ import { useCallback, useEffect, useState } from "react";
 import { TABS } from "../constants";
 
 const VALID_TABS = TABS.map((tab) => tab.key);
+const LEGACY_TAB_ALIASES = {
+  settings: "account",
+  profile: "account",
+};
 
 function tabFromHash(fallback) {
   const key = window.location.hash.replace(/^#\/?/, "");
-  return VALID_TABS.includes(key) ? key : fallback;
+  const resolvedKey = LEGACY_TAB_ALIASES[key] || key;
+  return VALID_TABS.includes(resolvedKey) ? resolvedKey : fallback;
 }
 
 /**
@@ -21,20 +26,24 @@ export function useHashTab(defaultTab) {
 
   // Back/forward and hand-edited URLs.
   useEffect(() => {
-    const onHashChange = () => setActiveTab(tabFromHash(defaultTab));
+    const onHashChange = () => {
+      const tab = tabFromHash(defaultTab);
+      setActiveTab(tab);
+      if (window.location.hash !== `#/${tab}`) {
+        window.history.replaceState(null, "", `#/${tab}`);
+      }
+    };
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, [defaultTab]);
 
-  // Normalize the bar on first load: an empty or bogus hash gets rewritten to
-  // whatever tab actually rendered, so the URL is never lying about the view.
+  // Normalize legacy, empty, and bogus hashes so bookmarks to the consolidated
+  // account area continue to work without leaving a stale route in the URL.
   useEffect(() => {
     if (window.location.hash !== `#/${activeTab}`) {
       window.history.replaceState(null, "", `#/${activeTab}`);
     }
-    // Intentionally first-mount only — subsequent changes go through changeTab.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [activeTab]);
 
   const changeTab = useCallback((key) => {
     if (!VALID_TABS.includes(key)) return;

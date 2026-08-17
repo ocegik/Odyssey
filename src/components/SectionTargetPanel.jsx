@@ -5,7 +5,7 @@ import ProgressBar from "./ui/ProgressBar";
 /**
  * Per-section target vs current form.
  *
- * The section targets in Settings previously only existed as faint dashed
+ * The section targets in Account previously only existed as faint dashed
  * lines on one Trends chart, which is a weak payoff for numbers the user
  * deliberately set. This turns them into the answer to "how far off am I,
  * and where?" — the question the whole app exists to answer.
@@ -33,7 +33,7 @@ export function buildTargetRows(sectionStats, settings) {
 /** Collapsed-row headline: the section furthest from its target. */
 export function targetGapSummary(rows) {
   const withCurrent = rows.filter((row) => row.gap !== null);
-  if (rows.length === 0) return "Set section targets in Settings";
+  if (rows.length === 0) return "Set section targets in Account";
   if (withCurrent.length === 0) return "No scored mocks yet";
   const worst = withCurrent.reduce((acc, row) => (row.gap < acc.gap ? row : acc));
   if (worst.gap >= 0) return "All targeted sections are at or above target";
@@ -51,7 +51,7 @@ export default function SectionTargetPanel({ rows }) {
       <span className="text-xs" style={{ color: COLORS.inkMuted }}>
         {totalCurrent !== null
           ? `Rolling 5-mock average — ${fmtNum(totalCurrent, 0)} / ${fmtNum(totalTarget, 0)} across targeted sections`
-          : "Rolling 5-mock average vs your Settings targets"}
+          : "Rolling 5-mock average vs your Account targets"}
       </span>
 
       <div className="flex flex-col gap-3.5">

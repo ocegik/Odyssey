@@ -79,7 +79,7 @@ function CatProgressCard({ catTargetDate, overallTargetPercentile }) {
   if (!catTargetDate) {
     return (
       <CardShell icon={Hourglass} label="CAT Progress" accent={COLORS.primary}>
-        <span className="text-sm" style={{ color: COLORS.inkMuted }}>Set the CAT date in Settings</span>
+        <span className="text-sm" style={{ color: COLORS.inkMuted }}>Set the CAT date in Account</span>
       </CardShell>
     );
   }
@@ -123,7 +123,7 @@ function NextMockCard({ mockSchedule, nextTargetMarks }) {
   if (!nextMock) {
     return (
       <CardShell icon={CalendarClock} label="Next Mock" accent={COLORS.info}>
-        <span className="text-sm" style={{ color: COLORS.inkMuted }}>Add a mock schedule in Settings</span>
+        <span className="text-sm" style={{ color: COLORS.inkMuted }}>Add a mock schedule in Account</span>
       </CardShell>
     );
   }
@@ -158,7 +158,7 @@ function NextMockCard({ mockSchedule, nextTargetMarks }) {
               </div>
             ))}
             {extraCount > 0 && (
-              <span className="text-xs" style={{ color: COLORS.inkMuted }}>+{extraCount} more — see Settings</span>
+              <span className="text-xs" style={{ color: COLORS.inkMuted }}>+{extraCount} more — see Account</span>
             )}
           </div>
         )}

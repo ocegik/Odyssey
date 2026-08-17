@@ -3,10 +3,9 @@ import {
   ClipboardList,
   LineChart as LineChartIcon,
   LayoutDashboard,
-  Info,
   FileSearch,
   ListChecks,
-  Settings,
+  UserRound,
   CloudLightning,
 } from "lucide-react";
 
@@ -151,6 +150,5 @@ export const TABS = [
   { key: "analysis", label: "Mock analysis", icon: FileSearch },
   { key: "analysisInsights", label: "Insights", icon: BarChart3 },
   { key: "trends", label: "Trends", icon: LineChartIcon },
-  { key: "settings", label: "Settings", icon: Settings },
-  { key: "about", label: "About", icon: Info },
+  { key: "account", label: "Account", icon: UserRound },
 ];

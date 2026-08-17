@@ -33,9 +33,10 @@ function Panel({ title, children, action }) {
   );
 }
 
-export default function SettingsTab({
+export default function AccountTab({
   settings,
   mocks,
+  userEmail,
   onUpdateProfile,
   onUpdateSectionTarget,
   onAddScheduleEntry,
@@ -120,14 +121,14 @@ export default function SettingsTab({
     const file = ev.target.files?.[0];
     ev.target.value = "";
     if (!file) return;
-    if (!window.confirm("Import will replace all mocks and settings currently on this device with the backup file. This can't be undone. Continue?")) {
+    if (!window.confirm("Import will replace all mocks and preferences currently on this device with the backup file. This can't be undone. Continue?")) {
       return;
     }
     const reader = new FileReader();
     reader.onload = () => {
       try {
         const count = onImportData(reader.result);
-        setDataMessage(`Imported ${count} mock${count === 1 ? "" : "s"} and settings`);
+        setDataMessage(`Imported ${count} mock${count === 1 ? "" : "s"} and preferences`);
         setDataError("");
       } catch (err) {
         setDataError(err.message || "Could not import that backup JSON.");
@@ -138,6 +139,30 @@ export default function SettingsTab({
 
   return (
     <div className="flex flex-col gap-4">
+      <section className="flex flex-col gap-3" aria-labelledby="account-profile-heading">
+        <div>
+          <h1 id="account-profile-heading" style={TYPE.pageTitle}>Account</h1>
+          <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>Manage your profile and study preferences.</p>
+        </div>
+        <Panel title="Profile">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel htmlFor="studentName">Student name</FieldLabel>
+              <input id="studentName" value={settings.studentName} onChange={setProfileField("studentName")} style={inputStyle(false)} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel htmlFor="accountEmail">Account email</FieldLabel>
+              <input id="accountEmail" value={userEmail || ""} readOnly style={inputStyle(false)} />
+            </div>
+          </div>
+        </Panel>
+      </section>
+
+      <section className="flex flex-col gap-4" aria-labelledby="account-preferences-heading">
+        <div>
+          <h2 id="account-preferences-heading" style={TYPE.panelTitle}>Preferences</h2>
+          <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>Set targets, adjust the dashboard, plan mocks, and manage backups.</p>
+        </div>
       <Panel
         title="Data Backup"
         action={
@@ -165,9 +190,9 @@ export default function SettingsTab({
         }
       >
         <p className="text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>
-          Export bundles every logged mock, analysis, and setting into one JSON file — useful as a manual backup
+          Export bundles every logged mock, analysis, and preference into one JSON file — useful as a manual backup
           alongside cloud sync. Importing a backup <strong style={{ color: COLORS.ink }}>replaces</strong> all mocks
-          and settings currently on this device, it doesn't merge with them.
+          and preferences currently on this device, it doesn't merge with them.
         </p>
         {dataError && <p className="text-sm" style={{ color: COLORS.danger }}>{dataError}</p>}
         {dataMessage && !dataError && <p className="text-sm" style={{ color: COLORS.good }}>{dataMessage}</p>}
@@ -204,12 +229,8 @@ export default function SettingsTab({
         </div>
       </Panel>
 
-      <Panel title="Student Profile">
+      <Panel title="Targets">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="studentName">Student name</FieldLabel>
-            <input id="studentName" value={settings.studentName} onChange={setProfileField("studentName")} style={inputStyle(false)} />
-          </div>
           <div className="flex flex-col gap-1.5">
             <FieldLabel htmlFor="catTargetDate">CAT exam date</FieldLabel>
             <input id="catTargetDate" type="date" value={settings.catTargetDate} onChange={setProfileField("catTargetDate")} style={inputStyle(false)} />
@@ -387,6 +408,7 @@ export default function SettingsTab({
           </>
         )}
       </Panel>
+      </section>
     </div>
   );
 }

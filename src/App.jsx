@@ -30,12 +30,11 @@ const SyllabusTab = lazy(() => import("./components/tabs/SyllabusTab"));
 const QuickMath = lazy(() => import("./components/tabs/QuickMath"));
 const MockLogTab = lazy(() => import("./components/tabs/MockLogTab"));
 const TrendsTab = lazy(() => import("./components/tabs/TrendsTab"));
-const AboutTab = lazy(() => import("./components/tabs/AboutTab"));
 const AnalysisTab = lazy(() => import("./components/tabs/AnalysisTab"));
 const AnalysisInsightsDataTab = lazy(
   () => import("./components/tabs/AnalysisInsightsDataTab"),
 );
-const SettingsTab = lazy(() => import("./components/tabs/SettingsTab"));
+const AccountTab = lazy(() => import("./components/tabs/AccountTab"));
 
 const THEME_STORAGE_KEY = "cat-mock-tracker:theme";
 
@@ -457,14 +456,15 @@ export default function CATMockTracker() {
             </div>
           )}
 
-          {visitedTabs.has("settings") && (
+          {visitedTabs.has("account") && (
             <div
               className="flex flex-col gap-6"
-              style={{ display: activeTab === "settings" ? "flex" : "none" }}
+              style={{ display: activeTab === "account" ? "flex" : "none" }}
             >
-              <SettingsTab
+              <AccountTab
                 settings={settings}
                 mocks={mocks}
+                userEmail={auth.user?.email}
                 onUpdateProfile={updateProfile}
                 onUpdateSectionTarget={updateSectionTarget}
                 onAddScheduleEntry={addScheduleEntry}
@@ -477,14 +477,6 @@ export default function CATMockTracker() {
             </div>
           )}
 
-          {visitedTabs.has("about") && (
-            <div
-              className="flex flex-col gap-6"
-              style={{ display: activeTab === "about" ? "flex" : "none" }}
-            >
-              <AboutTab />
-            </div>
-          )}
         </Suspense>
       </div>
 

@@ -429,7 +429,7 @@ function normalizeImportMock(raw, idx) {
  * an array of mocks, or { mocks: [...] }. Each mock accepts the same fields
  * the manual score-only form submits (see MockLogTab.jsx submitMock). This
  * is additive (new mocks get appended via addScoreOnlyMock) and distinct
- * from the Settings > Data Backup restore, which replaces the whole dataset.
+ * from the Account > Data Backup restore, which replaces the whole dataset.
  * Every mock is validated before any payload is returned, so a bad entry
  * can't cause a partial import.
  */

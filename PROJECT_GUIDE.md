@@ -54,7 +54,7 @@ Odyssey/
     │
     ├── components/             # ALL UI VISUAL COMPONENTS
     │   ├── layout/             # Header, Navigation bar, Cloud Sync status badge
-    │   ├── tabs/               # Main pages: Overview, Mock Log, Analysis, Trends, Syllabus, Settings, About
+    │   ├── tabs/               # Main pages: Overview, Mock Log, Analysis, Trends, Syllabus, Account
     │   ├── ui/                 # Small reusable UI widgets: StatCard, FieldLabel, SectionBadge, Toast, etc.
     │   ├── charts/             # Recharts chart components (Line, Bar, Radar, Signals)
     │   ├── syllabus/           # Syllabus progress bars and snapshot cards
@@ -62,7 +62,7 @@ Odyssey/
     │
     ├── hooks/                  # CUSTOM REACT HOOKS (STATE & DATA MANIPULATION)
     │   ├── useMockEntries.js   # Central state manager for parent mock entries & stats
-    │   ├── useSettings.js     # User settings (target percentiles, exam date, college target)
+    │   ├── useSettings.js     # Account preferences (targets, exam date, schedule, layout)
     │   ├── useSyllabus.js     # User syllabus topic progress & completion rates
     │   ├── useCloudSyncedState.js # Dual-storage bridge (localStorage + Supabase background sync)
     │   └── useHashTab.js       # URL hash navigation (e.g. #log, #analysis, #trends)
@@ -114,7 +114,7 @@ Use this reference table whenever you want to make a specific modification:
 | **Mock Score Entry & Table** | [`src/components/tabs/MockLogTab.jsx`](file:///Users/mohitchoudhary/Downloads/Odyssey/src/components/tabs/MockLogTab.jsx) & [`src/components/MockLogTable.jsx`](file:///Users/mohitchoudhary/Downloads/Odyssey/src/components/MockLogTable.jsx) | Controls score logging forms, batch JSON import, and row editing. |
 | **Detailed Question-by-Question Analysis** | [`src/components/tabs/AnalysisTab.jsx`](file:///Users/mohitchoudhary/Downloads/Odyssey/src/components/tabs/AnalysisTab.jsx) | Edit question review table, error reasons, time taken per question, and reflection text. |
 | **Score Trend Line Charts** | [`src/components/charts/MultiSectionLineChart.jsx`](file:///Users/mohitchoudhary/Downloads/Odyssey/src/components/charts/MultiSectionLineChart.jsx) & [`src/components/charts/PercentileTrendChart.jsx`](file:///Users/mohitchoudhary/Downloads/Odyssey/src/components/charts/PercentileTrendChart.jsx) | Customize chart colors, axes, tooltips, or smooth lines. |
-| **Settings & Storage Controls** | [`src/components/tabs/SettingsTab.jsx`](file:///Users/mohitchoudhary/Downloads/Odyssey/src/components/tabs/SettingsTab.jsx) | Edit target percentile sliders, export/import backup buttons, and cloud sync settings. |
+| **Account & Storage Controls** | [`src/components/tabs/AccountTab.jsx`](file:///Users/mohitchoudhary/Downloads/Odyssey/src/components/tabs/AccountTab.jsx) | Manage profile details, targets, layout, mock schedule, and backup controls. |
 
 ---
 

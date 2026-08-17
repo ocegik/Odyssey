@@ -82,7 +82,7 @@
 **Cloud sync:** when signed in, the app stores private data in normalized Supabase tables: `mocks`/`sections`, one optional `analysis` row per mock, `settings`, and `syllabus`. localStorage is only a fast browser cache; signing out clears all account-scoped cached and in-memory data before another person can use the same browser. Export/import remain available as a manual backup path. The old `app_storage` table is untouched and is not the active application data path. See [`docs/PHASE_1_FOUNDATION.md`](docs/PHASE_1_FOUNDATION.md), `supabase/phase-1-foundation.sql`, and `src/lib/cloudStore.js`.
 
 **JSON import comes in two flavors — don't confuse them:**
-- **Settings → Data Backup** (`onImportData` in `src/App.jsx`) is a **replace**: it wipes every mock and setting on this device and restores exactly what's in the backup file. This is the `scores.json` / full-export workflow above.
+- **Account → Data Backup** (`onImportData` in `src/App.jsx`) is a **replace**: it wipes every mock and preference on this device and restores exactly what's in the backup file. This is the `scores.json` / full-export workflow above.
 - **Mock Log → Import JSON** and **Mock Analysis → Import JSON** (see §4.1) are **additive**: they add to what's already logged without touching existing mocks. These exist so the tedious parts of data entry — logging many past mocks at once, or filling in a full per-question analysis table — can be done by pasting/uploading JSON instead of clicking through the form.
 
 ---
@@ -126,7 +126,7 @@
 - **Trends:**
   - Always on: section-wise marks trend, accuracy comparison, attempt-rate trend
   - Behind disclosure: where your marks go + marks-per-attempt, percentile trend, section shape (radar), consistency & sources
-- **Gap to section targets** (Overview) — the per-section target marks in Settings, compared against each section's rolling 5-mock average. Renders only when at least one target is set.
+- **Gap to section targets** (Overview) — the per-section target marks in Account, compared against each section's rolling 5-mock average. Renders only when at least one target is set.
 - Section-wise trend lines over time (VARC / DILR / Quant on the same or separate charts) — primary "who's lagging" view
 - Accuracy comparison: overall / MCQ / TITA, both latest mock and rolling average, per section
 - Attempt-rate trend per section over time
@@ -138,7 +138,7 @@
 
 ### 4.3 App shell
 - **URL-addressable tabs** — the active tab lives in the URL hash (`#/trends`), so reloads keep your place and any view can be bookmarked or linked. Hash rather than path, to stay a static site with no server rewrite rules (`src/hooks/useHashTab.js`).
-- **Command palette** — `⌘K` / `Ctrl-K` opens a search over every tab, every logged mock (jumps straight to its analysis), and the export/theme actions. Intentionally undiscoverable from the UI beyond one note in About, so it adds no clutter; everything in it is reachable the normal way too.
+- **Command palette** — `⌘K` / `Ctrl-K` opens a search over every tab, every logged mock (jumps straight to its analysis), and the export/theme actions. Everything in it is reachable the normal way too.
 - **Sync badge** — the header always shows whether data reached the cloud (`Synced` / `Saving` / `Sync failed` / `This device`), reflecting the *worst* state across the mocks, settings and syllabus slices. Previously only a failed mock save surfaced anything, and settings/syllabus failures were entirely silent.
 - **Error boundary** — a render crash shows a recovery screen with a "Download backup" button that reads straight from localStorage, instead of a white screen that's indistinguishable from data loss.
 

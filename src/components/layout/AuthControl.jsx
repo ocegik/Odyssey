@@ -115,7 +115,7 @@ export default function AuthControl({ auth, onSignedOut }) {
                 <p className="mt-0.5 break-all text-xs" style={{ color: COLORS.inkMuted }}>{auth.user.email}</p>
               </div>
               <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>
-                Your mocks, detailed analysis, settings, and syllabus progress are stored privately for this account. Signing out clears this browser's account data immediately.
+                Your mocks, detailed analysis, preferences, and syllabus progress are stored privately for this account. Signing out clears this browser's account data immediately.
               </p>
               {error && <p className="text-xs" role="alert" style={{ color: COLORS.danger }}>{error}</p>}
               <button

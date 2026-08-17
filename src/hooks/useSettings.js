@@ -18,7 +18,7 @@ const EMPTY_SECTION_TARGETS = SECTIONS.reduce((acc, section) => {
   return acc;
 }, {});
 
-// Page-content width presets for the "Layout" slider in Settings — three
+// Page-content width presets for the "Layout" slider in Account — three
 // steps, matching the widths already tried while dialing this in by hand.
 export const LAYOUT_WIDTH_OPTIONS = [
   { key: "cozy", label: "Cozy", px: 1024 },

@@ -7,10 +7,10 @@ import { fmtDate } from "../lib/format";
  * ⌘K / Ctrl-K palette: jump to any tab, open a specific mock's analysis, or
  * fire a data action.
  *
- * Deliberately zero-footprint — nothing on screen advertises it beyond one
- * line in About, so it adds no clutter to the daily view while removing a
- * lot of clicking for anyone who wants it. Everything reachable here is
- * reachable the normal way too; this is a shortcut, never the only path.
+ * Deliberately zero-footprint — it keeps the daily view uncluttered while
+ * removing a lot of clicking for anyone who wants it. Everything reachable
+ * here is reachable the normal way too; this is a shortcut, never the only
+ * path.
  */
 
 function scoreMatch(haystack, query) {

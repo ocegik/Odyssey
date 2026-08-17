@@ -8,10 +8,10 @@ import { SYNC_STATUS } from "../../hooks/useCloudSyncedState";
 const RANK = [SYNC_STATUS.error, SYNC_STATUS.loading, SYNC_STATUS.saving, SYNC_STATUS.local, SYNC_STATUS.synced];
 
 const META = {
-  [SYNC_STATUS.error]: { icon: TriangleAlert, label: "Sync failed", color: COLORS.danger, title: "Couldn't reach the cloud. Changes are saved on this device — export a backup from Settings to be safe." },
+  [SYNC_STATUS.error]: { icon: TriangleAlert, label: "Sync failed", color: COLORS.danger, title: "Couldn't reach the cloud. Changes are saved on this device — export a backup from Account to be safe." },
   [SYNC_STATUS.loading]: { icon: RefreshCw, label: "Syncing", color: COLORS.inkMuted, title: "Loading your data from the cloud." },
   [SYNC_STATUS.saving]: { icon: RefreshCw, label: "Saving", color: COLORS.inkMuted, title: "Saving changes to the cloud." },
-  [SYNC_STATUS.local]: { icon: HardDrive, label: "This device", color: COLORS.inkMuted, title: "No cloud sync configured — data lives in this browser only. Export backups from Settings." },
+  [SYNC_STATUS.local]: { icon: HardDrive, label: "This device", color: COLORS.inkMuted, title: "No cloud sync configured — data lives in this browser only. Export backups from Account." },
   [SYNC_STATUS.synced]: { icon: Check, label: "Synced", color: COLORS.good, title: "All changes saved to the cloud." },
 };
 
