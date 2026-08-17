@@ -13,7 +13,13 @@ function redirectHome() {
 export default function AdminRoute() {
   const auth = useAuth();
   const admin = useAdminRole(auth.user?.id);
-  const canEvaluate = auth.status !== "loading" && admin.status !== "loading" && admin.status !== "idle";
+  // A restored session and its profile query settle independently. Do not
+  // evaluate a stale result from the previous (or anonymous) user in between.
+  const roleResolvedForCurrentUser = admin.userId === (auth.user?.id ?? null);
+  const canEvaluate = auth.status !== "loading"
+    && roleResolvedForCurrentUser
+    && admin.status !== "loading"
+    && admin.status !== "idle";
 
   useEffect(() => {
     if (canEvaluate && !admin.isAdmin) redirectHome();

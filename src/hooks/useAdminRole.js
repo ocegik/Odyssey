@@ -6,17 +6,17 @@ import { supabase } from "../lib/supabaseClient";
  * guard: the matching database policies are the authorization boundary.
  */
 export function useAdminRole(userId) {
-  const [state, setState] = useState({ status: "idle", isAdmin: false });
+  const [state, setState] = useState({ status: "idle", isAdmin: false, userId: null });
 
   useEffect(() => {
     let active = true;
 
     if (!userId || !supabase) {
-      setState({ status: "ready", isAdmin: false });
+      setState({ status: "ready", isAdmin: false, userId: userId ?? null });
       return undefined;
     }
 
-    setState({ status: "loading", isAdmin: false });
+    setState({ status: "loading", isAdmin: false, userId });
     supabase
       .from("profiles")
       .select("role")
@@ -26,10 +26,10 @@ export function useAdminRole(userId) {
         if (!active) return;
         if (error) {
           console.error("Could not load account role:", error.message);
-          setState({ status: "error", isAdmin: false });
+          setState({ status: "error", isAdmin: false, userId });
           return;
         }
-        setState({ status: "ready", isAdmin: data?.role === "admin" });
+        setState({ status: "ready", isAdmin: data?.role === "admin", userId });
       });
 
     return () => {
