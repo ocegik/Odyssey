@@ -392,6 +392,8 @@ export default function CATMockTracker() {
                 mocks={mocks}
                 syllabusProgress={syllabusProgress}
                 quickMathProgress={settings.quickMathProgress}
+                accountType={onboarding.profile?.account_type}
+                onUpdateAccountType={onboarding.updateAccountType}
               />
             </div>
           )}
@@ -492,6 +494,8 @@ export default function CATMockTracker() {
                 settings={settings}
                 mocks={mocks}
                 userEmail={auth.user?.email}
+                accountType={onboarding.profile?.account_type}
+                onUpdateAccountType={onboarding.updateAccountType}
                 onUpdateProfile={updateProfile}
                 onUpdateSectionTarget={updateSectionTarget}
                 onAddScheduleEntry={addScheduleEntry}

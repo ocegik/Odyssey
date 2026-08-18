@@ -6,6 +6,7 @@ import { fmtDate, fmtNum } from "../../lib/format";
 import { mockTotalMarks, computeAdaptiveTarget } from "../../lib/compute";
 import { FieldLabel, inputStyle, selectStyle } from "../ui/FieldLabel";
 import EmptyState from "../ui/EmptyState";
+import AccountTypeSelector from "../AccountTypeSelector";
 
 const EMPTY_SCHEDULE_FORM = { date: "", examName: "", dateType: "fixed", windowStart: "", windowEnd: "" };
 
@@ -37,6 +38,8 @@ export default function AccountTab({
   settings,
   mocks,
   userEmail,
+  accountType,
+  onUpdateAccountType,
   onUpdateProfile,
   onUpdateSectionTarget,
   onAddScheduleEntry,
@@ -155,6 +158,10 @@ export default function AccountTab({
               <input id="accountEmail" value={userEmail || ""} readOnly style={inputStyle(false)} />
             </div>
           </div>
+        </Panel>
+        <Panel title="Account type">
+          <p className="-mt-1 text-sm leading-6" style={{ color: COLORS.inkMuted }}>Choose whether your eligible performance statistics can appear on community leaderboards.</p>
+          <AccountTypeSelector value={accountType} onChange={onUpdateAccountType} compact />
         </Panel>
       </section>
 

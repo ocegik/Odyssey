@@ -9,6 +9,10 @@ alter table public.profiles
   add column if not exists username text;
 alter table public.profiles
   add column if not exists cat_target_year smallint;
+alter table public.profiles
+  add column if not exists age smallint;
+alter table public.profiles
+  add column if not exists account_type text;
 
 alter table public.profiles
   drop constraint if exists profiles_cat_target_year_check;
@@ -22,6 +26,18 @@ alter table public.profiles
   add constraint profiles_username_check
   check (username is null or username ~ '^[a-z0-9_]{3,24}$');
 
+alter table public.profiles
+  drop constraint if exists profiles_age_check;
+alter table public.profiles
+  add constraint profiles_age_check
+  check (age is null or age between 1 and 120);
+
+alter table public.profiles
+  drop constraint if exists profiles_account_type_check;
+alter table public.profiles
+  add constraint profiles_account_type_check
+  check (account_type in ('community', 'personal'));
+
 create unique index if not exists profiles_username_unique_idx
   on public.profiles (lower(username))
   where username is not null;
@@ -30,10 +46,16 @@ update public.profiles
 set onboarding_completed = true
 where onboarding_completed is null;
 
+update public.profiles
+set account_type = 'community'
+where account_type is null;
+
 alter table public.profiles
   alter column onboarding_completed set default false,
-  alter column onboarding_completed set not null;
+  alter column onboarding_completed set not null,
+  alter column account_type set default 'community',
+  alter column account_type set not null;
 
 -- Keep users limited to their own profile while allowing this one persistence
 -- field alongside their existing display metadata columns.
-grant update (display_name, username, cat_target_year, timezone, onboarding_completed) on public.profiles to authenticated;
+grant update (display_name, username, age, cat_target_year, account_type, timezone, onboarding_completed) on public.profiles to authenticated;

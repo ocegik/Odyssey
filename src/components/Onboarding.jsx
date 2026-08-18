@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, CircleDot, LineChart, Target, UserRound } from "lucide-react";
 import { COLORS, SECTION_META, SHADOW, TYPE } from "../constants";
 import { FieldLabel, inputStyle, selectStyle } from "./ui/FieldLabel";
+import AccountTypeSelector from "./AccountTypeSelector";
 
 const slides = [
   {
@@ -34,7 +35,9 @@ export default function Onboarding({ onComplete }) {
   const [profile, setProfile] = useState({
     displayName: "",
     username: "",
+    age: "",
     catTargetYear: String(new Date().getFullYear()),
+    accountType: "community",
   });
   const slide = slides[index];
   const Icon = slide.icon;
@@ -207,6 +210,18 @@ function ProfileFields({ profile, setProfileField, targetYears }) {
         <select id="onboarding-target-year" value={profile.catTargetYear} onChange={setProfileField("catTargetYear")} style={selectStyle()}>
           {targetYears.map((year) => <option key={year} value={year}>{year}</option>)}
         </select>
+      </div>
+      <div className="flex flex-col gap-2">
+        <FieldLabel htmlFor="onboarding-age">Age</FieldLabel>
+        <input id="onboarding-age" type="number" inputMode="numeric" min="1" max="120" required value={profile.age} onChange={setProfileField("age")} placeholder="e.g. 21" style={inputStyle()} />
+      </div>
+      <div className="flex flex-col gap-2 sm:col-span-2">
+        <FieldLabel>Account type</FieldLabel>
+        <AccountTypeSelector
+            value={profile.accountType}
+            compact
+          onChange={(accountType) => setProfile((current) => ({ ...current, accountType }))}
+        />
       </div>
     </div>
   </div>;

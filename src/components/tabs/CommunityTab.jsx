@@ -17,6 +17,7 @@ import { fmtNum } from "../../lib/format";
 import { latestKnownPercentile } from "../../lib/percentile";
 import { computeSyllabusStats } from "../../lib/syllabusModel";
 import { normalizeQuickMathProgress } from "../../lib/quickMath";
+import AccountTypeSelector from "../AccountTypeSelector";
 
 const COMMUNITY_PULSE = [
   { label: "Learners active this week", value: "8,420", note: "+12% vs last week", icon: UsersRound, accent: COLORS.primary },
@@ -61,7 +62,7 @@ function nextMockMilestone(mockCount) {
   return milestones.find((milestone) => milestone > mockCount) || mockCount + 5;
 }
 
-export default function CommunityTab({ mocks, syllabusProgress, quickMathProgress }) {
+export default function CommunityTab({ mocks, syllabusProgress, quickMathProgress, accountType, onUpdateAccountType }) {
   const syllabusStats = useMemo(() => computeSyllabusStats(syllabusProgress), [syllabusProgress]);
   const quickMath = useMemo(() => normalizeQuickMathProgress(quickMathProgress), [quickMathProgress]);
   const scoredMocks = useMemo(() => mocks.filter((mock) => mockTotalMarks(mock) !== null), [mocks]);
@@ -94,6 +95,21 @@ export default function CommunityTab({ mocks, syllabusProgress, quickMathProgres
             <BarChart3 size={14} style={{ color: COLORS.info }} />
             Weekly snapshot
           </div>
+        </div>
+      </Card>
+
+      <Card>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h2 style={TYPE.panelTitle}>Your community participation</h2>
+            <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>Choose whether your eligible performance statistics can appear on community leaderboards.</p>
+          </div>
+          <span className="px-2.5 py-1 text-xs" style={{ borderRadius: 999, background: COLORS.surface2, color: COLORS.inkMuted, fontWeight: 700 }}>
+            {accountType === "personal" ? "Personal" : "Community"}
+          </span>
+        </div>
+        <div className="mt-4 max-w-3xl">
+          <AccountTypeSelector value={accountType} onChange={onUpdateAccountType} compact />
         </div>
       </Card>
 
