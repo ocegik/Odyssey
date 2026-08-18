@@ -22,13 +22,13 @@ describe("community stats", () => {
   it("normalizes RPC payloads without turning missing values into NaN", () => {
     expect(normalizeCommunityDashboard({
       total_students: "12",
-      leaderboard: [{ rank: "1", username: "abc", mock_count: "4", latest_score: "76.5" }],
+      leaderboard: [{ rank: "1", display_name: "Aditi Sharma", mock_count: "4", latest_score: "76.5" }],
     })).toEqual({
       totalStudents: 12,
       totalMocks: 0,
       mocksLast30Days: 0,
       activeLearners: 0,
-      leaderboard: [{ rank: 1, username: "abc", mockCount: 4, latestScore: 76.5 }],
+      leaderboard: [{ rank: 1, displayName: "Aditi Sharma", mockCount: 4, latestScore: 76.5 }],
     });
   });
 });

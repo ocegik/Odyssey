@@ -146,10 +146,10 @@ export default function CommunityTab({ mocks, syllabusProgress, quickMathProgres
           {community.status === "ready" && (
             <div className="mt-5 overflow-hidden" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 10 }}>
               {community.data.leaderboard.map((entry, index) => (
-                <div key={`${entry.rank}-${entry.username}`} className="grid grid-cols-[34px_minmax(0,1fr)_auto] items-center gap-3 px-3 sm:px-4 py-3" style={index ? { borderTop: `1px solid ${COLORS.border}` } : undefined}>
+                <div key={`${entry.rank}-${entry.displayName}`} className="grid grid-cols-[34px_minmax(0,1fr)_auto] items-center gap-3 px-3 sm:px-4 py-3" style={index ? { borderTop: `1px solid ${COLORS.border}` } : undefined}>
                   <span className="grid place-items-center text-xs" style={{ width: 26, height: 26, borderRadius: 8, background: entry.rank <= 3 ? COLORS.warnSoft : COLORS.surface2, color: entry.rank <= 3 ? COLORS.warn : COLORS.inkMuted, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}>#{entry.rank}</span>
                   <div className="min-w-0">
-                    <p className="truncate text-sm" style={{ color: COLORS.ink, fontWeight: 600 }}>@{entry.username}</p>
+                    <p className="truncate text-sm" style={{ color: COLORS.ink, fontWeight: 600 }}>{entry.displayName}</p>
                     <p className="mt-0.5 text-xs" style={{ color: COLORS.inkMuted }}>{entry.latestScore === null ? "No score shared" : `Latest score: ${score(entry.latestScore)}`}</p>
                   </div>
                   <span className="text-right text-sm" style={{ color: COLORS.ink, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}>{entry.mockCount} <span className="text-xs" style={{ color: COLORS.inkMuted, fontFamily: "'Inter', sans-serif", fontWeight: 500 }}>mocks</span></span>
@@ -205,7 +205,7 @@ export default function CommunityTab({ mocks, syllabusProgress, quickMathProgres
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h2 style={TYPE.panelTitle}>Leaderboard participation</h2>
-            <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>Only Community accounts appear using their username and aggregate mock activity.</p>
+            <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>Only Community accounts appear using their display name and aggregate mock activity.</p>
           </div>
           <span className="px-2.5 py-1 text-xs" style={{ borderRadius: 999, background: COLORS.surface2, color: COLORS.inkMuted, fontWeight: 700 }}>{accountType === "personal" ? "Personal" : "Community"}</span>
         </div>

@@ -1,7 +1,5 @@
--- Community dashboard data
--- Run after phase-1-foundation.sql and onboarding.sql. This keeps raw user
--- data private under RLS while making only opt-in leaderboard fields and
--- platform-wide counts available to signed-in users.
+-- Remove the username feature and show opted-in Community learners by their
+-- existing display name instead. Run after the onboarding/community migrations.
 
 create or replace function public.get_community_dashboard()
 returns jsonb
@@ -70,5 +68,10 @@ as $$
   from totals;
 $$;
 
-revoke all on function public.get_community_dashboard() from public;
-grant execute on function public.get_community_dashboard() to authenticated;
+drop index if exists public.profiles_username_unique_idx;
+alter table public.profiles drop constraint if exists profiles_username_check;
+alter table public.profiles drop column if exists username;
+
+revoke insert, update, delete on public.profiles from authenticated;
+grant select on public.profiles to authenticated;
+grant update (display_name, age, cat_target_year, account_type, timezone, onboarding_completed) on public.profiles to authenticated;

@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, CircleDot, LineChart, Target, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarDays, Check, CheckCircle2, LineChart, Target, UserRound } from "lucide-react";
 import { COLORS, SECTION_META, SHADOW, TYPE } from "../constants";
 import { FieldLabel, inputStyle, selectStyle } from "./ui/FieldLabel";
-import AccountTypeSelector from "./AccountTypeSelector";
 import { CURRENT_STATUS_OPTIONS, GENDER_OPTIONS, TEST_SERIES_OPTIONS } from "../hooks/useSettings";
+import { catExamDateForYear, fmtDateLong } from "../lib/dateMath";
 
 const slides = [
   {
@@ -11,21 +11,21 @@ const slides = [
     title: "Know what every mock is telling you.",
     text: "Odyssey tracks VARC, DILR, and Quant separately, then puts every mock on a timeline so patterns are easy to spot.",
     icon: LineChart,
-    shortTitle: "Your prep",
+    shortTitle: "Welcome",
   },
   {
-    eyebrow: "More useful signals",
-    title: "Accuracy and attempts are different problems.",
-    text: "You can be accurate but leave marks on the table, or attempt more than your accuracy can support. Odyssey keeps both signals separate—and distinguishes MCQs from TITA questions—so your next adjustment is specific.",
+    eyebrow: "Set your CAT timeline",
+    title: "See the signals that make your next move clearer.",
+    text: "Odyssey separates accuracy, attempts, and question type, so you can spot what to improve. First, set the essentials for your prep plan.",
     icon: Target,
-    shortTitle: "Find signals",
+    shortTitle: "Your plan",
   },
   {
-    eyebrow: "Ready when you are",
-    title: "Welcome to a more intentional prep cycle.",
-    text: "Log a mock, look for one signal worth acting on, and carry that lesson into the next test.",
+    eyebrow: "Make it yours",
+    title: "Add details for a more personalized workspace.",
+    text: "These details are optional. They help Odyssey tailor your account context as your preparation evolves.",
     icon: CheckCircle2,
-    shortTitle: "Set up profile",
+    shortTitle: "Personalize",
   },
 ];
 
@@ -35,25 +35,21 @@ export default function Onboarding({ onComplete }) {
   const [error, setError] = useState("");
   const [profile, setProfile] = useState({
     displayName: "",
-    username: "",
     age: "",
     catTargetYear: String(new Date().getFullYear()),
     preparationStartDate: "",
     testSeries: [],
     gender: "",
     currentStatus: "",
-    accountType: "community",
   });
   const slide = slides[index];
   const Icon = slide.icon;
   const targetYears = Array.from({ length: 6 }, (_, offset) => new Date().getFullYear() + offset);
-  const isProfileStep = index === slides.length - 1;
+  const isEssentialStep = index === 1;
+  const isPersonalizationStep = index === slides.length - 1;
 
   const setProfileField = (field) => (event) => {
-    const value = field === "username"
-      ? event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "")
-      : event.target.value;
-    setProfile((current) => ({ ...current, [field]: value }));
+    setProfile((current) => ({ ...current, [field]: event.target.value }));
   };
 
   const toggleTestSeries = (series) => {
@@ -121,8 +117,8 @@ export default function Onboarding({ onComplete }) {
             <p className="mt-5 max-w-2xl text-base leading-7 sm:text-lg sm:leading-8" style={{ color: COLORS.inkMuted }}>{slide.text}</p>
 
             {index === 0 && <SectionPreview />}
-            {index === 1 && <SignalPreview />}
-            {isProfileStep && <ProfileFields profile={profile} setProfileField={setProfileField} toggleTestSeries={toggleTestSeries} targetYears={targetYears} />}
+            {isEssentialStep && <><SignalPreview /><EssentialFields profile={profile} setProfileField={setProfileField} targetYears={targetYears} /></>}
+            {isPersonalizationStep && <PersonalizationFields profile={profile} setProfileField={setProfileField} toggleTestSeries={toggleTestSeries} />}
           </div>
 
           {error && <p role="alert" className="mb-5 rounded-lg border px-3 py-2.5 text-sm" style={{ color: COLORS.danger, background: COLORS.dangerSoft, borderColor: COLORS.danger }}>{error}</p>}
@@ -132,8 +128,8 @@ export default function Onboarding({ onComplete }) {
             </div>
             <div className="flex items-center justify-between gap-2 sm:justify-end">
               {index > 0 && <button type="button" onClick={() => setIndex((current) => current - 1)} disabled={busy} className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold disabled:opacity-60" style={{ borderRadius: 8, color: COLORS.ink }}><ArrowLeft size={16} /> Back</button>}
-              <button type="button" onClick={isProfileStep ? finish : () => setIndex((current) => current + 1)} disabled={busy} className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold disabled:opacity-60" style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif" }}>
-                {busy ? "Saving…" : isProfileStep ? "Get started" : "Continue"} <ArrowRight size={16} />
+              <button type="button" onClick={isPersonalizationStep ? finish : () => setIndex((current) => current + 1)} disabled={busy} className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold disabled:opacity-60" style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif" }}>
+                {busy ? "Saving…" : isPersonalizationStep ? "Get started" : "Continue"} <ArrowRight size={16} />
               </button>
             </div>
           </div>
@@ -200,13 +196,14 @@ function SignalPreview() {
   </div>;
 }
 
-function ProfileFields({ profile, setProfileField, toggleTestSeries, targetYears }) {
+function EssentialFields({ profile, setProfileField, targetYears }) {
+  const catExamDate = catExamDateForYear(profile.catTargetYear);
   return <div className="mt-8 rounded-xl border p-4 sm:p-5" style={{ background: COLORS.surface2, borderColor: COLORS.border }}>
     <div className="flex items-start gap-3">
-      <div className="grid h-8 w-8 place-items-center rounded-lg" style={{ color: COLORS.primary, background: COLORS.primary + "18" }}><UserRound size={16} /></div>
+      <div className="grid h-8 w-8 place-items-center rounded-lg" style={{ color: COLORS.primary, background: COLORS.primary + "18" }}><CalendarDays size={16} /></div>
       <div>
-        <h2 style={TYPE.panelTitle}>A few details to get started</h2>
-        <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>This personalizes your workspace and profile.</p>
+        <h2 style={TYPE.panelTitle}>The essentials</h2>
+        <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>Your CAT date is calculated automatically from the target year.</p>
       </div>
     </div>
     <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -215,23 +212,37 @@ function ProfileFields({ profile, setProfileField, toggleTestSeries, targetYears
         <input id="onboarding-name" autoComplete="name" maxLength={80} required value={profile.displayName} onChange={setProfileField("displayName")} placeholder="e.g. Aditi Sharma" style={inputStyle()} />
       </div>
       <div className="flex flex-col gap-2">
-        <FieldLabel htmlFor="onboarding-username">Unique username</FieldLabel>
-        <input id="onboarding-username" autoComplete="username" minLength={3} maxLength={24} pattern="[a-z0-9_]{3,24}" required value={profile.username} onChange={setProfileField("username")} placeholder="e.g. aditi_cat26" style={inputStyle()} />
-        <span className="text-xs leading-5" style={{ color: COLORS.inkMuted }}>3–24 lowercase letters, numbers, or underscores.</span>
-      </div>
-      <div className="flex flex-col gap-2">
         <FieldLabel htmlFor="onboarding-target-year">CAT target year</FieldLabel>
         <select id="onboarding-target-year" value={profile.catTargetYear} onChange={setProfileField("catTargetYear")} style={selectStyle()}>
           {targetYears.map((year) => <option key={year} value={year}>{year}</option>)}
         </select>
       </div>
       <div className="flex flex-col gap-2">
-        <FieldLabel htmlFor="onboarding-age">Age</FieldLabel>
-        <input id="onboarding-age" type="number" inputMode="numeric" min="1" max="120" required value={profile.age} onChange={setProfileField("age")} placeholder="e.g. 21" style={inputStyle()} />
+        <FieldLabel htmlFor="onboarding-exam-date">Calculated CAT exam date</FieldLabel>
+        <input id="onboarding-exam-date" value={fmtDateLong(catExamDate)} readOnly aria-describedby="onboarding-exam-date-help" style={inputStyle()} />
+        <span id="onboarding-exam-date-help" className="text-xs leading-5" style={{ color: COLORS.inkMuted }}>Last Sunday of November.</span>
       </div>
       <div className="flex flex-col gap-2">
         <FieldLabel htmlFor="onboarding-preparation-start">Preparation start date</FieldLabel>
         <input id="onboarding-preparation-start" type="date" required value={profile.preparationStartDate} onChange={setProfileField("preparationStartDate")} style={inputStyle()} />
+      </div>
+    </div>
+  </div>;
+}
+
+function PersonalizationFields({ profile, setProfileField, toggleTestSeries }) {
+  return <div className="mt-8 rounded-xl border p-4 sm:p-5" style={{ background: COLORS.surface2, borderColor: COLORS.border }}>
+    <div className="flex items-start gap-3">
+      <div className="grid h-8 w-8 place-items-center rounded-lg" style={{ color: COLORS.primary, background: COLORS.primary + "18" }}><UserRound size={16} /></div>
+      <div>
+        <h2 style={TYPE.panelTitle}>Optional personal details</h2>
+        <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>You can update these any time in Account.</p>
+      </div>
+    </div>
+    <div className="mt-5 grid gap-4 sm:grid-cols-2">
+      <div className="flex flex-col gap-2">
+        <FieldLabel htmlFor="onboarding-age" optional>Age</FieldLabel>
+        <input id="onboarding-age" type="number" inputMode="numeric" min="1" max="120" value={profile.age} onChange={setProfileField("age")} placeholder="e.g. 21" style={inputStyle()} />
       </div>
       <div className="flex flex-col gap-2">
         <FieldLabel htmlFor="onboarding-gender" optional>Gender</FieldLabel>
@@ -240,14 +251,14 @@ function ProfileFields({ profile, setProfileField, toggleTestSeries, targetYears
         </select>
       </div>
       <div className="flex flex-col gap-2 sm:col-span-2">
-        <FieldLabel htmlFor="onboarding-current-status">Current status</FieldLabel>
-        <select id="onboarding-current-status" required value={profile.currentStatus} onChange={setProfileField("currentStatus")} style={selectStyle()}>
-          <option value="" disabled>Select current status</option>
+        <FieldLabel htmlFor="onboarding-current-status" optional>Current status</FieldLabel>
+        <select id="onboarding-current-status" value={profile.currentStatus} onChange={setProfileField("currentStatus")} style={selectStyle()}>
+          <option value="">Select current status</option>
           {CURRENT_STATUS_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
       </div>
       <div className="flex flex-col gap-2 sm:col-span-2">
-        <FieldLabel optional>Test series enrolled in</FieldLabel>
+        <FieldLabel optional>Test series / coaching</FieldLabel>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {TEST_SERIES_OPTIONS.map((series) => {
             const checked = profile.testSeries.includes(series);
@@ -257,14 +268,6 @@ function ProfileFields({ profile, setProfileField, toggleTestSeries, targetYears
             </label>;
           })}
         </div>
-      </div>
-      <div className="flex flex-col gap-2 sm:col-span-2">
-        <FieldLabel>Account type</FieldLabel>
-        <AccountTypeSelector
-            value={profile.accountType}
-            compact
-          onChange={(accountType) => setProfile((current) => ({ ...current, accountType }))}
-        />
       </div>
     </div>
   </div>;

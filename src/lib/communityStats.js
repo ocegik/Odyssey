@@ -48,7 +48,7 @@ export function normalizeCommunityDashboard(payload) {
     leaderboard: Array.isArray(source.leaderboard)
       ? source.leaderboard.map((entry, index) => ({
         rank: number(entry?.rank) || index + 1,
-        username: typeof entry?.username === "string" && entry.username ? entry.username : "Anonymous learner",
+        displayName: typeof entry?.display_name === "string" && entry.display_name ? entry.display_name : "Odyssey learner",
         mockCount: number(entry?.mock_count),
         latestScore: Number.isFinite(Number(entry?.latest_score)) ? Number(entry.latest_score) : null,
       }))

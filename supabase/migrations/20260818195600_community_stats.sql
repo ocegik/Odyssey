@@ -1,5 +1,5 @@
 -- Community dashboard data. The dashboard exposes only aggregate counts and
--- usernames from people who explicitly chose the Community account setting.
+-- display names from people who explicitly chose the Community account setting.
 
 create or replace function public.get_community_dashboard()
 returns jsonb
@@ -37,9 +37,9 @@ as $$
         order by count(rms.id) desc,
         (array_agg(rms.total_marks order by rms.mock_date desc, rms.created_at desc)
           filter (where rms.total_marks is not null))[1] desc nulls last,
-        lower(p.username) asc
+        lower(p.display_name) asc
       )::integer as rank,
-      coalesce(nullif(p.username, ''), 'Anonymous learner') as username,
+      coalesce(nullif(p.display_name, ''), 'Odyssey learner') as display_name,
       count(rms.id)::integer as mock_count,
       (array_agg(rms.total_marks order by rms.mock_date desc, rms.created_at desc)
         filter (where rms.total_marks is not null))[1] as latest_score
@@ -47,7 +47,7 @@ as $$
     join recent_mock_scores rms on rms.user_id = p.id
     where p.account_type = 'community'
       and p.onboarding_completed = true
-    group by p.id, p.username
+    group by p.id, p.display_name
     order by rank
     limit 10
   ),

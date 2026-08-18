@@ -36,7 +36,7 @@ export function useOnboarding(userId) {
     setState({ status: "loading", completed: false, profile: null, error: "" });
     supabase
       .from("profiles")
-      .select("onboarding_completed, display_name, username, age, cat_target_year, account_type")
+      .select("onboarding_completed, display_name, age, cat_target_year, account_type")
       .eq("id", userId)
       .maybeSingle()
       .then(({ data, error }) => {
@@ -62,31 +62,28 @@ export function useOnboarding(userId) {
   }, [userId]);
 
   const complete = useCallback(async ({
-    displayName, username, age, catTargetYear, accountType,
+    displayName, age, catTargetYear,
     preparationStartDate, testSeries, gender, currentStatus,
   }) => {
     if (!userId || !supabase) return;
 
     const normalizedName = typeof displayName === "string" ? displayName.trim() : "";
-    const normalizedUsername = typeof username === "string" ? username.trim().toLowerCase() : "";
-    const normalizedAge = Number(age);
+    const hasAge = age !== "" && age !== null && age !== undefined;
+    const normalizedAge = hasAge ? Number(age) : null;
     const targetYear = Number(catTargetYear);
-    const normalizedAccountType = normalizeAccountType(accountType);
+    const normalizedAccountType = "community";
     if (!normalizedName) throw new Error("Please enter your name.");
-    if (!/^[a-z0-9_]{3,24}$/.test(normalizedUsername)) {
-      throw new Error("Username must be 3–24 letters, numbers, or underscores.");
-    }
     if (!Number.isInteger(targetYear) || targetYear < 2020 || targetYear > 2100) {
       throw new Error("Please choose your CAT target year.");
     }
-    if (!Number.isInteger(normalizedAge) || normalizedAge < 1 || normalizedAge > 120) {
+    if (hasAge && (!Number.isInteger(normalizedAge) || normalizedAge < 1 || normalizedAge > 120)) {
       throw new Error("Please enter an age between 1 and 120.");
     }
     if (typeof preparationStartDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(preparationStartDate)) {
       throw new Error("Please enter the date you started preparing.");
     }
-    if (!CURRENT_STATUS_OPTIONS.some((option) => option.value === currentStatus)) {
-      throw new Error("Please select your current status.");
+    if (currentStatus && !CURRENT_STATUS_OPTIONS.some((option) => option.value === currentStatus)) {
+      throw new Error("Please choose a valid current status.");
     }
     if (gender && !GENDER_OPTIONS.some((option) => option.value === gender)) {
       throw new Error("Please choose a valid gender option.");
@@ -99,7 +96,6 @@ export function useOnboarding(userId) {
       .from("profiles")
       .update({
         display_name: normalizedName,
-        username: normalizedUsername,
         age: normalizedAge,
         cat_target_year: targetYear,
         account_type: normalizedAccountType,
@@ -107,7 +103,6 @@ export function useOnboarding(userId) {
       })
       .eq("id", userId);
     if (error) {
-      if (error.code === "23505") throw new Error("That username is already taken. Try another one.");
       throw error;
     }
     setState({
@@ -116,7 +111,6 @@ export function useOnboarding(userId) {
       profile: {
         onboarding_completed: true,
         display_name: normalizedName,
-        username: normalizedUsername,
         age: normalizedAge,
         cat_target_year: targetYear,
         account_type: normalizedAccountType,

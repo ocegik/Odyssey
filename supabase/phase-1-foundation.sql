@@ -34,7 +34,6 @@ create table if not exists public.profiles (
   email text not null default '',
   role text not null default 'user' check (role in ('user', 'admin')),
   display_name text not null default '',
-  username text check (username is null or username ~ '^[a-z0-9_]{3,24}$'),
   age smallint check (age is null or age between 1 and 120),
   cat_target_year smallint check (cat_target_year between 2020 and 2100),
   account_type text not null default 'community' check (account_type in ('community', 'personal')),
@@ -43,10 +42,6 @@ create table if not exists public.profiles (
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
-
-create unique index if not exists profiles_username_unique_idx
-  on public.profiles (lower(username))
-  where username is not null;
 
 -- New email/password signups receive their private profile row immediately.
 -- SECURITY DEFINER is required because the auth service, rather than the new
@@ -282,4 +277,4 @@ grant select, insert, update, delete on public.mocks, public.sections,
 -- creates profiles; signed-in people may change only their display metadata.
 revoke insert, update, delete on public.profiles from authenticated;
 grant select on public.profiles to authenticated;
-grant update (display_name, username, age, cat_target_year, account_type, timezone, onboarding_completed) on public.profiles to authenticated;
+grant update (display_name, age, cat_target_year, account_type, timezone, onboarding_completed) on public.profiles to authenticated;
