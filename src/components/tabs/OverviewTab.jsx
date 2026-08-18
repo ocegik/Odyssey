@@ -3,18 +3,16 @@ import { ArrowRight, ClipboardCheck, Flame, Lightbulb, Sparkles } from "lucide-r
 import { COLORS, SECTIONS, SHADOW, TYPE } from "../../constants";
 import { fmtDate, fmtNum, fmtPct } from "../../lib/format";
 import { computePacing, mockTotalMarks, computeAdaptiveTarget, avgOfLastN, bestMarks } from "../../lib/compute";
-import { latestKnownPercentile, mockOverallPercentile } from "../../lib/percentile";
+import { mockOverallPercentile } from "../../lib/percentile";
 import { computeSyllabusStats, getHighFrequencyRemaining, getLeastCompletedMacroTopics } from "../../lib/syllabusModel";
 import SectionBadge from "../ui/SectionBadge";
 import ChartFrame from "../charts/ChartFrame";
-import CollegeTargetsPanel from "../CollegeTargetsPanel";
 import CountdownHero, { QuickStatsCard } from "../CountdownHero";
 import WeakestSectionCard from "../charts/WeakestSectionCard";
 import InsightList from "../charts/InsightList";
 import SyllabusSnapshotCard from "../SyllabusSnapshotCard";
 import SectionTargetPanel, { buildTargetRows, targetGapSummary } from "../SectionTargetPanel";
 import Disclosure from "../ui/Disclosure";
-import { countWithinReach } from "../../lib/collegeCutoffs";
 import { QUICK_MATH_LEVELS, accuracy, getLevelProgress, isLevelUnlocked, normalizeQuickMathProgress } from "../../lib/quickMath";
 import { catExamDateForYear } from "../../lib/dateMath";
 
@@ -169,9 +167,6 @@ function QuickMathCard({ progress: rawProgress, onOpenQuickMath }) {
 export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionStats, settings, syllabusProgress, onOpenSyllabus, onOpenQuickMath }) {
   const graphData = buildOverallMarksData(mocks);
   const latestMock = mocks.length > 0 ? mocks[mocks.length - 1] : null;
-  // Walk back to the latest logged overall percentile so a legacy record
-  // without one does not blank the college comparison.
-  const currentPercentile = latestKnownPercentile(mocks);
   const catTargetDate = catExamDateForYear(settings?.catTargetYear);
   const pacing = computePacing(mocks, catTargetDate);
   const lastMarks = latestMock ? mockTotalMarks(latestMock) : null;
@@ -184,10 +179,6 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionS
   const leastCompletedMacroTopics = useMemo(() => getLeastCompletedMacroTopics(syllabusStats, 4), [syllabusStats]);
 
   const targetRows = useMemo(() => buildTargetRows(sectionStats, settings), [sectionStats, settings]);
-  const collegeSummary = currentPercentile
-    ? `${countWithinReach(currentPercentile.value)} programs within reach at ${fmtNum(currentPercentile.value, 2)}%ile`
-    : "Log a mock with a percentile to compare against cutoffs";
-
   return (
     <div className="flex flex-col gap-4">
       <CountdownHero
@@ -252,11 +243,6 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionS
         </div>
       </Disclosure>
 
-      <Disclosure id="overview.colleges" title="College targets" summary={collegeSummary}>
-        <div className="pt-4">
-          <CollegeTargetsPanel percentile={currentPercentile} />
-        </div>
-      </Disclosure>
     </div>
   );
 }

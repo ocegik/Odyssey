@@ -122,11 +122,12 @@
 
 - **Overview:** high-level preparation readout: goals, pacing, weakest-section flag, score-level insights, and broad comparison charts
   - Always on: countdown, quick stats, latest-mock spotlight, insights, weakest section, syllabus snapshot
-  - Behind disclosure: gap to section targets, overall-marks chart, college targets
+  - Behind disclosure: gap to section targets, overall-marks chart
 - **Trends:**
   - Always on: section-wise marks trend, accuracy comparison, attempt-rate trend
   - Behind disclosure: where your marks go + marks-per-attempt, percentile trend, section shape (radar), consistency & sources
 - **Gap to section targets** (Overview) — the per-section target marks in Account, compared against each section's rolling 5-mock average. Renders only when at least one target is set.
+- **College cutoff reference** (Admin only) — static program cutoff data for administration; it is not compared against an individual user's percentile or presented as an admission prediction.
 - Section-wise trend lines over time (VARC / DILR / Quant on the same or separate charts) — primary "who's lagging" view
 - Accuracy comparison: overall / MCQ / TITA, both latest mock and rolling average, per section
 - Attempt-rate trend per section over time

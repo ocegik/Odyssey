@@ -101,7 +101,7 @@ Use this reference table whenever you want to make a specific modification:
 |---|---|---|
 | **Marking Scheme & Derived Stats** | [`src/lib/compute.js`](file:///Users/mohitchoudhary/Downloads/Odyssey/src/lib/compute.js) | Functions like `computeDerived()` compute total marks `(Right * 3 - Wrong * 1)`, accuracy `%`, attempt rates, and 5-mock rolling averages. |
 | **Score Leakage Calculations** | [`src/lib/scoreLeak.js`](file:///Users/mohitchoudhary/Downloads/Odyssey/src/lib/scoreLeak.js) | Computes marks lost due to unattempted questions vs wrong answers vs negative marking. |
-| **Percentiles & Target Cutoffs** | [`src/lib/percentile.js`](file:///Users/mohitchoudhary/Downloads/Odyssey/src/lib/percentile.js) & [`src/lib/collegeCutoffs.js`](file:///Users/mohitchoudhary/Downloads/Odyssey/src/lib/collegeCutoffs.js) | Maps total marks to estimated CAT percentile and college selection targets. |
+| **Percentiles & College Cutoffs** | [`src/lib/percentile.js`](file:///Users/mohitchoudhary/Downloads/Odyssey/src/lib/percentile.js) & [`src/lib/collegeCutoffs.js`](file:///Users/mohitchoudhary/Downloads/Odyssey/src/lib/collegeCutoffs.js) | Maps total marks to estimated CAT percentile and provides static college cutoff reference data for admins. |
 | **Syllabus Topics & Quant/VARC/DILR Structure** | [`src/lib/syllabusData.js`](file:///Users/mohitchoudhary/Downloads/Odyssey/src/lib/syllabusData.js) | Add or edit CAT topics, subtopics, and difficulty tags. |
 
 ---

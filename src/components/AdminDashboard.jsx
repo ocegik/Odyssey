@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabaseClient";
 import { buildAdminMetrics, startOfWeek } from "../lib/adminMetrics";
 import { COLORS, SHADOW, TYPE } from "../constants";
 import StatCard from "./ui/StatCard";
+import CollegeTargetsPanel from "./CollegeTargetsPanel";
 
 const columns = [
   { key: "email", label: "Email" },
@@ -134,6 +135,10 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
+        </section>
+
+        <section aria-label="College target reference">
+          <CollegeTargetsPanel />
         </section>
       </>}
     </main>

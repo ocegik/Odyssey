@@ -57,23 +57,3 @@ export const COLLEGE_TYPE_META = {
   DU: { label: "DU", color: "var(--color-good)" },
   Other: { label: "Other", color: "var(--color-ink-muted)" },
 };
-
-/**
- * Reach status against the student's current standing. `req` is sometimes a
- * non-numeric hard-filter string (e.g. eligibility restriction) rather than
- * a cutoff. `currentPercentile` is the actual percentile to compare against
- * (e.g. the most recent mock's percentile), not a static target.
- */
-/** Shared by the panel and by the collapsed-summary line above it. */
-export function countWithinReach(currentPercentile) {
-  return COLLEGE_CUTOFFS.filter((college) => reachStatus(college.req, currentPercentile) === "reach").length;
-}
-
-export function reachStatus(req, currentPercentile) {
-  const numericReq = Number(req);
-  if (!Number.isFinite(numericReq)) return "filter";
-  if (currentPercentile === null || currentPercentile === undefined) return "unknown";
-  if (currentPercentile >= numericReq) return "reach";
-  if (currentPercentile >= numericReq - 1.5) return "stretch";
-  return "gap";
-}

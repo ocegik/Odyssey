@@ -2,21 +2,11 @@ import { useMemo, useState } from "react";
 import { ChevronDown, ChevronRight, GraduationCap } from "lucide-react";
 import { COLORS, TYPE, SHADOW } from "../constants";
 import { fmtNum } from "../lib/format";
-import { COLLEGE_CUTOFFS, COLLEGE_TYPE_META, reachStatus } from "../lib/collegeCutoffs";
-
-const STATUS_META = {
-  reach: { label: "Within reach", color: COLORS.good },
-  stretch: { label: "Close", color: COLORS.warn },
-  gap: { label: null, color: COLORS.inkMuted },
-  filter: { label: "Special criteria", color: COLORS.inkMuted },
-  unknown: { label: null, color: COLORS.inkMuted },
-};
+import { COLLEGE_CUTOFFS, COLLEGE_TYPE_META } from "../lib/collegeCutoffs";
 
 const COLLAPSED_COUNT = 6;
 
-function CollegeRow({ college, currentPercentile, expanded, onToggle }) {
-  const status = reachStatus(college.req, currentPercentile);
-  const statusMeta = STATUS_META[status];
+function CollegeRow({ college, expanded, onToggle }) {
   const numericReq = Number(college.req);
   const reqIsNumeric = Number.isFinite(numericReq);
   const typeMeta = COLLEGE_TYPE_META[college.type] || COLLEGE_TYPE_META.Other;
@@ -40,8 +30,8 @@ function CollegeRow({ college, currentPercentile, expanded, onToggle }) {
           <span className="text-sm truncate" style={{ fontWeight: 600 }}>{college.name}</span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {statusMeta.label && (
-            <span className="text-xs" style={{ color: statusMeta.color, fontWeight: 600 }}>{statusMeta.label}</span>
+          {!reqIsNumeric && (
+            <span className="text-xs" style={{ color: COLORS.inkMuted, fontWeight: 600 }}>Special criteria</span>
           )}
           <span
             className="text-xs"
@@ -69,15 +59,9 @@ function CollegeRow({ college, currentPercentile, expanded, onToggle }) {
   );
 }
 
-export default function CollegeTargetsPanel({ percentile }) {
+export default function CollegeTargetsPanel() {
   const [expandedName, setExpandedName] = useState(null);
   const [showAll, setShowAll] = useState(false);
-  const currentPercentile = percentile ? percentile.value : null;
-  // `mocksAgo` is set when the number came from an older mock (see
-  // latestKnownPercentile) — saying so beats implying it's current.
-  const asOf = percentile?.mocksAgo > 0
-    ? `from ${percentile.mocksAgo} mock${percentile.mocksAgo === 1 ? "" : "s"} ago`
-    : "latest";
 
   const sorted = useMemo(() => {
     return [...COLLEGE_CUTOFFS].sort((a, b) => {
@@ -85,21 +69,12 @@ export default function CollegeTargetsPanel({ percentile }) {
       const reqB = Number(b.req);
       const validA = Number.isFinite(reqA);
       const validB = Number.isFinite(reqB);
-      if (validA && validB) {
-        return currentPercentile !== null && currentPercentile !== undefined
-          ? Math.abs(reqA - currentPercentile) - Math.abs(reqB - currentPercentile)
-          : reqA - reqB;
-      }
+      if (validA && validB) return reqA - reqB;
       if (validA) return -1;
       if (validB) return 1;
       return 0;
     });
-  }, [currentPercentile]);
-
-  const reachCount = useMemo(
-    () => sorted.filter((college) => reachStatus(college.req, currentPercentile) === "reach").length,
-    [sorted, currentPercentile]
-  );
+  }, []);
 
   const visible = showAll ? sorted : sorted.slice(0, COLLAPSED_COUNT);
 
@@ -111,9 +86,7 @@ export default function CollegeTargetsPanel({ percentile }) {
           <h3 style={TYPE.chartTitle}>College targets</h3>
         </div>
         <span className="text-xs" style={{ color: COLORS.inkMuted }}>
-          {currentPercentile !== null && currentPercentile !== undefined
-            ? `${reachCount} of ${sorted.length} within reach at your ${asOf} ${fmtNum(currentPercentile, 2)}%ile`
-            : "Log a mock with an overall percentile to compare — showing required percentiles for now"}
+          Reference cutoffs only — not an admission prediction
         </span>
       </div>
 
@@ -122,7 +95,6 @@ export default function CollegeTargetsPanel({ percentile }) {
           <CollegeRow
             key={college.name}
             college={college}
-            currentPercentile={currentPercentile}
             expanded={expandedName === college.name}
             onToggle={() => setExpandedName((current) => (current === college.name ? null : college.name))}
           />
