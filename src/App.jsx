@@ -296,6 +296,21 @@ export default function CATMockTracker() {
     return count;
   };
 
+  const handleCompleteOnboarding = async (profile) => {
+    await onboarding.complete(profile);
+    // Profile data is initially collected during onboarding, while Account is
+    // backed by settings. Seed the same values so the account form reflects
+    // the user's answers as soon as the workspace opens.
+    updateProfile({
+      studentName: profile.displayName,
+      catTargetYear: profile.catTargetYear,
+      preparationStartDate: profile.preparationStartDate,
+      testSeries: profile.testSeries,
+      gender: profile.gender,
+      currentStatus: profile.currentStatus,
+    });
+  };
+
   if (auth.status === "loading") {
     return <><GlobalThemeStyles /><div className="grid min-h-screen place-items-center text-sm" style={{ background: COLORS.bg, color: COLORS.inkMuted }}>Checking your account…</div></>;
   }
@@ -309,7 +324,7 @@ export default function CATMockTracker() {
   }
 
   if (!onboarding.completed) {
-    return <><GlobalThemeStyles /><Onboarding onComplete={onboarding.complete} /></>;
+    return <><GlobalThemeStyles /><Onboarding onComplete={handleCompleteOnboarding} /></>;
   }
 
   return (

@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, Check, CheckCircle2, CircleDot, LineChart, Targe
 import { COLORS, SECTION_META, SHADOW, TYPE } from "../constants";
 import { FieldLabel, inputStyle, selectStyle } from "./ui/FieldLabel";
 import AccountTypeSelector from "./AccountTypeSelector";
+import { CURRENT_STATUS_OPTIONS, GENDER_OPTIONS, TEST_SERIES_OPTIONS } from "../hooks/useSettings";
 
 const slides = [
   {
@@ -37,6 +38,10 @@ export default function Onboarding({ onComplete }) {
     username: "",
     age: "",
     catTargetYear: String(new Date().getFullYear()),
+    preparationStartDate: "",
+    testSeries: [],
+    gender: "",
+    currentStatus: "",
     accountType: "community",
   });
   const slide = slides[index];
@@ -49,6 +54,15 @@ export default function Onboarding({ onComplete }) {
       ? event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "")
       : event.target.value;
     setProfile((current) => ({ ...current, [field]: value }));
+  };
+
+  const toggleTestSeries = (series) => {
+    setProfile((current) => ({
+      ...current,
+      testSeries: current.testSeries.includes(series)
+        ? current.testSeries.filter((item) => item !== series)
+        : [...current.testSeries, series],
+    }));
   };
 
   const finish = async () => {
@@ -108,7 +122,7 @@ export default function Onboarding({ onComplete }) {
 
             {index === 0 && <SectionPreview />}
             {index === 1 && <SignalPreview />}
-            {isProfileStep && <ProfileFields profile={profile} setProfileField={setProfileField} targetYears={targetYears} />}
+            {isProfileStep && <ProfileFields profile={profile} setProfileField={setProfileField} toggleTestSeries={toggleTestSeries} targetYears={targetYears} />}
           </div>
 
           {error && <p role="alert" className="mb-5 rounded-lg border px-3 py-2.5 text-sm" style={{ color: COLORS.danger, background: COLORS.dangerSoft, borderColor: COLORS.danger }}>{error}</p>}
@@ -186,7 +200,7 @@ function SignalPreview() {
   </div>;
 }
 
-function ProfileFields({ profile, setProfileField, targetYears }) {
+function ProfileFields({ profile, setProfileField, toggleTestSeries, targetYears }) {
   return <div className="mt-8 rounded-xl border p-4 sm:p-5" style={{ background: COLORS.surface2, borderColor: COLORS.border }}>
     <div className="flex items-start gap-3">
       <div className="grid h-8 w-8 place-items-center rounded-lg" style={{ color: COLORS.primary, background: COLORS.primary + "18" }}><UserRound size={16} /></div>
@@ -214,6 +228,35 @@ function ProfileFields({ profile, setProfileField, targetYears }) {
       <div className="flex flex-col gap-2">
         <FieldLabel htmlFor="onboarding-age">Age</FieldLabel>
         <input id="onboarding-age" type="number" inputMode="numeric" min="1" max="120" required value={profile.age} onChange={setProfileField("age")} placeholder="e.g. 21" style={inputStyle()} />
+      </div>
+      <div className="flex flex-col gap-2">
+        <FieldLabel htmlFor="onboarding-preparation-start">Preparation start date</FieldLabel>
+        <input id="onboarding-preparation-start" type="date" required value={profile.preparationStartDate} onChange={setProfileField("preparationStartDate")} style={inputStyle()} />
+      </div>
+      <div className="flex flex-col gap-2">
+        <FieldLabel htmlFor="onboarding-gender" optional>Gender</FieldLabel>
+        <select id="onboarding-gender" value={profile.gender} onChange={setProfileField("gender")} style={selectStyle()}>
+          {GENDER_OPTIONS.map((option) => <option key={option.value || "empty"} value={option.value}>{option.label}</option>)}
+        </select>
+      </div>
+      <div className="flex flex-col gap-2 sm:col-span-2">
+        <FieldLabel htmlFor="onboarding-current-status">Current status</FieldLabel>
+        <select id="onboarding-current-status" required value={profile.currentStatus} onChange={setProfileField("currentStatus")} style={selectStyle()}>
+          <option value="" disabled>Select current status</option>
+          {CURRENT_STATUS_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+        </select>
+      </div>
+      <div className="flex flex-col gap-2 sm:col-span-2">
+        <FieldLabel optional>Test series enrolled in</FieldLabel>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {TEST_SERIES_OPTIONS.map((series) => {
+            const checked = profile.testSeries.includes(series);
+            return <label key={series} className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm" style={{ background: checked ? COLORS.primary + "12" : COLORS.surface, borderColor: checked ? COLORS.primary : COLORS.border }}>
+              <input type="checkbox" checked={checked} onChange={() => toggleTestSeries(series)} style={{ accentColor: COLORS.primary }} />
+              {series}
+            </label>;
+          })}
+        </div>
       </div>
       <div className="flex flex-col gap-2 sm:col-span-2">
         <FieldLabel>Account type</FieldLabel>

@@ -16,6 +16,7 @@ import SectionTargetPanel, { buildTargetRows, targetGapSummary } from "../Sectio
 import Disclosure from "../ui/Disclosure";
 import { countWithinReach } from "../../lib/collegeCutoffs";
 import { QUICK_MATH_LEVELS, accuracy, getLevelProgress, isLevelUnlocked, normalizeQuickMathProgress } from "../../lib/quickMath";
+import { catExamDateForYear } from "../../lib/dateMath";
 
 const OverallMarksChart = lazy(() => import("../charts/OverallMarksChart"));
 
@@ -171,7 +172,8 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionS
   // Walk back to the latest logged overall percentile so a legacy record
   // without one does not blank the college comparison.
   const currentPercentile = latestKnownPercentile(mocks);
-  const pacing = computePacing(mocks, settings?.catTargetDate);
+  const catTargetDate = catExamDateForYear(settings?.catTargetYear);
+  const pacing = computePacing(mocks, catTargetDate);
   const lastMarks = latestMock ? mockTotalMarks(latestMock) : null;
   const nextTargetMarks = computeAdaptiveTarget(lastMarks, settings?.overallTargetMarks);
   const avgLast3 = avgOfLastN(mocks, 3);
@@ -189,7 +191,8 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionS
   return (
     <div className="flex flex-col gap-4">
       <CountdownHero
-        catTargetDate={settings?.catTargetDate}
+        catTargetYear={settings?.catTargetYear}
+        preparationStartDate={settings?.preparationStartDate}
         overallTargetPercentile={settings?.overallTargetPercentile}
         mockSchedule={settings?.mockSchedule}
         nextTargetMarks={nextTargetMarks}

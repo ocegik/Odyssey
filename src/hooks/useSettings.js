@@ -9,6 +9,22 @@ import {
   recordQuickMathResult as addQuickMathResult,
 } from "../lib/quickMath";
 
+export const TEST_SERIES_OPTIONS = ["Career Launcher", "TIME", "IMS", "Cracku", "2IIM", "Rodha", "Unacademy", "Other", "Self-study"];
+export const GENDER_OPTIONS = [
+  { value: "", label: "Select gender" },
+  { value: "female", label: "Female" },
+  { value: "male", label: "Male" },
+  { value: "non_binary", label: "Non-binary" },
+  { value: "prefer_not_to_say", label: "Prefer not to say" },
+];
+export const CURRENT_STATUS_OPTIONS = [
+  { value: "college_student", label: "College student" },
+  { value: "working", label: "Working" },
+  { value: "gap_year", label: "Taking a gap year/Drop year" },
+  { value: "graduate_not_working", label: "Graduate/Not currently working" },
+  { value: "other", label: "Other" },
+];
+
 const STORAGE_KEY = "cat-mock-tracker:settings";
 const REMOTE_KEY = "settings";
 
@@ -31,10 +47,15 @@ export const LAYOUT_WIDTH_OPTIONS = [
   { key: "wide", label: "Wide", px: 1440 },
 ];
 const DEFAULT_LAYOUT_WIDTH = "comfortable";
+const DEFAULT_CAT_TARGET_YEAR = new Date().getFullYear();
 
 const EMPTY_SETTINGS = {
   studentName: "",
-  catTargetDate: "",
+  catTargetYear: DEFAULT_CAT_TARGET_YEAR,
+  preparationStartDate: "",
+  testSeries: [],
+  gender: "",
+  currentStatus: "",
   overallTargetMarks: null,
   overallTargetPercentile: null,
   sectionTargetMarks: EMPTY_SECTION_TARGETS,
@@ -62,6 +83,30 @@ function nonNegativeOrNull(value) {
 function percentileOrNull(value) {
   const n = numberOrNull(value);
   return n !== null && n >= 0 && n <= 100 ? n : null;
+}
+
+function targetYearOrDefault(value, legacyDate = "") {
+  const year = Number(value);
+  if (Number.isInteger(year) && year >= 2020 && year <= 2100) return year;
+  const legacyYear = typeof legacyDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(legacyDate)
+    ? Number(legacyDate.slice(0, 4))
+    : null;
+  return Number.isInteger(legacyYear) && legacyYear >= 2020 && legacyYear <= 2100
+    ? legacyYear
+    : DEFAULT_CAT_TARGET_YEAR;
+}
+
+function normalizeTestSeries(value) {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.filter((item) => TEST_SERIES_OPTIONS.includes(item)))];
+}
+
+function normalizeGender(value) {
+  return GENDER_OPTIONS.some((option) => option.value === value) ? value : "";
+}
+
+function normalizeCurrentStatus(value) {
+  return CURRENT_STATUS_OPTIONS.some((option) => option.value === value) ? value : "";
 }
 
 const SCHEDULE_DATE_TYPES = ["fixed", "range", "flexible"];
@@ -122,7 +167,13 @@ export function normalizeSettings(raw) {
   const rawSchedule = Array.isArray(profile.mockSchedule) ? profile.mockSchedule : [];
   return {
     studentName: typeof profile.studentName === "string" ? profile.studentName : "",
-    catTargetDate: typeof profile.catTargetDate === "string" ? profile.catTargetDate : "",
+    // A legacy manually-entered date is read only once to preserve its year;
+    // it is never written back. The app now stores only this target year.
+    catTargetYear: targetYearOrDefault(profile.catTargetYear, profile.catTargetDate),
+    preparationStartDate: isIsoDate(profile.preparationStartDate) ? profile.preparationStartDate : "",
+    testSeries: normalizeTestSeries(profile.testSeries),
+    gender: normalizeGender(profile.gender),
+    currentStatus: normalizeCurrentStatus(profile.currentStatus),
     overallTargetMarks: nonNegativeOrNull(profile.overallTargetMarks),
     overallTargetPercentile: percentileOrNull(profile.overallTargetPercentile),
     sectionTargetMarks: normalizeSectionTargets(profile.sectionTargetMarks),
@@ -175,6 +226,15 @@ export function useSettings({ userId } = {}) {
     setSettings((prev) => ({
       ...prev,
       ...patch,
+      catTargetYear: patch.catTargetYear !== undefined
+        ? targetYearOrDefault(patch.catTargetYear)
+        : prev.catTargetYear,
+      preparationStartDate: patch.preparationStartDate !== undefined
+        ? (isIsoDate(patch.preparationStartDate) ? patch.preparationStartDate : "")
+        : prev.preparationStartDate,
+      testSeries: patch.testSeries !== undefined ? normalizeTestSeries(patch.testSeries) : prev.testSeries,
+      gender: patch.gender !== undefined ? normalizeGender(patch.gender) : prev.gender,
+      currentStatus: patch.currentStatus !== undefined ? normalizeCurrentStatus(patch.currentStatus) : prev.currentStatus,
       overallTargetMarks: patch.overallTargetMarks !== undefined ? nonNegativeOrNull(patch.overallTargetMarks) : prev.overallTargetMarks,
       overallTargetPercentile: patch.overallTargetPercentile !== undefined ? percentileOrNull(patch.overallTargetPercentile) : prev.overallTargetPercentile,
     }));

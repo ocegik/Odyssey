@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Hourglass, CalendarClock, ClipboardList, TrendingUp, Target, Trophy, Clock } from "lucide-react";
 import { COLORS, TYPE, SHADOW } from "../constants";
 import { fmtDate, fmtNum } from "../lib/format";
-import { daysUntil, fmtDateLong, relativeDayLabel, prepProgressPercent, upcomingSchedule } from "../lib/dateMath";
+import { catExamDateForYear, daysUntil, fmtDateLong, relativeDayLabel, prepProgressPercent, upcomingSchedule } from "../lib/dateMath";
 
 const UPCOMING_LIMIT = 4; // the hero mock + up to 3 more in the mini list
 
@@ -75,17 +75,18 @@ function CardShell({ icon: Icon, label, accent, right, children }) {
   );
 }
 
-function CatProgressCard({ catTargetDate, overallTargetPercentile }) {
+function CatProgressCard({ catTargetYear, preparationStartDate, overallTargetPercentile }) {
+  const catTargetDate = catExamDateForYear(catTargetYear);
   if (!catTargetDate) {
     return (
       <CardShell icon={Hourglass} label="CAT Progress" accent={COLORS.primary}>
-        <span className="text-sm" style={{ color: COLORS.inkMuted }}>Set the CAT date in Account</span>
+        <span className="text-sm" style={{ color: COLORS.inkMuted }}>Set the CAT target year in Account</span>
       </CardShell>
     );
   }
 
   const daysLeft = daysUntil(catTargetDate);
-  const percent = prepProgressPercent(catTargetDate);
+  const percent = prepProgressPercent(preparationStartDate, catTargetDate);
 
   return (
     <CardShell icon={Hourglass} label="CAT Progress" accent={COLORS.primary}>
@@ -202,7 +203,8 @@ export function QuickStatsCard({ mocksLogged, latestMarks, avgLast3, bestMarksVa
 }
 
 export default function CountdownHero({
-  catTargetDate,
+  catTargetYear,
+  preparationStartDate,
   overallTargetPercentile,
   mockSchedule,
   nextTargetMarks,
@@ -211,7 +213,11 @@ export default function CountdownHero({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
-      <CatProgressCard catTargetDate={catTargetDate} overallTargetPercentile={overallTargetPercentile} />
+      <CatProgressCard
+        catTargetYear={catTargetYear}
+        preparationStartDate={preparationStartDate}
+        overallTargetPercentile={overallTargetPercentile}
+      />
       <NextMockCard mockSchedule={mockSchedule} nextTargetMarks={nextTargetMarks} />
     </div>
   );

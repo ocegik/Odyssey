@@ -18,6 +18,21 @@ export function daysUntil(iso) {
   return Math.ceil((date.getTime() - startOfToday().getTime()) / MS_PER_DAY);
 }
 
+// CAT is conventionally held on the last Sunday of November. Keeping this
+// calculation here makes the target year the sole source of truth everywhere
+// that needs the exam date.
+export function catExamDateForYear(targetYear) {
+  const year = Number(targetYear);
+  if (!Number.isInteger(year) || year < 2020 || year > 2100) return "";
+
+  const lastDayOfNovember = new Date(year, 10, 30);
+  lastDayOfNovember.setDate(lastDayOfNovember.getDate() - lastDayOfNovember.getDay());
+
+  const month = String(lastDayOfNovember.getMonth() + 1).padStart(2, "0");
+  const day = String(lastDayOfNovember.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 // "29 Nov 2026" — a year-qualified sibling of lib/format.js's fmtDate, which
 // stays short-form (no year) since it's used all over for compact contexts
 // (chart labels, table cells) where the year would just be noise.
@@ -39,15 +54,13 @@ export function relativeDayLabel(iso) {
   return `In ${Math.round(d / 7)}w`;
 }
 
-// Rough "how far through prep" read for the CAT Progress bar. There's no
-// stored prep-start date anywhere in the app, so this is deliberately
-// approximate: prep is assumed to start the most recent June 1 on or before
-// the exam date (typical CAT prep cycle), not a real user-set date.
-export function prepProgressPercent(catTargetDate, now = Date.now()) {
+// Measures a student's actual preparation window rather than assuming a
+// generic CAT cycle. Values are capped so the UI remains useful before the
+// start date and after the exam.
+export function prepProgressPercent(preparationStartDate, catTargetDate, now = Date.now()) {
+  const start = parseDate(preparationStartDate);
   const target = parseDate(catTargetDate);
-  if (!target) return null;
-  const startYear = target.getMonth() >= 5 ? target.getFullYear() : target.getFullYear() - 1;
-  const start = new Date(startYear, 5, 1);
+  if (!start || !target) return null;
   const total = target.getTime() - start.getTime();
   if (total <= 0) return null;
   return Math.max(0, Math.min(100, ((now - start.getTime()) / total) * 100));

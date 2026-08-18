@@ -79,7 +79,7 @@ export async function saveRemoteSettings(value) {
 
   const {
     overallTargetMarks, overallTargetPercentile, sectionTargetMarks,
-    mockSchedule, layoutWidth, ...preferences
+    mockSchedule, layoutWidth, catTargetDate, ...preferences
   } = value;
 
   const { error } = await supabase.from("settings").upsert({

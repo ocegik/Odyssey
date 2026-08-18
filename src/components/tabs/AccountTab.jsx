@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import { CheckCircle2, Download, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
 import { COLORS, SECTIONS, SECTION_META, TYPE, SHADOW } from "../../constants";
-import { LAYOUT_WIDTH_OPTIONS } from "../../hooks/useSettings";
+import { CURRENT_STATUS_OPTIONS, GENDER_OPTIONS, LAYOUT_WIDTH_OPTIONS, TEST_SERIES_OPTIONS } from "../../hooks/useSettings";
+import { catExamDateForYear, fmtDateLong } from "../../lib/dateMath";
 import { fmtDate, fmtNum } from "../../lib/format";
 import { mockTotalMarks, computeAdaptiveTarget } from "../../lib/compute";
 import { FieldLabel, inputStyle, selectStyle } from "../ui/FieldLabel";
@@ -60,6 +61,8 @@ export default function AccountTab({
   const [error, setError] = useState("");
   const [dataMessage, setDataMessage] = useState("");
   const [dataError, setDataError] = useState("");
+  const targetYears = Array.from({ length: 11 }, (_, offset) => new Date().getFullYear() + offset - 1);
+  const catExamDate = catExamDateForYear(settings.catTargetYear);
 
   const setProfileField = (field) => (ev) => {
     onUpdateProfile({ [field]: ev.target.value });
@@ -67,6 +70,15 @@ export default function AccountTab({
 
   const setScheduleField = (field) => (ev) => {
     setScheduleForm((form) => ({ ...form, [field]: ev.target.value }));
+  };
+
+  const toggleTestSeries = (series) => {
+    const selected = settings.testSeries || [];
+    onUpdateProfile({
+      testSeries: selected.includes(series)
+        ? selected.filter((item) => item !== series)
+        : [...selected, series],
+    });
   };
 
   const clearScheduleForm = () => {
@@ -151,11 +163,24 @@ export default function AccountTab({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="studentName">Student name</FieldLabel>
-              <input id="studentName" value={settings.studentName} onChange={setProfileField("studentName")} style={inputStyle(false)} />
+              <input id="studentName" value={settings.studentName} onChange={setProfileField("studentName")} maxLength={80} style={inputStyle(false)} />
             </div>
             <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="accountEmail">Account email</FieldLabel>
               <input id="accountEmail" value={userEmail || ""} readOnly style={inputStyle(false)} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel htmlFor="gender" optional>Gender</FieldLabel>
+              <select id="gender" value={settings.gender} onChange={setProfileField("gender")} style={selectStyle(false)}>
+                {GENDER_OPTIONS.map((option) => <option key={option.value || "empty"} value={option.value}>{option.label}</option>)}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel htmlFor="currentStatus">Current status</FieldLabel>
+              <select id="currentStatus" value={settings.currentStatus} onChange={setProfileField("currentStatus")} style={selectStyle(false)}>
+                <option value="">Select current status</option>
+                {CURRENT_STATUS_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
             </div>
           </div>
         </Panel>
@@ -239,8 +264,19 @@ export default function AccountTab({
       <Panel title="Targets">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="catTargetDate">CAT exam date</FieldLabel>
-            <input id="catTargetDate" type="date" value={settings.catTargetDate} onChange={setProfileField("catTargetDate")} style={inputStyle(false)} />
+            <FieldLabel htmlFor="catTargetYear">CAT target year</FieldLabel>
+            <select id="catTargetYear" value={settings.catTargetYear} onChange={setProfileField("catTargetYear")} style={selectStyle(false)}>
+              {targetYears.map((year) => <option key={year} value={year}>{year}</option>)}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel htmlFor="catExamDate">Calculated CAT exam date</FieldLabel>
+            <input id="catExamDate" value={fmtDateLong(catExamDate)} readOnly aria-describedby="catExamDateHelp" style={inputStyle(false)} />
+            <span id="catExamDateHelp" className="text-xs leading-5" style={{ color: COLORS.inkMuted }}>Last Sunday of November, calculated automatically.</span>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel htmlFor="preparationStartDate">Preparation start date</FieldLabel>
+            <input id="preparationStartDate" type="date" value={settings.preparationStartDate} onChange={setProfileField("preparationStartDate")} style={inputStyle(false)} />
           </div>
           <div className="flex flex-col gap-1.5">
             <FieldLabel htmlFor="overallTargetMarks" optional>Overall target marks</FieldLabel>
@@ -273,6 +309,21 @@ export default function AccountTab({
               </div>
             ))}
           </div>
+        </div>
+      </Panel>
+
+      <Panel title="Test series enrolled in">
+        <p className="-mt-1 text-sm leading-6" style={{ color: COLORS.inkMuted }}>Select every test series you are using. You can also track a self-study plan.</p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {TEST_SERIES_OPTIONS.map((series) => {
+            const checked = (settings.testSeries || []).includes(series);
+            return (
+              <label key={series} className="flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm" style={{ borderColor: checked ? COLORS.primary : COLORS.border, background: checked ? COLORS.primary + "12" : COLORS.surface, color: COLORS.ink }}>
+                <input type="checkbox" checked={checked} onChange={() => toggleTestSeries(series)} style={{ accentColor: COLORS.primary }} />
+                {series}
+              </label>
+            );
+          })}
         </div>
       </Panel>
 

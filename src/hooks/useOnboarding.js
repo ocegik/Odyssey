@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { CURRENT_STATUS_OPTIONS, GENDER_OPTIONS, TEST_SERIES_OPTIONS } from "./useSettings";
 
 const ACCOUNT_TYPES = ["community", "personal"];
 
@@ -60,7 +61,10 @@ export function useOnboarding(userId) {
     };
   }, [userId]);
 
-  const complete = useCallback(async ({ displayName, username, age, catTargetYear, accountType }) => {
+  const complete = useCallback(async ({
+    displayName, username, age, catTargetYear, accountType,
+    preparationStartDate, testSeries, gender, currentStatus,
+  }) => {
     if (!userId || !supabase) return;
 
     const normalizedName = typeof displayName === "string" ? displayName.trim() : "";
@@ -77,6 +81,18 @@ export function useOnboarding(userId) {
     }
     if (!Number.isInteger(normalizedAge) || normalizedAge < 1 || normalizedAge > 120) {
       throw new Error("Please enter an age between 1 and 120.");
+    }
+    if (typeof preparationStartDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(preparationStartDate)) {
+      throw new Error("Please enter the date you started preparing.");
+    }
+    if (!CURRENT_STATUS_OPTIONS.some((option) => option.value === currentStatus)) {
+      throw new Error("Please select your current status.");
+    }
+    if (gender && !GENDER_OPTIONS.some((option) => option.value === gender)) {
+      throw new Error("Please choose a valid gender option.");
+    }
+    if (!Array.isArray(testSeries) || testSeries.some((series) => !TEST_SERIES_OPTIONS.includes(series))) {
+      throw new Error("Please choose valid test series options.");
     }
 
     const { error } = await supabase
