@@ -42,6 +42,35 @@ function quickStatsLabel(section) {
   return parts.join(" · ");
 }
 
+function analysisStatus(analysis) {
+  if (!analysis) {
+    return { label: "No analysis yet", tone: COLORS.inkMuted, Icon: FilePlus2 };
+  }
+
+  const questions = Object.values(analysis.sections || {}).flatMap((section) =>
+    (section?.blocks || []).flatMap((block) => block.questions || [])
+  );
+  const totalQuestions = Number(analysis.summary?.totalQuestions ?? questions.length);
+  const unreviewed = Number(
+    analysis.summary?.unreviewed
+      ?? questions.filter((question) => question.result === "Unreviewed").length
+  );
+
+  if (totalQuestions > 0 && unreviewed === 0) {
+    return { label: "Analysis complete", tone: COLORS.good, Icon: FileCheck2 };
+  }
+
+  if (totalQuestions > 0) {
+    return {
+      label: `Analysis: ${Math.max(0, totalQuestions - unreviewed)}/${totalQuestions} reviewed`,
+      tone: COLORS.warn,
+      Icon: FileCheck2,
+    };
+  }
+
+  return { label: "Analysis started", tone: COLORS.info, Icon: FileCheck2 };
+}
+
 function RowActionsMenu({ mockSource, hasAnalysis, onOpenAnalysis, onEdit, onDelete }) {
   const [open, setOpen] = useState(false);
   const Icon = hasAnalysis ? FileCheck2 : FilePlus2;
@@ -225,8 +254,8 @@ function MockLogTable({
               const sectionMarks = sectionNames.reduce((sum, section) => sum + (mock[section]?.totalMarks || 0), 0);
               const totalMarks = mock.manualTotalMarks ?? sectionMarks;
               const hasAnalysis = Boolean(mock.analysis);
-              const isPartialAnalysis = hasAnalysis && (mock.analysis.summary?.unreviewed || 0) > 0;
-              const analysisTone = isPartialAnalysis ? COLORS.warn : COLORS.good;
+              const status = analysisStatus(mock.analysis);
+              const StatusIcon = status.Icon;
               const expanded = expandedMockIds.has(mock.id);
               const rowBg = i % 2 ? COLORS.surface : COLORS.surface2;
 
@@ -238,11 +267,18 @@ function MockLogTable({
 
               return (
                 <Fragment key={mock.id}>
-                  <tr className="hover:bg-black/[0.025]" style={{ borderBottom: expanded ? "none" : `1px solid ${COLORS.border}`, background: rowBg }}>
+                  <tr
+                    className="hover:bg-black/[0.025]"
+                    onClick={() => toggleRow(mock.id)}
+                    style={{ borderBottom: expanded ? "none" : `1px solid ${COLORS.border}`, background: rowBg, cursor: "pointer" }}
+                  >
                     <td className="pl-3 py-2.5">
                       <button
                         type="button"
-                        onClick={() => toggleRow(mock.id)}
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          toggleRow(mock.id);
+                        }}
                         aria-expanded={expanded}
                         aria-label={`${expanded ? "Collapse" : "Expand"} ${mock.source}`}
                         className="theme-hover inline-flex items-center justify-center"
@@ -255,9 +291,12 @@ function MockLogTable({
                       <div className="flex flex-col">
                         <span className="inline-flex items-center gap-1.5" style={{ fontWeight: 650 }}>
                           {mock.source}
-                          {hasAnalysis && <FileCheck2 size={13} style={{ color: analysisTone }} />}
                         </span>
                         <span className="text-xs" style={{ color: COLORS.inkMuted, fontFamily: "'JetBrains Mono', monospace" }}>{fmtDate(mock.date)}</span>
+                        <span className="mt-0.5 inline-flex items-center gap-1 text-xs" style={{ color: status.tone }}>
+                          <StatusIcon size={12} />
+                          {status.label}
+                        </span>
                       </div>
                     </td>
                     <td className="px-3 py-2.5">
@@ -281,7 +320,7 @@ function MockLogTable({
                     <td className="px-3 py-2.5" style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 650 }}>
                       {fmtNum(totalMarks, 0)}
                     </td>
-                    <td className="px-3 py-2.5 text-right">
+                    <td className="px-3 py-2.5 text-right" onClick={(ev) => ev.stopPropagation()}>
                       <RowActionsMenu
                         mockSource={mock.source}
                         hasAnalysis={hasAnalysis}
