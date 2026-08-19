@@ -4,7 +4,6 @@ import {
   LineChart as LineChartIcon,
   LayoutDashboard,
   UsersRound,
-  FileSearch,
   ListChecks,
   UserRound,
 } from "lucide-react";
@@ -146,8 +145,7 @@ export const TABS = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
   { key: "community", label: "Community", icon: UsersRound },
   { key: "syllabus", label: "Syllabus", icon: ListChecks },
-  { key: "log", label: "Mock log", icon: ClipboardList },
-  { key: "analysis", label: "Mock analysis", icon: FileSearch },
+  { key: "mocks", label: "Mocks", icon: ClipboardList },
   { key: "analysisInsights", label: "Insights", icon: BarChart3 },
   { key: "trends", label: "Trends", icon: LineChartIcon },
   { key: "account", label: "Account", icon: UserRound },

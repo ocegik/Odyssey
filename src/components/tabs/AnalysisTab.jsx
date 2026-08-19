@@ -212,11 +212,10 @@ function SectionSummary({ section, summary }) {
   );
 }
 
-export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectMock, onSaveAnalysis, onEditMock }) {
-  const selectedMock = useMemo(
-    () => mocks.find((mock) => mock.id === selectedMockId) || mocks[0] || null,
-    [mocks, selectedMockId]
-  );
+// This editor is rendered inside the expanded row for its mock. Keeping the
+// complete editor in one component preserves its import, structure, review,
+// and insights behavior without reintroducing a second mock-selection step.
+export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSaveAnalysis, onEditMock }) {
   const [draft, setDraft] = useState(null);
   const [analysisNotices, setAnalysisNotices] = useState([]);
   const [saveError, setSaveError] = useState("");
@@ -229,11 +228,6 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
   const [structureForm, setStructureForm] = useState(null);
   const [structureErrors, setStructureErrors] = useState([]);
   const importFileInputRef = useRef(null);
-
-  useEffect(() => {
-    const selectedExists = mocks.some((mock) => mock.id === selectedMockId);
-    if (mocks[0] && (!selectedMockId || !selectedExists)) onSelectMock(mocks[0].id);
-  }, [mocks, onSelectMock, selectedMockId]);
 
   // Switching to a different mock resets all feedback from whatever was
   // happening on the previous one.
@@ -501,8 +495,8 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
     [draft, selectedMock?.analysis?.summary]
   );
 
-  if (mocks.length === 0) {
-    return <EmptyState icon={ClipboardList} title="No mocks yet" body="Log a mock result first. Analysis will use that saved structure." />;
+  if (!selectedMock) {
+    return <EmptyState icon={ClipboardList} title="Mock unavailable" body="This mock is no longer available. Collapse the row and choose another mock." />;
   }
 
   const mockForInsights = selectedMock && draft ? { ...selectedMock, analysis: { ...draft, summary } } : selectedMock;
@@ -513,7 +507,7 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
   return (
     <div className="flex flex-col gap-4">
       <Panel
-        title="Mock Analysis"
+        title={`Analysis · ${selectedMock.source}`}
         action={
           <div className="flex flex-wrap gap-2 justify-end">
             <input ref={importFileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} />
@@ -547,20 +541,12 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
           </div>
         }
       >
-        <div className="grid grid-cols-1 sm:grid-cols-[1.4fr_1fr] gap-3">
-          <select
-            value={selectedMock?.id || ""}
-            onChange={(ev) => onSelectMock(ev.target.value)}
-            style={{ ...selectStyle(false), fontFamily: "'Inter', sans-serif" }}
-          >
-            {mocks.map((mock) => (
-              <option key={mock.id} value={mock.id}>
-                {fmtDate(mock.date)} - {mock.source}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-wrap items-center justify-between gap-2 text-sm" style={{ color: COLORS.inkMuted }}>
+          <span>
+            {fmtDate(selectedMock.date)} · {selectedMock.source}
+          </span>
           <div className="flex items-center gap-2 text-sm" style={{ color: COLORS.inkMuted }}>
-            <span>{selectedMock?.analysis ? "Analysis saved" : "Analysis not saved"}</span>
+            <span>{selectedMock.analysis ? "Analysis saved" : "Analysis not saved"}</span>
           </div>
         </div>
 
@@ -605,7 +591,7 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
       </Panel>
 
       {!draft && (
-        <EmptyState icon={ClipboardList} title="No analysis draft" body="Choose a mock to generate its question list from the saved mock log." />
+        <EmptyState icon={ClipboardList} title="No analysis draft" body="Generate an analysis from this mock's saved structure." />
       )}
 
       {draft && (

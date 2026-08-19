@@ -32,6 +32,10 @@ export default function MockLogTab({
   settings,
   onLoadSample,
   onOpenAnalysis,
+  expandedMockIds,
+  onToggleAnalysis,
+  onSetExpandedMockIds,
+  onSaveAnalysis,
   onCreateMock,
   onEditMock,
   onDeleteMock,
@@ -382,7 +386,18 @@ export default function MockLogTab({
 
       <div className="flex flex-col gap-2">
         <h3 style={TYPE.chartTitle}>Mocks</h3>
-        <MockLogTable mocks={mocks} settings={settings} onOpenAnalysis={onOpenAnalysis} onEditMock={startEditMock} onDeleteMock={onDeleteMock} />
+        <MockLogTable
+          mocks={mocks}
+          settings={settings}
+          expandedMockIds={expandedMockIds}
+          onOpenAnalysis={onOpenAnalysis}
+          onToggleAnalysis={onToggleAnalysis}
+          onSetExpandedMockIds={onSetExpandedMockIds}
+          onSaveAnalysis={onSaveAnalysis}
+          onEditMock={startEditMock}
+          onUpdateMock={onEditMock}
+          onDeleteMock={onDeleteMock}
+        />
       </div>
 
     </div>

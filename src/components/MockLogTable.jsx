@@ -6,7 +6,7 @@ import { mockTotalMarks } from "../lib/compute";
 import { inputStyle } from "./ui/FieldLabel";
 import SectionBadge from "./ui/SectionBadge";
 import EmptyState from "./ui/EmptyState";
-import PerMockInsightsBlock from "./PerMockInsightsBlock";
+import AnalysisTab from "./tabs/AnalysisTab";
 
 function SortIndicator({ active, dir }) {
   if (!active) return null;
@@ -25,15 +25,6 @@ function SortableHeader({ label, active, dir, onClick }) {
       <SortIndicator active={active} dir={dir} />
     </button>
   );
-}
-
-function analysisLabel(mock) {
-  if (!mock.analysis) return "No analysis";
-  const total = mock.analysis.summary?.totalQuestions || 0;
-  const unreviewed = mock.analysis.summary?.unreviewed || 0;
-  if (total === 0) return "Added";
-  if (unreviewed > 0) return `${total - unreviewed}/${total} reviewed`;
-  return `${total} questions`;
 }
 
 function structureLabel(section) {
@@ -125,26 +116,21 @@ function RowActionsMenu({ mockSource, hasAnalysis, onOpenAnalysis, onEdit, onDel
   );
 }
 
-function MockLogTable({ mocks, settings, onOpenAnalysis, onEditMock, onDeleteMock }) {
-  const [expandedIds, setExpandedIds] = useState(() => new Set());
+function MockLogTable({
+  mocks,
+  settings,
+  expandedMockIds,
+  onOpenAnalysis,
+  onToggleAnalysis,
+  onSetExpandedMockIds,
+  onSaveAnalysis,
+  onEditMock,
+  onUpdateMock,
+  onDeleteMock,
+}) {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortKey, setSortKey] = useState("date");
   const [sortDir, setSortDir] = useState("desc");
-
-  // Chronological (oldest-first) regardless of the table's display sort, so
-  // "prior mock" for the target-score insight always means chronologically
-  // prior — not whatever's above it in the current sort/filter view.
-  const chronological = useMemo(
-    () => [...mocks].sort((a, b) => (a.date === b.date ? a.createdAt - b.createdAt : a.date.localeCompare(b.date))),
-    [mocks]
-  );
-  const priorMarksByMockId = useMemo(() => {
-    const map = new Map();
-    chronological.forEach((mock, idx) => {
-      map.set(mock.id, idx > 0 ? mockTotalMarks(chronological[idx - 1]) : null);
-    });
-    return map;
-  }, [chronological]);
 
   const filtered = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -165,19 +151,14 @@ function MockLogTable({ mocks, settings, onOpenAnalysis, onEditMock, onDeleteMoc
     return <EmptyState icon={Layers3} title="No mocks yet" body="Log your first mock to get started." />;
   }
 
-  const allExpanded = rows.length > 0 && rows.every((mock) => expandedIds.has(mock.id));
+  const allExpanded = rows.length > 0 && rows.every((mock) => expandedMockIds.has(mock.id));
 
   const toggleRow = (id) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    onToggleAnalysis(id);
   };
 
   const toggleAll = () => {
-    setExpandedIds(allExpanded ? new Set() : new Set(rows.map((mock) => mock.id)));
+    onSetExpandedMockIds(allExpanded ? new Set() : new Set(rows.map((mock) => mock.id)));
   };
 
   const toggleSort = (key) => {
@@ -246,8 +227,7 @@ function MockLogTable({ mocks, settings, onOpenAnalysis, onEditMock, onDeleteMoc
               const hasAnalysis = Boolean(mock.analysis);
               const isPartialAnalysis = hasAnalysis && (mock.analysis.summary?.unreviewed || 0) > 0;
               const analysisTone = isPartialAnalysis ? COLORS.warn : COLORS.good;
-              const priorMarks = priorMarksByMockId.get(mock.id) ?? null;
-              const expanded = expandedIds.has(mock.id);
+              const expanded = expandedMockIds.has(mock.id);
               const rowBg = i % 2 ? COLORS.surface : COLORS.surface2;
 
               const handleDelete = () => {
@@ -314,22 +294,14 @@ function MockLogTable({ mocks, settings, onOpenAnalysis, onEditMock, onDeleteMoc
                   {expanded && (
                     <tr style={{ borderBottom: `1px solid ${COLORS.border}`, background: rowBg }}>
                       <td colSpan={5} className="px-3 pb-3">
-                        <div className="animate-fade-up flex flex-col gap-2">
-                          <span
-                            className="inline-flex items-center gap-1.5 self-start px-2 py-1 text-xs"
-                            style={{
-                              background: hasAnalysis ? COLORS.surface : COLORS.surface2,
-                              border: `1px solid ${hasAnalysis ? analysisTone : COLORS.border}`,
-                              borderRadius: 8,
-                              color: hasAnalysis ? analysisTone : COLORS.inkMuted,
-                              fontFamily: "'Space Grotesk', sans-serif",
-                              fontWeight: 650,
-                            }}
-                          >
-                            {hasAnalysis ? <FileCheck2 size={13} /> : <FilePlus2 size={13} />}
-                            {analysisLabel(mock)}
-                          </span>
-                          <PerMockInsightsBlock mock={mock} settings={settings} priorMarks={priorMarks} compact />
+                        <div className="animate-fade-up pt-1">
+                          <AnalysisTab
+                            mock={mock}
+                            mocks={mocks}
+                            settings={settings}
+                            onSaveAnalysis={onSaveAnalysis}
+                            onEditMock={onUpdateMock}
+                          />
                         </div>
                       </td>
                     </tr>
