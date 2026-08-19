@@ -78,14 +78,14 @@ function headerNote(rangeMode, analysis, rangeMocks) {
 function rangeEmptyBody(rangeMode) {
   switch (rangeMode) {
     case "latest":
-      return "The latest mock doesn't have analysis attached yet. Attach analysis details to it, or switch ranges above.";
+      return "No analysis for the latest mock.";
     case "specific":
-      return "This mock doesn't have analysis attached yet. Attach analysis details to it, or pick a different mock above.";
+      return "No analysis for this mock.";
     case "last5":
     case "last10":
-      return "None of the mocks in this range have analysis attached yet. Attach analysis details to a recent mock, or switch to All mocks.";
+      return "No analysis in this range.";
     default:
-      return "Attach analysis details to a mock to unlock cross-mock mistake, skip, timing, and section-pattern insights.";
+      return "Add mock analysis to view insights.";
   }
 }
 
@@ -272,7 +272,7 @@ export default function AnalysisInsightsDataTab({ mocks }) {
       <EmptyState
         icon={BarChart3}
         title="No analysis data yet"
-        body="Attach analysis details to a mock to unlock cross-mock mistake, skip, timing, and section-pattern insights."
+        body="Add mock analysis to view insights."
       />
     );
   }
@@ -280,9 +280,6 @@ export default function AnalysisInsightsDataTab({ mocks }) {
   return (
     <div className="flex flex-col gap-4">
       <Panel title="Analysis Insights & Data" note={headerNote(rangeMode, analysis, rangeMocks)}>
-        <p className="text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>
-          Aggregate view of detailed analysis data across mocks: mistake reasons, skip reasons, timing patterns, and section-wise signals.
-        </p>
         <MockRangeSelector
           mocks={mocks}
           rangeMode={rangeMode}
@@ -310,13 +307,13 @@ export default function AnalysisInsightsDataTab({ mocks }) {
           <GroupHeading>Recommendations</GroupHeading>
           <ChartFrame
             title="Recommendations"
-            note={advanced.recommendations.length === 0 ? "Evidence-based next steps, tied to the pattern that triggered them" : `${countLabel(advanced.recommendations.length, "evidence-based next step")}, tied to the pattern that triggered them`}
+            note={advanced.recommendations.length === 0 ? undefined : countLabel(advanced.recommendations.length, "recommendation")}
             empty={advanced.recommendations.length === 0 ? "No actionable recommendations yet." : null}
           >
             <RecommendationList recommendations={advanced.recommendations} />
           </ChartFrame>
 
-          <GroupHeading>Explore deeper</GroupHeading>
+          <GroupHeading>More insights</GroupHeading>
           <Disclosure
             id="insights.sectionSet"
             title="Section & set-level patterns"
@@ -325,8 +322,7 @@ export default function AnalysisInsightsDataTab({ mocks }) {
             <div className="flex flex-col gap-4">
               <ChartFrame
                 title="Patterns"
-                note={`${countLabel(advanced.setInsights.length, "set pattern")} found · ranked by impact`}
-                empty={sectionSetInsights.length === 0 ? "Analysis is attached, but there is not enough repeated signal beyond what's shown in Top Signals." : null}
+                empty={sectionSetInsights.length === 0 ? "No additional patterns yet." : null}
               >
                 <InsightList insights={sectionSetInsights} iconFor={detailedInsightIcon} showHero={false} />
               </ChartFrame>
@@ -339,13 +335,12 @@ export default function AnalysisInsightsDataTab({ mocks }) {
           <Disclosure
             id="insights.topicDomain"
             title="Topic & domain patterns"
-            summary={patternDisclosureSummary(topicInsightsRemaining, "No strong topic/domain patterns yet — tag more questions and log a few more mocks.")}
+            summary={patternDisclosureSummary(topicInsightsRemaining, "No topic or domain patterns yet.")}
           >
             <div className="flex flex-col gap-4">
               <ChartFrame
                 title="Patterns"
-                note={`${countLabel(advanced.topicInsights.length, "topic insight")} found · guessing, concept gaps, timing, and trend`}
-                empty={topicInsightsRemaining.length === 0 ? "No strong topic/domain patterns yet — tag more questions and log a few more mocks." : null}
+                empty={topicInsightsRemaining.length === 0 ? "No topic or domain patterns yet." : null}
               >
                 <InsightList insights={topicInsightsRemaining} showHero={false} />
               </ChartFrame>
@@ -360,7 +355,7 @@ export default function AnalysisInsightsDataTab({ mocks }) {
               <ChartFrame
                 title="Timing by outcome"
                 note="Average seconds per question"
-                empty={!analysis.hasTimeData ? "We don't have time data yet — fill in Time Taken on any mock's analysis to unlock timing insights." : null}
+                empty={!analysis.hasTimeData ? "No timing data yet." : null}
               >
                 <TimingTable rows={analysis.timingRows} />
               </ChartFrame>

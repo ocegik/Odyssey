@@ -119,7 +119,7 @@ export function AnalysisTrendChart({ rows }) {
 export function TopicAccuracyTable({ rows }) {
   const tagged = rows.filter((row) => row.attempted > 0);
   if (tagged.length === 0) {
-    return <p className="text-sm" style={{ color: COLORS.inkMuted }}>Tag topics and passage domains in Mock Analysis to unlock an accuracy breakdown.</p>;
+    return <p className="text-sm" style={{ color: COLORS.inkMuted }}>Add topics or passage domains to view this breakdown.</p>;
   }
   return (
     <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>

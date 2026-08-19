@@ -66,7 +66,7 @@ export default function CommunityTab({ mocks, syllabusProgress, quickMathProgres
 
     async function loadCommunity() {
       if (!supabase) {
-        if (active) setCommunity({ status: "unavailable", data: null, error: "Connect Supabase to see live platform stats and the leaderboard." });
+        if (active) setCommunity({ status: "unavailable", data: null, error: "Community stats are unavailable." });
         return;
       }
 
@@ -77,7 +77,7 @@ export default function CommunityTab({ mocks, syllabusProgress, quickMathProgres
         setCommunity({
           status: "error",
           data: null,
-          error: "Community data is not available yet. Run supabase/community-stats.sql in your Supabase project, then refresh this page.",
+          error: "Community stats are unavailable. Please try again later.",
         });
         return;
       }
@@ -105,10 +105,7 @@ export default function CommunityTab({ mocks, syllabusProgress, quickMathProgres
               <UsersRound size={17} />
               <span style={TYPE.label}>Odyssey community</span>
             </div>
-            <h1 className="mt-3" style={{ ...TYPE.pageTitle, fontSize: 28 }}>Your prep, in context.</h1>
-            <p className="mt-2 text-sm leading-6" style={{ color: COLORS.inkMuted }}>
-              Track your own momentum, see the month’s most consistent mock-loggers, and follow Odyssey’s real-time growth.
-            </p>
+            <h1 className="mt-3" style={{ ...TYPE.pageTitle, fontSize: 28 }}>Community</h1>
           </div>
           <div className="flex items-center gap-2 px-3 py-2 text-xs shrink-0" style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.inkMuted }}>
             <BarChart3 size={14} style={{ color: COLORS.info }} />
@@ -120,7 +117,6 @@ export default function CommunityTab({ mocks, syllabusProgress, quickMathProgres
       <section>
         <div className="mb-3">
           <h2 style={TYPE.panelTitle}>Your stats</h2>
-          <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>These update as soon as you log a mock.</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {personalCards.map((card) => <StatCard key={card.label} {...card} />)}
@@ -135,7 +131,6 @@ export default function CommunityTab({ mocks, syllabusProgress, quickMathProgres
                 <Trophy size={17} style={{ color: COLORS.warn }} />
                 <h2 style={TYPE.panelTitle}>Monthly mock leaderboard</h2>
               </div>
-              <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>Ranked by mocks logged in the last 30 days. Latest score breaks a tie.</p>
             </div>
             <span className="px-2.5 py-1 text-xs shrink-0" style={{ borderRadius: 999, background: COLORS.warnSoft, color: COLORS.warn, fontWeight: 700 }}>Last 30 days</span>
           </div>
@@ -165,7 +160,6 @@ export default function CommunityTab({ mocks, syllabusProgress, quickMathProgres
             <UsersRound size={17} style={{ color: COLORS.primary }} />
             <h2 style={TYPE.panelTitle}>Odyssey by the numbers</h2>
           </div>
-          <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>Live totals across every signed-up learner.</p>
           {community.status === "loading" && <CommunityLoading />}
           {(community.status === "unavailable" || community.status === "error") && <CommunityUnavailable message={community.error} />}
           {community.status === "ready" && (
@@ -181,22 +175,18 @@ export default function CommunityTab({ mocks, syllabusProgress, quickMathProgres
 
       <Card>
         <div className="flex items-center gap-2"><Target size={17} style={{ color: COLORS.primary }} /><h2 style={TYPE.panelTitle}>Your preparation snapshot</h2></div>
-        <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>A few signals alongside your mock history.</p>
         <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 10, background: COLORS.surface2 }}>
             <div className="flex items-center gap-2"><BookOpenCheck size={15} style={{ color: COLORS.dilr }} /><span style={{ ...TYPE.label, color: COLORS.inkMuted }}>Syllabus coverage</span></div>
             <p className="mt-3 text-sm" style={{ color: COLORS.ink }}><strong>{syllabusStats.overall.percent}% complete</strong></p>
-            <p className="mt-2 text-xs leading-5" style={{ color: COLORS.inkMuted }}>Keep marking completed topics to make your study coverage visible.</p>
           </div>
           <div className="p-4" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 10, background: COLORS.surface2 }}>
             <div className="flex items-center gap-2"><Sparkles size={15} style={{ color: COLORS.warn }} /><span style={{ ...TYPE.label, color: COLORS.inkMuted }}>Quick Math</span></div>
             <p className="mt-3 text-sm" style={{ color: COLORS.ink }}><strong>{quickMath.totalAnswered || 0} answers</strong> · {quickMath.currentStreak ? `${quickMath.currentStreak}-day streak` : "start your first streak"}</p>
-            <p className="mt-2 text-xs leading-5" style={{ color: COLORS.inkMuted }}>Small daily practice compounds between mocks.</p>
           </div>
           <div className="p-4" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 10, background: COLORS.surface2 }}>
             <div className="flex items-center gap-2"><ClipboardCheck size={15} style={{ color: COLORS.info }} /><span style={{ ...TYPE.label, color: COLORS.inkMuted }}>Scored mock coverage</span></div>
             <p className="mt-3 text-sm" style={{ color: COLORS.ink }}><strong>{personal.scoredMockCount} of {personal.totalMocks} mocks scored</strong></p>
-            <p className="mt-2 text-xs leading-5" style={{ color: COLORS.inkMuted }}>Scores power your best-score and trend insights.</p>
           </div>
         </div>
       </Card>
@@ -205,16 +195,12 @@ export default function CommunityTab({ mocks, syllabusProgress, quickMathProgres
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h2 style={TYPE.panelTitle}>Leaderboard participation</h2>
-            <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>Only Community accounts appear using their display name and aggregate mock activity.</p>
           </div>
           <span className="px-2.5 py-1 text-xs" style={{ borderRadius: 999, background: COLORS.surface2, color: COLORS.inkMuted, fontWeight: 700 }}>{accountType === "personal" ? "Personal" : "Community"}</span>
         </div>
         <div className="mt-4 max-w-3xl"><AccountTypeSelector value={accountType} onChange={onUpdateAccountType} compact /></div>
       </Card>
 
-      <p className="px-1 text-xs leading-5" style={{ color: COLORS.inkMuted }}>
-        Platform totals are aggregated. Leaderboard visibility is opt-in through the Community account setting; private accounts never appear there.
-      </p>
     </div>
   );
 }

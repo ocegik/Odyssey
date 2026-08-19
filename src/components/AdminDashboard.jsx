@@ -42,7 +42,7 @@ export default function AdminDashboard() {
     let active = true;
     async function load() {
       if (!supabase) {
-        if (active) setState({ status: "error", profiles: [], mocks: [], error: "Supabase is not configured." });
+        if (active) setState({ status: "error", profiles: [], mocks: [], error: "Dashboard data is unavailable." });
         return;
       }
 

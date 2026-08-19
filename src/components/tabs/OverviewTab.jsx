@@ -31,9 +31,9 @@ function buildOverallMarksData(mocks) {
 }
 
 function emptyInsightText(mocks) {
-  if (mocks.length === 0) return "Log a mock to start seeing prep signals here.";
-  if (mocks.length < 3) return "A few more mocks will make the first meaningful trend easier to read.";
-  return "No major swing stands out in the latest data. Keep logging mocks to sharpen the signal.";
+  if (mocks.length === 0) return "Log a mock to view insights.";
+  if (mocks.length < 3) return "Log more mocks to reveal trends.";
+  return "No major changes in recent mocks.";
 }
 
 /* The one thing a user opening the app actually wants first: how did the
@@ -123,7 +123,7 @@ function QuickMathCard({ progress: rawProgress, onOpenQuickMath }) {
           <p className="mt-1 text-sm leading-5" style={{ color: COLORS.inkMuted }}>
             {progress.totalAnswered
               ? `You’re practicing at ${currentLevel.label} level. Keep your streak going.`
-              : "Build calculation speed with level-based mental-math drills."}
+              : "Mental-math drills for CAT preparation."}
           </p>
         </div>
         <button
@@ -205,7 +205,7 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionS
       <LatestMockSpotlight mocks={mocks} />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4 items-start">
-        <ChartFrame title="Insights" icon={Lightbulb} note="Latest signals from your rolling stats" empty={insights.length === 0 ? emptyInsightText(mocks) : null}>
+        <ChartFrame title="Insights" icon={Lightbulb} empty={insights.length === 0 ? emptyInsightText(mocks) : null}>
           <InsightList insights={insights} />
         </ChartFrame>
 
@@ -234,7 +234,7 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionS
       >
         <div className="pt-4">
           {graphData.length === 0 ? (
-            <p className="text-sm" style={{ color: COLORS.inkMuted }}>Log a mock to see overall marks across dates.</p>
+            <p className="text-sm" style={{ color: COLORS.inkMuted }}>No scored mocks yet.</p>
           ) : (
             <Suspense fallback={<div style={{ height: 280 }} aria-busy="true" />}>
               <OverallMarksChart data={graphData} />

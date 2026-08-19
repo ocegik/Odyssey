@@ -180,10 +180,10 @@ export default function MockLogTab({
       >
         {editingMockId ? (
           <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>
-            Editing an existing mock — change anything below (including the date) and save. This updates the mock in place instead
-            of deleting and re-logging it.
+            Update the mock details and save your changes.
           </p>
-        ) : (
+        ) : null}
+        {false && (
         <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>
           Import adds mocks on top of what's already logged — it doesn't replace anything. Accepts one mock object, an array of
           mocks, or {"{"}"mocks": [...]{"}"}, each like{" "}
@@ -217,7 +217,7 @@ export default function MockLogTab({
               <input
                 value={mockForm.sections.reduce((sum, section) => sum + (Number(section.score) || 0), 0)}
                 readOnly
-                aria-label="Overall marks calculated from section scores"
+                aria-label="Overall marks"
                 style={{ ...inputStyle(false), color: COLORS.inkMuted }}
               />
             </div>

@@ -95,11 +95,8 @@ export default function QuickMath({ progress: rawProgress, onRecordResult }) {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <div style={{ ...TYPE.label, color: COLORS.inkMuted }}>Adaptive practice</div>
+        <div style={{ ...TYPE.label, color: COLORS.inkMuted }}>Practice</div>
         <h1 className="mt-1" style={TYPE.pageTitle}>Quick Math</h1>
-        <p className="mt-2 text-sm leading-6" style={{ color: COLORS.inkMuted, maxWidth: 620 }}>
-          Train accuracy first, then unlock faster and more demanding calculation drills. Your results are saved to your account.
-        </p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

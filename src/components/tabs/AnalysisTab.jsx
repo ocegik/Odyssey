@@ -466,7 +466,7 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
     if (!selectedMock) return;
     if (selectedMock.analysis) {
       const confirmed = window.confirm(
-        "Regenerate will discard the attached analysis for this mock (all logged results, reasons, times, and notes) and rebuild a blank question list. This can't be undone. Continue?"
+        "Regenerate this analysis? Existing answers, reasons, timings, and notes will be removed."
       );
       if (!confirmed) return;
     }
@@ -560,15 +560,10 @@ export default function AnalysisTab({ mocks, selectedMockId, settings, onSelectM
             ))}
           </select>
           <div className="flex items-center gap-2 text-sm" style={{ color: COLORS.inkMuted }}>
-            <span>{selectedMock?.analysis ? "Analysis attached" : "Generated from mock log, not saved yet"}</span>
+            <span>{selectedMock?.analysis ? "Analysis saved" : "Analysis not saved"}</span>
           </div>
         </div>
 
-        <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>
-          Import replaces the draft below with the JSON's sections/questions — nothing is saved until you click "Save analysis",
-          which still checks the imported question count and score against this mock's logged data.
-          Download a template first to see the exact fields expected for this mock's structure.
-        </p>
 
         <button
           type="button"

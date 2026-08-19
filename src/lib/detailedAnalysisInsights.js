@@ -157,7 +157,7 @@ function generateSectionInsights(sectionSummaries, questions) {
         tone: "negative",
         significance: share,
         title: "Wrong-answer driver",
-        text: `${section} wrong answers are mostly from ${topWrong.label}: ${topWrong.count}/${summary.wrong} wrong questions (${fmtPct(share)}).`,
+        text: `${topWrong.label}: ${topWrong.count}/${summary.wrong} wrong answers in ${section} (${fmtPct(share)}).`,
       });
     }
 
@@ -170,7 +170,7 @@ function generateSectionInsights(sectionSummaries, questions) {
         tone: "negative",
         significance: Math.min(1, share * 0.9),
         title: "Skip pattern",
-        text: `${section} skips are mainly ${topSkipped.label}: ${topSkipped.count}/${summary.skipped} skipped questions (${fmtPct(share)}).`,
+        text: `${topSkipped.label}: ${topSkipped.count}/${summary.skipped} skips in ${section} (${fmtPct(share)}).`,
       });
     }
 
@@ -184,7 +184,7 @@ function generateSectionInsights(sectionSummaries, questions) {
           tone: "negative",
           significance: typeWrongRate,
           title: "Question-type risk",
-          text: `${section} ${topType.label} attempts are leaking accuracy: ${topType.count}/${summary.attemptedByType[topType.label]} attempted ${topType.label} questions were wrong (${fmtPct(typeWrongRate)} wrong-rate).`,
+          text: `${section} ${topType.label}: ${topType.count}/${summary.attemptedByType[topType.label]} wrong (${fmtPct(typeWrongRate)}).`,
         });
       }
     }
@@ -196,7 +196,7 @@ function generateSectionInsights(sectionSummaries, questions) {
         tone: "negative",
         significance: summary.slowRate,
         title: "Time pressure",
-        text: `${section} has ${summary.slow} slow questions out of ${summary.total} (${fmtPct(summary.slowRate)}), so timing is likely part of the pattern, not just accuracy.`,
+        text: `${section}: ${summary.slow}/${summary.total} slow questions (${fmtPct(summary.slowRate)}).`,
       });
     }
 
@@ -212,7 +212,7 @@ function generateSectionInsights(sectionSummaries, questions) {
           tone: "negative",
           significance: 1 - weakestTopic.accuracy,
           title: "Weakest topic",
-          text: `${section}'s softest topic is ${weakestTopic.topic}: ${weakestTopic.correct}/${weakestTopic.attempted} correct (${fmtPct(weakestTopic.accuracy)}).`,
+          text: `${weakestTopic.topic}: ${weakestTopic.correct}/${weakestTopic.attempted} correct in ${section} (${fmtPct(weakestTopic.accuracy)}).`,
         });
       }
     }
@@ -225,7 +225,7 @@ function generateSectionInsights(sectionSummaries, questions) {
         tone: "negative",
         significance: Math.min(1, topWrong.count / Math.max(1, summary.total)),
         title: "Recurring mistake",
-        text: `${topWrong.label} is recurring in ${section}: ${topWrong.count} wrong questions across ${repeatedWrong} analyzed mocks.`,
+        text: `${topWrong.label}: ${topWrong.count} wrong answers across ${repeatedWrong} ${section} mocks.`,
       });
     }
   });

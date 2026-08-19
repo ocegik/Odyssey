@@ -6,12 +6,12 @@ const ACCOUNT_TYPES = [
   {
     value: "community",
     label: "Community",
-    description: "Your eligible performance statistics can appear on community leaderboards.",
+    description: "Appear on community leaderboards.",
   },
   {
     value: "personal",
     label: "Personal",
-    description: "Your performance will not appear on community leaderboards.",
+    description: "Keep your progress off leaderboards.",
   },
 ];
 
@@ -62,9 +62,6 @@ export default function AccountTypeSelector({ value = "community", onChange, com
           );
         })}
       </div>
-      <p className="mt-3 text-xs leading-5" style={{ color: COLORS.inkMuted }}>
-        Your account and personal data remain secure in either option. This setting only controls leaderboard visibility.
-      </p>
       {error && <p role="alert" className="mt-3 text-sm" style={{ color: COLORS.danger }}>{error}</p>}
     </div>
   );

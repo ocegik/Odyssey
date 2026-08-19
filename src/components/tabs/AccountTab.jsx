@@ -157,7 +157,6 @@ export default function AccountTab({
       <section className="flex flex-col gap-3" aria-labelledby="account-profile-heading">
         <div>
           <h1 id="account-profile-heading" style={TYPE.pageTitle}>Account</h1>
-          <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>Manage your profile and study preferences.</p>
         </div>
         <Panel title="Profile">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -185,7 +184,6 @@ export default function AccountTab({
           </div>
         </Panel>
         <Panel title="Account type">
-          <p className="-mt-1 text-sm leading-6" style={{ color: COLORS.inkMuted }}>Choose whether your eligible performance statistics can appear on community leaderboards.</p>
           <AccountTypeSelector value={accountType} onChange={onUpdateAccountType} compact />
         </Panel>
       </section>
@@ -193,10 +191,9 @@ export default function AccountTab({
       <section className="flex flex-col gap-4" aria-labelledby="account-preferences-heading">
         <div>
           <h2 id="account-preferences-heading" style={TYPE.panelTitle}>Preferences</h2>
-          <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>Set targets, adjust the dashboard, plan mocks, and manage backups.</p>
         </div>
       <Panel
-        title="Data Backup"
+        title="Backup"
         action={
           <div className="flex gap-2">
             <input ref={dataFileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportDataFile} />
@@ -221,11 +218,7 @@ export default function AccountTab({
           </div>
         }
       >
-        <p className="text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>
-          Export bundles every logged mock, analysis, and preference into one JSON file — useful as a manual backup
-          alongside cloud sync. Importing a backup <strong style={{ color: COLORS.ink }}>replaces</strong> all mocks
-          and preferences currently on this device, it doesn't merge with them.
-        </p>
+        <p className="text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>Importing a backup replaces your current mocks and preferences.</p>
         {dataError && <p className="text-sm" style={{ color: COLORS.danger }}>{dataError}</p>}
         {dataMessage && !dataError && <p className="text-sm" style={{ color: COLORS.good }}>{dataMessage}</p>}
       </Panel>
@@ -270,9 +263,8 @@ export default function AccountTab({
             </select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="catExamDate">Calculated CAT exam date</FieldLabel>
-            <input id="catExamDate" value={fmtDateLong(catExamDate)} readOnly aria-describedby="catExamDateHelp" style={inputStyle(false)} />
-            <span id="catExamDateHelp" className="text-xs leading-5" style={{ color: COLORS.inkMuted }}>Last Sunday of November, calculated automatically.</span>
+            <FieldLabel htmlFor="catExamDate">CAT exam date</FieldLabel>
+            <input id="catExamDate" value={fmtDateLong(catExamDate)} readOnly style={inputStyle(false)} />
           </div>
           <div className="flex flex-col gap-1.5">
             <FieldLabel htmlFor="preparationStartDate">Preparation start date</FieldLabel>
@@ -289,9 +281,6 @@ export default function AccountTab({
         </div>
 
         <div className="flex flex-col gap-2 pt-1" style={{ borderTop: `1px solid ${COLORS.border}` }}>
-          <p className="text-xs leading-relaxed pt-3" style={{ color: COLORS.inkMuted }}>
-            Optional per-section target marks — when set, they show as dashed reference lines on the section-wise trend chart in Trends.
-          </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {SECTIONS.map((section) => (
               <div key={section} className="flex flex-col gap-1.5">
@@ -312,8 +301,7 @@ export default function AccountTab({
         </div>
       </Panel>
 
-      <Panel title="Test series enrolled in">
-        <p className="-mt-1 text-sm leading-6" style={{ color: COLORS.inkMuted }}>Select every test series you are using. You can also track a self-study plan.</p>
+      <Panel title="Test series">
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {TEST_SERIES_OPTIONS.map((series) => {
             const checked = (settings.testSeries || []).includes(series);
@@ -405,38 +393,18 @@ export default function AccountTab({
           </div>
         </form>
 
-        <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>
-          JSON import accepts a single entry, an array, or an object with{" "}
-          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>mockSchedule</code>. Fields:{" "}
-          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>date</code> and{" "}
-          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>examName</code> are required;{" "}
-          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>dateType</code> (
-          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>fixed</code>/
-          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>range</code>/
-          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>flexible</code>),{" "}
-          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>windowStart</code> and{" "}
-          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>windowEnd</code> are optional and default to a
-          fixed date. Example:{" "}
-          <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-            {"{\"date\":\"2026-07-22\",\"examName\":\"AIMCAT2716\",\"dateType\":\"range\",\"windowStart\":\"2026-07-20\",\"windowEnd\":\"2026-07-24\"}"}
-          </code>
-        </p>
-
         {error && <p className="text-sm" style={{ color: COLORS.danger }}>{error}</p>}
         {message && !error && <p className="text-sm" style={{ color: COLORS.good }}>{message}</p>}
 
         {settings.mockSchedule.length === 0 ? (
-          <EmptyState icon={Upload} title="No schedule yet" body="Add entries manually or import a JSON schedule." />
+          <EmptyState icon={Upload} title="No scheduled mocks" body="Add a mock or import your schedule." />
         ) : (
           <>
-            <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>
-              Next target is auto-generated from your most recent logged score — a small step up, capped at your overall target marks — not something you set per entry.
-            </p>
             <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
               <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>
-                    {["Date", "Window", "Exam", "Next target (auto)", "Actions"].map((label, idx) => (
+                    {["Date", "Window", "Exam", "Next target", "Actions"].map((label, idx) => (
                       <th key={label} className={`px-3 py-2 text-left ${idx === 4 ? "text-right" : ""}`} style={{ ...TYPE.label, color: COLORS.inkMuted }}>{label}</th>
                     ))}
                   </tr>

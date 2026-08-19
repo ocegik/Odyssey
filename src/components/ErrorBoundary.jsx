@@ -79,21 +79,11 @@ export default class ErrorBoundary extends Component {
         >
           <div className="flex items-center gap-2.5">
             <AlertTriangle size={20} style={{ color: COLORS.danger }} />
-            <h1 style={TYPE.panelTitle}>Something broke while rendering</h1>
+            <h1 style={TYPE.panelTitle}>Something went wrong</h1>
           </div>
 
-          <p className="text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>
-            Your logged mocks and preferences are still saved on this device — this is a display problem, not lost data.
-            Download a backup first, then reload. If it keeps crashing, the backup file has everything needed to
-            restore into a fresh session.
-          </p>
+          <p className="text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>Download a backup, then reload the app.</p>
 
-          <pre
-            className="text-xs p-3 overflow-x-auto"
-            style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.danger, fontFamily: "'JetBrains Mono', monospace" }}
-          >
-            {error.message || String(error)}
-          </pre>
 
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={downloadRescueBackup} className="theme-hover inline-flex items-center gap-1.5 px-4 py-2 text-sm" style={buttonStyle}>

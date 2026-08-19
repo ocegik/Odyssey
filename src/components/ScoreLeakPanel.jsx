@@ -16,7 +16,7 @@ const BANDS = [
 
 /** One-line headline for a collapsed Disclosure — see components/ui/Disclosure. */
 export function scoreLeakSummary(leak) {
-  if (!leak || leak.sectionsWithData.length === 0) return "Needs attempted + correct counts";
+  if (!leak || leak.sectionsWithData.length === 0) return "Add attempt data";
   const { biggestLeak } = leak;
   if (!biggestLeak) return "No recoverable marks — a clean sweep";
   return `${biggestLeak.section}: ${fmtNum(biggestLeak.value, 0)} marks/mock to ${biggestLeak.label}`;
@@ -103,7 +103,7 @@ export default function ScoreLeakPanel({ leak }) {
       <EmptyState
         icon={Droplet}
         title="Not enough detail yet"
-        body="This breakdown needs attempted and correct counts alongside the score. Add them when logging a mock — they're the two optional fields next to Score."
+        body="Add total questions, attempted, correct, and score to view this breakdown."
       />
     );
   }
@@ -136,11 +136,6 @@ export default function ScoreLeakPanel({ leak }) {
         ))}
       </div>
 
-      <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>
-        Each bar is the full section out of a perfect score, averaged over your last {LEAK_WINDOW} mocks. "Wrong
-        attempts" is the marks those questions would have been worth if answered correctly; "lost to negatives" is what
-        the penalty actually took off, derived from the score you logged rather than assumed from a marking scheme.
-      </p>
     </div>
   );
 }

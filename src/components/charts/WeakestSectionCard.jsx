@@ -7,7 +7,7 @@ export default function WeakestSectionCard({ analysis }) {
   if (!analysis) {
     return (
       <div className="p-5" style={{ background: COLORS.surface2, border: `1px dashed ${COLORS.border}`, borderRadius: 12 }}>
-        <p className="text-sm" style={{ color: COLORS.inkMuted }}>Log a few mocks across sections and the weakest-section flag will appear here automatically.</p>
+        <p className="text-sm" style={{ color: COLORS.inkMuted }}>Log mocks across sections to compare performance.</p>
       </div>
     );
   }

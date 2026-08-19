@@ -70,10 +70,10 @@ export function buildPerMockInsights(mock, settings = {}, priorMarks = null) {
     const delta = totalMarks - targetMarks;
     insights.push({
       id: "target-score",
-      label: "Target score comparison",
+      label: "Target comparison",
       value: delta >= 0 ? `+${fmtNum(delta, 0)}` : fmtNum(delta, 0),
       tone: delta >= 0 ? "positive" : "negative",
-      sub: `${fmtNum(totalMarks, 0)} scored vs ${fmtNum(targetMarks, 0)} adaptive target marks.`,
+      sub: `${fmtNum(totalMarks, 0)} marks vs ${fmtNum(targetMarks, 0)} target.`,
     });
   }
 
@@ -83,7 +83,7 @@ export function buildPerMockInsights(mock, settings = {}, priorMarks = null) {
       label: "Mock analysis",
       value: `${questions.length} questions`,
       tone: "neutral",
-      sub: "Detailed data is attached for this mock.",
+      sub: "Analysis is available for this mock.",
     });
   }
 

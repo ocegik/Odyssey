@@ -80,7 +80,7 @@ function CatProgressCard({ catTargetYear, preparationStartDate, overallTargetPer
   if (!catTargetDate) {
     return (
       <CardShell icon={Hourglass} label="CAT Progress" accent={COLORS.primary}>
-        <span className="text-sm" style={{ color: COLORS.inkMuted }}>Set the CAT target year in Account</span>
+        <span className="text-sm" style={{ color: COLORS.inkMuted }}>Set your CAT target year</span>
       </CardShell>
     );
   }
@@ -124,7 +124,7 @@ function NextMockCard({ mockSchedule, nextTargetMarks }) {
   if (!nextMock) {
     return (
       <CardShell icon={CalendarClock} label="Next Mock" accent={COLORS.info}>
-        <span className="text-sm" style={{ color: COLORS.inkMuted }}>Add a mock schedule in Account</span>
+        <span className="text-sm" style={{ color: COLORS.inkMuted }}>Add a mock to your schedule</span>
       </CardShell>
     );
   }
@@ -138,7 +138,7 @@ function NextMockCard({ mockSchedule, nextTargetMarks }) {
     >
       <div className="flex flex-col gap-1">
         <strong style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 26, color: COLORS.ink }}>{nextMock.examName}</strong>
-        <span className="text-sm" style={{ color: COLORS.good, fontWeight: 650 }}>Target {fmtNum(nextTargetMarks, 0)} (auto)</span>
+        <span className="text-sm" style={{ color: COLORS.good, fontWeight: 650 }}>Target {fmtNum(nextTargetMarks, 0)}</span>
       </div>
 
       <div className="mt-auto flex flex-col gap-3">

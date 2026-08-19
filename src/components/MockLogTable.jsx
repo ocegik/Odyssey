@@ -31,7 +31,7 @@ function analysisLabel(mock) {
   if (!mock.analysis) return "No analysis";
   const total = mock.analysis.summary?.totalQuestions || 0;
   const unreviewed = mock.analysis.summary?.unreviewed || 0;
-  if (total === 0) return "Attached";
+  if (total === 0) return "Added";
   if (unreviewed > 0) return `${total - unreviewed}/${total} reviewed`;
   return `${total} questions`;
 }
@@ -162,7 +162,7 @@ function MockLogTable({ mocks, settings, onOpenAnalysis, onEditMock, onDeleteMoc
   }, [filtered, sortKey, sortDir]);
 
   if (mocks.length === 0) {
-    return <EmptyState icon={Layers3} title="No mocks yet" body="Log a full mock from Add Analysis; optional detailed analysis can attach to that same mock." />;
+    return <EmptyState icon={Layers3} title="No mocks yet" body="Log your first mock to get started." />;
   }
 
   const allExpanded = rows.length > 0 && rows.every((mock) => expandedIds.has(mock.id));
@@ -193,7 +193,7 @@ function MockLogTable({ mocks, settings, onOpenAnalysis, onEditMock, onDeleteMoc
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <span className="text-xs" style={{ color: COLORS.inkMuted }}>
-          {searchQuery ? `${rows.length} of ${mocks.length} mocks match` : `${rows.length} mock${rows.length === 1 ? "" : "s"} logged`} — expand a row for insights &amp; structure
+          {searchQuery ? `${rows.length} of ${mocks.length} mocks match` : `${rows.length} mock${rows.length === 1 ? "" : "s"} logged`}
         </span>
         <div className="flex items-center gap-2">
           <div className="relative">

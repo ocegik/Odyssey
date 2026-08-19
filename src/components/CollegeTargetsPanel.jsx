@@ -43,8 +43,6 @@ function CollegeRow({ college, expanded, onToggle }) {
       </button>
       {expanded && (
         <div className="animate-fade-up px-3 pb-3 pl-8 flex flex-col gap-1.5">
-          <span className="text-xs" style={{ color: COLORS.inkMuted }}>{college.tag}</span>
-          <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>{college.info}</p>
           {hasSectionTargets && (
             <div className="flex flex-wrap gap-3 text-xs" style={{ color: COLORS.inkMuted, fontFamily: "'JetBrains Mono', monospace" }}>
               {college.varc != null && <span>VARC {fmtNum(college.varc, 0)}</span>}
@@ -86,7 +84,7 @@ export default function CollegeTargetsPanel() {
           <h3 style={TYPE.chartTitle}>College targets</h3>
         </div>
         <span className="text-xs" style={{ color: COLORS.inkMuted }}>
-          Reference cutoffs only — not an admission prediction
+          Reference cutoffs
         </span>
       </div>
 

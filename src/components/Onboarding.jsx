@@ -7,23 +7,23 @@ import { catExamDateForYear, fmtDateLong } from "../lib/dateMath";
 
 const slides = [
   {
-    eyebrow: "Your prep, in one view",
-    title: "Know what every mock is telling you.",
-    text: "Odyssey tracks VARC, DILR, and Quant separately, then puts every mock on a timeline so patterns are easy to spot.",
+    eyebrow: "CAT mock tracker",
+    title: "Make every mock count.",
+    text: "Track your progress across VARC, DILR, and Quant.",
     icon: LineChart,
     shortTitle: "Welcome",
   },
   {
-    eyebrow: "Set your CAT timeline",
-    title: "See the signals that make your next move clearer.",
-    text: "Odyssey separates accuracy, attempts, and question type, so you can spot what to improve. First, set the essentials for your prep plan.",
+    eyebrow: "Set your timeline",
+    title: "Plan your CAT preparation.",
+    text: "Set your target year and preparation start date.",
     icon: Target,
     shortTitle: "Your plan",
   },
   {
-    eyebrow: "Make it yours",
-    title: "Add details for a more personalized workspace.",
-    text: "These details are optional. They help Odyssey tailor your account context as your preparation evolves.",
+    eyebrow: "Personalize",
+    title: "Add your preferences.",
+    text: "Optional details you can update anytime.",
     icon: CheckCircle2,
     shortTitle: "Personalize",
   },
@@ -93,10 +93,6 @@ export default function Onboarding({ onComplete }) {
             {slides.map((item, stepIndex) => <StepItem key={item.shortTitle} item={item} stepIndex={stepIndex} activeIndex={index} />)}
           </ol>
 
-          <div className="mt-auto hidden rounded-lg border p-4 lg:block" style={{ background: COLORS.surface, borderColor: COLORS.border }}>
-            <p style={{ ...TYPE.label, color: COLORS.inkMuted }}>A clear next move</p>
-            <p className="mt-2 text-sm leading-5" style={{ color: COLORS.inkMuted }}>Every screen is designed to help you turn your latest mock into an actionable adjustment.</p>
-          </div>
         </aside>
 
         <section className="flex min-w-0 flex-col p-5 sm:p-8 lg:p-10">
@@ -175,7 +171,6 @@ function SectionPreview() {
       return <div key={section} className="rounded-lg border p-4" style={{ background: COLORS.surface2, borderColor: COLORS.border }}>
         <span className="inline-flex h-7 items-center rounded-md px-2 text-xs font-bold" style={{ background: meta.soft, color: meta.color }}>{section}</span>
         <p className="mt-4 text-sm font-semibold">Sectional view</p>
-        <p className="mt-1 text-xs leading-5" style={{ color: COLORS.inkMuted }}>Track the details behind your score.</p>
       </div>;
     })}
   </div>;
@@ -183,9 +178,9 @@ function SectionPreview() {
 
 function SignalPreview() {
   const signals = [
-    ["Accuracy", "How often your attempts convert", "88%", COLORS.good],
-    ["Attempt rate", "How much of the paper you use", "67%", COLORS.primary],
-    ["Question mix", "MCQ and TITA, kept distinct", "2 types", COLORS.quant],
+    ["Accuracy", "Correct attempts", "88%", COLORS.good],
+    ["Attempt rate", "Questions attempted", "67%", COLORS.primary],
+    ["Question mix", "MCQ and TITA", "2 types", COLORS.quant],
   ];
   return <div className="mt-8 grid gap-3 sm:grid-cols-3">
     {signals.map(([label, text, value, color]) => <div key={label} className="rounded-lg border p-4" style={{ background: COLORS.surface2, borderColor: COLORS.border }}>
@@ -202,8 +197,7 @@ function EssentialFields({ profile, setProfileField, targetYears }) {
     <div className="flex items-start gap-3">
       <div className="grid h-8 w-8 place-items-center rounded-lg" style={{ color: COLORS.primary, background: COLORS.primary + "18" }}><CalendarDays size={16} /></div>
       <div>
-        <h2 style={TYPE.panelTitle}>The essentials</h2>
-        <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>Your CAT date is calculated automatically from the target year.</p>
+        <h2 style={TYPE.panelTitle}>Your plan</h2>
       </div>
     </div>
     <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -218,9 +212,8 @@ function EssentialFields({ profile, setProfileField, targetYears }) {
         </select>
       </div>
       <div className="flex flex-col gap-2">
-        <FieldLabel htmlFor="onboarding-exam-date">Calculated CAT exam date</FieldLabel>
-        <input id="onboarding-exam-date" value={fmtDateLong(catExamDate)} readOnly aria-describedby="onboarding-exam-date-help" style={inputStyle()} />
-        <span id="onboarding-exam-date-help" className="text-xs leading-5" style={{ color: COLORS.inkMuted }}>Last Sunday of November.</span>
+        <FieldLabel htmlFor="onboarding-exam-date">CAT exam date</FieldLabel>
+        <input id="onboarding-exam-date" value={fmtDateLong(catExamDate)} readOnly style={inputStyle()} />
       </div>
       <div className="flex flex-col gap-2">
         <FieldLabel htmlFor="onboarding-preparation-start">Preparation start date</FieldLabel>
@@ -235,8 +228,7 @@ function PersonalizationFields({ profile, setProfileField, toggleTestSeries }) {
     <div className="flex items-start gap-3">
       <div className="grid h-8 w-8 place-items-center rounded-lg" style={{ color: COLORS.primary, background: COLORS.primary + "18" }}><UserRound size={16} /></div>
       <div>
-        <h2 style={TYPE.panelTitle}>Optional personal details</h2>
-        <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>You can update these any time in Account.</p>
+        <h2 style={TYPE.panelTitle}>About you</h2>
       </div>
     </div>
     <div className="mt-5 grid gap-4 sm:grid-cols-2">
