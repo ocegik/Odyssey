@@ -20,6 +20,7 @@ import Toast from "./components/ui/Toast";
 import CommandPalette from "./components/CommandPalette";
 import OverviewTab from "./components/tabs/OverviewTab";
 import AuthLanding from "./components/AuthLanding";
+import Homepage from "./components/Homepage";
 import Onboarding from "./components/Onboarding";
 import LegalPage, { LegalLinks } from "./components/LegalPage";
 
@@ -135,7 +136,7 @@ function TabFallback() {
 }
 
 export default function CATMockTracker() {
-  const [activeTab, setActiveTab, linkedMockId] = useHashTab("overview");
+  const [activeTab, setActiveTab, linkedMockId] = useHashTab("home");
   const [visitedTabs, setVisitedTabs] = useState(() => new Set([activeTab]));
   const [expandedMockIds, setExpandedMockIds] = useState(
     () => new Set(linkedMockId ? [linkedMockId] : []),
@@ -354,6 +355,10 @@ export default function CATMockTracker() {
         />
       </>
     );
+  }
+
+  if (activeTab === "home") {
+    return <><GlobalThemeStyles /><Homepage isSignedIn={Boolean(auth.user)} /></>;
   }
 
   if (auth.status === "loading") {

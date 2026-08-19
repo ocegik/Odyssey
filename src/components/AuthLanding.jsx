@@ -59,7 +59,7 @@ export default function AuthLanding({ auth }) {
     <main className="min-h-screen px-4 py-6 sm:px-6 sm:py-10" style={{ background: COLORS.bg, color: COLORS.ink }}>
       <div className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-6xl items-center gap-10 lg:grid-cols-[1.12fr_.88fr]">
         <section className="max-w-xl">
-          <div className="mb-8 flex items-center gap-2.5">
+          <a href="#/home" className="mb-8 flex w-fit items-center gap-2.5 rounded-lg focus:outline-none">
             <div className="grid h-10 w-10 place-items-center rounded-xl" style={{ background: COLORS.primary, color: COLORS.onPrimary }}>
               <Sparkles size={20} />
             </div>
@@ -67,19 +67,22 @@ export default function AuthLanding({ auth }) {
               <p className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Odyssey</p>
               <p className="text-xs" style={{ color: COLORS.inkMuted }}>CAT mock tracker</p>
             </div>
-          </div>
+          </a>
           <p className="mb-4 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: COLORS.primary + "18", color: COLORS.primary }}>
-            <BarChart3 size={14} /> A clearer way to prepare
+            <BarChart3 size={14} /> CAT preparation companion
           </p>
           <h1 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            Turn every CAT mock into your next smart move.
+            Odyssey is a CAT mock-test tracking app.
           </h1>
           <p className="mt-5 max-w-lg text-base leading-relaxed sm:text-lg" style={{ color: COLORS.inkMuted }}>
-            Track VARC, DILR, and Quant with the context that matters—so your prep improves from mock to mock.
+            It helps CAT aspirants record mock-test results, review performance across VARC, DILR, and Quant, and organise their syllabus and revision work in one place.
+          </p>
+          <p className="mt-3 max-w-lg text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>
+            Odyssey is an independent study-planning tool. It is not affiliated with the CAT examination, IIMs, or any test-series provider.
           </p>
           <div className="mt-8 grid gap-3 sm:grid-cols-2">
-            <Feature icon={BarChart3} title="Mock trends" text="See your score, accuracy, and attempts evolve over time." />
-            <Feature icon={ShieldCheck} title="Private by default" text="Your progress stays tied to your own account." />
+            <Feature icon={BarChart3} title="Track and review" text="Log mock scores, accuracy, attempts, and section-level performance over time." />
+            <Feature icon={ShieldCheck} title="Plan your preparation" text="Maintain syllabus progress, targets, and revision work in your account." />
           </div>
         </section>
 
