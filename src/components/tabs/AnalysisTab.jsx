@@ -221,6 +221,83 @@ function SectionSummary({ section, summary, expanded, onToggle }) {
   );
 }
 
+function ReviewField({ label, children, className = "" }) {
+  return (
+    <label className={`flex min-w-0 flex-col gap-1 ${className}`}>
+      <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function QuestionReviewRow({
+  section,
+  blockIdx,
+  question,
+  questionIdx,
+  isSet,
+  topicHeader,
+  setQuestion,
+  setQuestionTopic,
+}) {
+  const fieldGrid = isSet ? "xl:grid-cols-3" : "xl:grid-cols-4";
+  const notesSpan = isSet ? "sm:col-span-2 xl:col-span-3" : "sm:col-span-2 xl:col-span-4";
+
+  return (
+    <div
+      className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-3 p-3"
+      style={{ background: question.result === "Unreviewed" ? COLORS.surface2 : COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8 }}
+    >
+      <div className="flex flex-col items-center justify-start gap-0.5 pt-1" style={{ color: COLORS.inkMuted }}>
+        <span style={{ ...TYPE.label, fontSize: 10 }}>Q</span>
+        <strong style={{ color: COLORS.ink, fontFamily: "'JetBrains Mono', monospace" }}>{question.questionNumber}</strong>
+      </div>
+      <div className={`grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 ${fieldGrid}`}>
+        <ReviewField label="Result">
+          <select value={question.result} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "result", ev.target.value)} style={{ ...selectStyle(false), height: 38, fontSize: 13 }}>
+            {["Unreviewed", "Correct", "Wrong", "Skipped"].map((result) => <option key={result}>{result}</option>)}
+          </select>
+        </ReviewField>
+        <ReviewField label="Outcome reason">
+          {question.result === "Unreviewed" ? (
+            <span className="flex items-center px-3 text-sm" style={{ height: 38, color: COLORS.inkMuted }}>Review result first</span>
+          ) : (
+            <select value={question.outcomeReason} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "outcomeReason", ev.target.value)} style={{ ...selectStyle(false), height: 38, fontSize: 13 }}>
+              {(OUTCOME_REASONS[section]?.[question.result] || []).map((reason) => <option key={reason} value={reason}>{reason}</option>)}
+            </select>
+          )}
+        </ReviewField>
+        <ReviewField label="Type">
+          <select value={question.questionType} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "questionType", ev.target.value)} style={{ ...selectStyle(false), height: 38, fontSize: 13 }}>
+            {["MCQ", "TITA"].map((type) => <option key={type}>{type}</option>)}
+          </select>
+        </ReviewField>
+        {!isSet && (
+          <ReviewField label={topicHeader}>
+            <TopicPicker
+              section={section}
+              topicRef={question.topicRef}
+              legacyTopic={question.topic}
+              onChange={setQuestionTopic(section, blockIdx, questionIdx)}
+              selectStyle={selectStyle}
+              compact
+            />
+          </ReviewField>
+        )}
+        <ReviewField label="Time (seconds)">
+          <input type="number" min="0" value={question.timeTaken ?? ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "timeTaken", ev.target.value === "" ? null : Number(ev.target.value))} title={seconds(question.timeTaken)} style={{ ...inputStyle(false), height: 38, fontSize: 13 }} />
+        </ReviewField>
+        <ReviewField label="Average time (seconds)">
+          <input type="number" min="0" value={question.averageTime ?? ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "averageTime", ev.target.value === "" ? null : Number(ev.target.value))} title={seconds(question.averageTime)} style={{ ...inputStyle(false), height: 38, fontSize: 13 }} />
+        </ReviewField>
+        <ReviewField label="Notes" className={notesSpan}>
+          <input value={question.notes} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "notes", ev.target.value)} style={{ ...inputStyle(false), height: 38, fontSize: 13 }} />
+        </ReviewField>
+      </div>
+    </div>
+  );
+}
+
 // This editor is rendered inside the expanded row for its mock. Keeping the
 // complete editor in one component preserves its import, structure, review,
 // and insights behavior without reintroducing a second mock-selection step.
@@ -808,22 +885,22 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
             if (!sectionAnalysis || !expandedSections.has(section)) return null;
             return (
               <Panel key={section} id={`analysis-section-${section}`} title={`${section} questions`}>
-                <textarea
-                  value={sectionAnalysis.notes}
-                  onChange={setSectionNotes(section)}
-                  rows={2}
-                  placeholder={`${section} notes`}
-                  style={{ ...inputStyle(false), resize: "vertical" }}
-                />
+                <label className="flex flex-col gap-1.5">
+                  <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>{section} notes</span>
+                  <textarea
+                    value={sectionAnalysis.notes}
+                    onChange={setSectionNotes(section)}
+                    rows={2}
+                    placeholder={`Patterns or reminders for ${section}`}
+                    style={{ ...inputStyle(false), resize: "vertical" }}
+                  />
+                </label>
                 <div className="flex flex-col gap-4">
                   {sectionAnalysis.blocks.map((block, blockIdx) => {
                     const isSet = block.type === "set";
                     const topicHeader = section === "VARC" ? "Passage Domain" : "Topic";
-                    const headers = isSet
-                      ? ["Q", "Result", "Outcome Reason", "Type", "Time (optional)", "Average Time (optional)", "Notes"]
-                      : ["Q", "Result", "Outcome Reason", "Type", topicHeader, "Time (optional)", "Average Time (optional)", "Notes"];
                     return (
-                    <div key={block.id} className="flex flex-col gap-2">
+                    <div key={block.id} className="flex flex-col gap-3 p-3" style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10 }}>
                       <div className="flex items-center gap-2 flex-wrap">
                         <SectionBadge section={section} size="sm" />
                         <span className="text-sm" style={{ fontWeight: 650 }}>{block.name || block.type}</span>
@@ -842,62 +919,20 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
                           </div>
                         )}
                       </div>
-                      <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
-                        <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: isSet ? 1240 : 1440 }}>
-                          <thead>
-                            <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>
-                              {headers.map((label) => (
-                                <th key={label} className="text-left px-3 py-2.5" style={{ ...TYPE.label, color: COLORS.inkMuted }}>{label}</th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {block.questions.map((question, questionIdx) => (
-                              <tr key={question.id} style={{ borderTop: `1px solid ${COLORS.border}`, background: question.result === "Unreviewed" ? COLORS.surface2 : undefined }}>
-                                <td className="px-3 py-2.5" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{question.questionNumber}</td>
-                                <td className="px-3 py-2.5">
-                                  <select value={question.result} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "result", ev.target.value)} style={{ ...selectStyle(false), minWidth: 130, height: 40, fontSize: 14 }}>
-                                    {["Unreviewed", "Correct", "Wrong", "Skipped"].map((result) => <option key={result}>{result}</option>)}
-                                  </select>
-                                </td>
-                                <td className="px-3 py-2.5">
-                                  {question.result === "Unreviewed" ? (
-                                    <span className="text-sm" style={{ color: COLORS.inkMuted }}>—</span>
-                                  ) : (
-                                    <select value={question.outcomeReason} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "outcomeReason", ev.target.value)} style={{ ...selectStyle(false), minWidth: 240, height: 40, fontSize: 14 }}>
-                                      {(OUTCOME_REASONS[section]?.[question.result] || []).map((reason) => <option key={reason} value={reason}>{reason}</option>)}
-                                    </select>
-                                  )}
-                                </td>
-                                <td className="px-3 py-2.5">
-                                  <select value={question.questionType} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "questionType", ev.target.value)} style={{ ...selectStyle(false), minWidth: 110, height: 40, fontSize: 14 }}>
-                                    {["MCQ", "TITA"].map((type) => <option key={type}>{type}</option>)}
-                                  </select>
-                                </td>
-                                {!isSet && (
-                                  <td className="px-3 py-2.5">
-                                    <TopicPicker
-                                      section={section}
-                                      topicRef={question.topicRef}
-                                      legacyTopic={question.topic}
-                                      onChange={setQuestionTopic(section, blockIdx, questionIdx)}
-                                      selectStyle={selectStyle}
-                                    />
-                                  </td>
-                                )}
-                                <td className="px-3 py-2.5">
-                                  <input type="number" min="0" value={question.timeTaken ?? ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "timeTaken", ev.target.value === "" ? null : Number(ev.target.value))} title={seconds(question.timeTaken)} style={{ ...inputStyle(false), width: 120, height: 40, fontSize: 14 }} />
-                                </td>
-                                <td className="px-3 py-2.5">
-                                  <input type="number" min="0" value={question.averageTime ?? ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "averageTime", ev.target.value === "" ? null : Number(ev.target.value))} title={seconds(question.averageTime)} style={{ ...inputStyle(false), width: 140, height: 40, fontSize: 14 }} />
-                                </td>
-                                <td className="px-3 py-2.5">
-                                  <input value={question.notes} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "notes", ev.target.value)} style={{ ...inputStyle(false), minWidth: 360, height: 40, fontSize: 14 }} />
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                      <div className="flex flex-col gap-2">
+                        {block.questions.map((question, questionIdx) => (
+                          <QuestionReviewRow
+                            key={question.id}
+                            section={section}
+                            blockIdx={blockIdx}
+                            question={question}
+                            questionIdx={questionIdx}
+                            isSet={isSet}
+                            topicHeader={topicHeader}
+                            setQuestion={setQuestion}
+                            setQuestionTopic={setQuestionTopic}
+                          />
+                        ))}
                       </div>
                     </div>
                     );

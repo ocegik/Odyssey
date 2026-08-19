@@ -234,7 +234,7 @@ function MockLogTable({
         </div>
       ) : (
       <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
-        <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+        <table className="w-full text-sm" style={{ borderCollapse: "collapse", tableLayout: "fixed" }}>
           <thead>
             <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>
               <th className="px-3 py-2.5 text-left" style={{ ...TYPE.label, color: COLORS.inkMuted, width: 1 }} />
@@ -332,8 +332,8 @@ function MockLogTable({
                   </tr>
                   {expanded && (
                     <tr style={{ borderBottom: `1px solid ${COLORS.border}`, background: rowBg }}>
-                      <td colSpan={5} className="px-3 pb-3">
-                        <div className="animate-fade-up pt-1">
+                    <td colSpan={5} className="px-3 pb-3" style={{ minWidth: 0 }}>
+                        <div className="animate-fade-up min-w-0 pt-1">
                           <AnalysisTab
                             mock={mock}
                             mocks={mocks}
