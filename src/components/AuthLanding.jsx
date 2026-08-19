@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ArrowRight, BarChart3, KeyRound, ShieldCheck, Sparkles } from "lucide-react";
 import { COLORS } from "../constants";
+import { LegalLinks } from "./LegalPage";
 
 const inputStyle = {
   width: "100%",
@@ -120,7 +121,16 @@ export default function AuthLanding({ auth }) {
               {mode === "signup" ? "Sign in" : "Create an account"}
             </button>
           </p>
+          {mode === "signup" && (
+            <p className="mt-4 text-center text-xs leading-5" style={{ color: COLORS.inkMuted }}>
+              By creating an account, you agree to Odyssey’s <a className="underline underline-offset-2" style={{ color: COLORS.primary }} href="#/terms">Terms of Service</a> and acknowledge the <a className="underline underline-offset-2" style={{ color: COLORS.primary }} href="#/privacy">Privacy Policy</a>.
+            </p>
+          )}
         </section>
+
+        <div className="lg:col-span-2 flex justify-center pt-1">
+          <LegalLinks />
+        </div>
       </div>
     </main>
   );

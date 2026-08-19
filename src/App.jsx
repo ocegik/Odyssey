@@ -21,6 +21,7 @@ import CommandPalette from "./components/CommandPalette";
 import OverviewTab from "./components/tabs/OverviewTab";
 import AuthLanding from "./components/AuthLanding";
 import Onboarding from "./components/Onboarding";
+import LegalPage, { LegalLinks } from "./components/LegalPage";
 
 /* Overview is the landing tab and stays in the main bundle. Everything else
    is split out: the heavy chart/analysis tabs used to force every visitor to
@@ -340,6 +341,21 @@ export default function CATMockTracker() {
     });
   };
 
+  if (activeTab === "privacy" || activeTab === "terms") {
+    return (
+      <>
+        <GlobalThemeStyles />
+        <LegalPage
+          page={activeTab}
+          theme={theme}
+          onToggleTheme={() =>
+            setTheme((current) => (current === "dark" ? "light" : "dark"))
+          }
+        />
+      </>
+    );
+  }
+
   if (auth.status === "loading") {
     return <><GlobalThemeStyles /><div className="grid min-h-screen place-items-center text-sm" style={{ background: COLORS.bg, color: COLORS.inkMuted }}>Checking your account…</div></>;
   }
@@ -555,6 +571,11 @@ export default function CATMockTracker() {
       />
 
       <Toast toast={toast} />
+
+      <footer className="mx-auto flex w-full items-center justify-between gap-4 px-4 pb-6 sm:px-6" style={{ maxWidth: LAYOUT_WIDTH_OPTIONS.find((opt) => opt.key === settings.layoutWidth)?.px ?? LAYOUT_WIDTH_OPTIONS[1].px }}>
+        <span className="text-xs" style={{ color: COLORS.inkMuted }}>Odyssey · CAT Mock Tracker</span>
+        <LegalLinks compact />
+      </footer>
     </div>
   );
 }
