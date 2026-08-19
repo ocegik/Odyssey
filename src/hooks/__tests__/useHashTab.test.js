@@ -2,6 +2,17 @@ import { describe, expect, it } from "vitest";
 import { parseHashRoute } from "../useHashTab";
 
 describe("mock route compatibility", () => {
+  it("keeps the public homepage and login routes addressable", () => {
+    expect(parseHashRoute("#/home", "home")).toEqual({
+      tab: "home",
+      mockId: null,
+    });
+    expect(parseHashRoute("#/login", "home")).toEqual({
+      tab: "login",
+      mockId: null,
+    });
+  });
+
   it("keeps ordinary tab routes free of a mock selection", () => {
     expect(parseHashRoute("#/overview", "overview")).toEqual({
       tab: "overview",
