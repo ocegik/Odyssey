@@ -25,9 +25,9 @@ import TopicPicker from "../topics/TopicPicker";
 const clone = (value) => (value ? JSON.parse(JSON.stringify(value)) : null);
 const tempId = (prefix) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
-function Panel({ title, children, action }) {
+function Panel({ title, children, action, id }) {
   return (
-    <div className="p-5 flex flex-col gap-3" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
+    <div id={id} className="p-5 flex flex-col gap-3" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
       <div className="flex items-center justify-between gap-3">
         <h3 style={TYPE.chartTitle}>{title}</h3>
         {action}
@@ -185,16 +185,25 @@ function mergeDraftOntoMockStructure(mock, currentDraft) {
   };
 }
 
-function SectionSummary({ section, summary }) {
+function SectionSummary({ section, summary, expanded, onToggle }) {
   if (!summary) return null;
   return (
-    <div className="p-3 flex flex-col gap-2" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface2 }}>
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={expanded}
+      aria-controls={`analysis-section-${section}`}
+      aria-label={`${expanded ? "Collapse" : "Expand"} ${section} questions`}
+      className="theme-hover p-3 flex flex-col gap-2 text-left"
+      style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface2, color: COLORS.ink, cursor: "pointer" }}
+    >
       <div className="flex items-center justify-between gap-2">
         <SectionBadge section={section} size="sm" />
-        <span className="text-xs" style={{ color: COLORS.inkMuted }}>
+        <span className="inline-flex items-center gap-1 text-xs" style={{ color: COLORS.inkMuted }}>
           {summary.unreviewed > 0
             ? `${summary.totalQuestions - summary.unreviewed}/${summary.totalQuestions} reviewed`
             : `${summary.totalQuestions} Qs`}
+          {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </span>
       </div>
       <div className="grid grid-cols-2 gap-2 text-xs" style={{ color: COLORS.inkMuted }}>
@@ -208,7 +217,7 @@ function SectionSummary({ section, summary }) {
         <span>MCQ: <strong style={{ color: COLORS.ink }}>{summary.questionTypeCounts.MCQ || 0}</strong></span>
         <span>TITA: <strong style={{ color: COLORS.ink }}>{summary.questionTypeCounts.TITA || 0}</strong></span>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -227,6 +236,7 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
   const [showStructureEditor, setShowStructureEditor] = useState(false);
   const [structureForm, setStructureForm] = useState(null);
   const [structureErrors, setStructureErrors] = useState([]);
+  const [expandedSections, setExpandedSections] = useState(new Set());
   const importFileInputRef = useRef(null);
 
   // Switching to a different mock resets all feedback from whatever was
@@ -235,6 +245,7 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
     setAnalysisNotices([]);
     setSaveError("");
     setSaveMessage("");
+    setExpandedSections(new Set());
   }, [selectedMock?.id]);
 
   // Resyncs the draft whenever the canonical saved analysis changes — either
@@ -456,6 +467,15 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
     });
   };
 
+  const toggleSection = (section) => {
+    setExpandedSections((current) => {
+      const next = new Set(current);
+      if (next.has(section)) next.delete(section);
+      else next.add(section);
+      return next;
+    });
+  };
+
   const regenerateDraft = () => {
     if (!selectedMock) return;
     if (selectedMock.analysis) {
@@ -506,20 +526,13 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
 
   return (
     <div className="flex flex-col gap-4">
-      <Panel
-        title={`Analysis · ${selectedMock.source}`}
-        action={
+      <div className="p-4 flex flex-col gap-3" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="text-sm" style={{ color: COLORS.inkMuted }}>
+            <strong style={{ color: COLORS.ink }}>{selectedMock.source}</strong> · {fmtDate(selectedMock.date)} · {SECTIONS.filter((section) => selectedMock[section]).length} sections
+          </span>
           <div className="flex flex-wrap gap-2 justify-end">
             <input ref={importFileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} />
-            <button
-              type="button"
-              onClick={downloadTemplate}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-black/[0.04]"
-              style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
-            >
-              <Download size={14} />
-              Download template
-            </button>
             <button
               type="button"
               onClick={() => importFileInputRef.current?.click()}
@@ -531,6 +544,15 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
             </button>
             <button
               type="button"
+              onClick={downloadTemplate}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-black/[0.04]"
+              style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+            >
+              <Download size={14} />
+              Download template
+            </button>
+            <button
+              type="button"
               onClick={regenerateDraft}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:opacity-90"
               style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
@@ -538,15 +560,6 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
               <Plus size={14} />
               {selectedMock?.analysis ? "Regenerate" : "Add Analysis"}
             </button>
-          </div>
-        }
-      >
-        <div className="flex flex-wrap items-center justify-between gap-2 text-sm" style={{ color: COLORS.inkMuted }}>
-          <span>
-            {fmtDate(selectedMock.date)} · {selectedMock.source}
-          </span>
-          <div className="flex items-center gap-2 text-sm" style={{ color: COLORS.inkMuted }}>
-            <span>{selectedMock.analysis ? "Analysis saved" : "Analysis not saved"}</span>
           </div>
         </div>
 
@@ -588,7 +601,7 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
           </div>
         )}
         {importMessage && !importError && <p className="text-sm" style={{ color: COLORS.good }}>{importMessage}</p>}
-      </Panel>
+      </div>
 
       {!draft && (
         <EmptyState icon={ClipboardList} title="No analysis draft" body="Generate an analysis from this mock's saved structure." />
@@ -596,7 +609,7 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
 
       {draft && (
         <div className="animate-fade-up flex flex-col gap-4">
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
             <StatCard label="Questions" value={summary?.totalQuestions || 0} />
             <StatCard
               label="Unreviewed"
@@ -606,54 +619,41 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
             <StatCard label="Accuracy" value={fmtPct(summary?.accuracy)} />
             <StatCard label="Wrong" value={summary?.wrong || 0} />
             <StatCard label="Skipped" value={summary?.skipped || 0} />
+            <StatCard label="Avg time/question" value={seconds(summary?.averageTime)} sub={!summary?.timedQuestions ? "We don't have time data yet" : undefined} />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <StatCard label="Avg time/question" value={seconds(summary?.averageTime)} sub={!summary?.timedQuestions ? "We don't have time data yet" : undefined} />
-            <StatCard label="Avg benchmark" value={seconds(summary?.averageBenchmarkTime)} sub={!summary?.timedQuestions ? "We don't have time data yet" : undefined} />
-            <StatCard
-              label="Total time vs benchmark"
-              value={summary?.timeDelta === null || summary?.timeDelta === undefined ? "-" : `${summary.timeDelta >= 0 ? "+" : ""}${fmtNum(summary.timeDelta, 0)}s`}
-              accent={summary?.timeDelta > 0 ? COLORS.danger : summary?.timeDelta < 0 ? COLORS.good : undefined}
-              sub={!summary?.timedQuestions ? "We don't have time data yet" : undefined}
-            />
+            {SECTIONS.map((section) => (
+              <SectionSummary
+                key={section}
+                section={section}
+                summary={summary?.sections?.[section]}
+                expanded={expandedSections.has(section)}
+                onToggle={() => toggleSection(section)}
+              />
+            ))}
           </div>
 
-          <Panel
-            title={draft.mockName || selectedMock.source}
-            action={
-              <div className="flex flex-wrap gap-2 justify-end">
-                <button
-                  type="button"
-                  onClick={() => setShowStructureEditor((value) => !value)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-black/[0.04]"
-                  style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
-                >
-                  <Pencil size={14} />
-                  Paper structure
-                </button>
-                <button
-                  type="button"
-                  onClick={saveDraft}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:opacity-90"
-                  style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
-                >
-                  <Save size={14} />
-                  Save analysis
-                </button>
-              </div>
-            }
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="text-sm" style={{ color: COLORS.inkMuted }}>
-                Mock date: <strong style={{ color: COLORS.ink }}>{fmtDate(selectedMock.date)}</strong>
-              </div>
-              <div className="text-sm" style={{ color: COLORS.inkMuted }}>
-                Logged total: <strong style={{ color: COLORS.ink }}>{fmtNum(selectedMock.manualTotalMarks, 0)}</strong>
-              </div>
-              <div className="text-sm" style={{ color: COLORS.inkMuted }}>
-                Sections: <strong style={{ color: COLORS.ink }}>{SECTIONS.filter((section) => selectedMock[section]).length}</strong>
-              </div>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowStructureEditor((value) => !value)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-black/[0.04]"
+                style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+              >
+                <Pencil size={14} />
+                Paper structure
+              </button>
+              <button
+                type="button"
+                onClick={saveDraft}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:opacity-90"
+                style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+              >
+                <Save size={14} />
+                Save analysis
+              </button>
             </div>
             {showStructureEditor && structureForm && (
               <div className="animate-fade-up p-4 flex flex-col gap-3" style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10 }}>
@@ -790,27 +790,24 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
                 {notice.text}
               </div>
             ))}
-            <textarea
-              value={draft.overallReflection}
-              onChange={setOverall("overallReflection")}
-              rows={3}
-              placeholder="Overall reflection"
-              style={{ ...inputStyle(false), resize: "vertical", minHeight: 82 }}
-            />
+            <label className="flex flex-col gap-1.5">
+              <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>Overall reflection</span>
+              <textarea
+                value={draft.overallReflection}
+                onChange={setOverall("overallReflection")}
+                rows={3}
+                placeholder="What will you repeat or change next mock?"
+                style={{ ...inputStyle(false), resize: "vertical", minHeight: 82 }}
+              />
+            </label>
             <PerMockInsightsBlock mock={mockForInsights} settings={settings} priorMarks={priorMarks} />
-          </Panel>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {SECTIONS.map((section) => (
-              <SectionSummary key={section} section={section} summary={summary?.sections?.[section]} />
-            ))}
           </div>
 
           {SECTIONS.map((section) => {
             const sectionAnalysis = draft.sections?.[section];
-            if (!sectionAnalysis) return null;
+            if (!sectionAnalysis || !expandedSections.has(section)) return null;
             return (
-              <Panel key={section} title={`${section} Analysis`}>
+              <Panel key={section} id={`analysis-section-${section}`} title={`${section} questions`}>
                 <textarea
                   value={sectionAnalysis.notes}
                   onChange={setSectionNotes(section)}
