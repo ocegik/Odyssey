@@ -353,7 +353,7 @@ export default function CATMockTracker() {
   }
 
   if (!onboarding.completed) {
-    return <><GlobalThemeStyles /><Onboarding onComplete={handleCompleteOnboarding} /></>;
+    return <><GlobalThemeStyles /><Onboarding user={auth.user} onComplete={handleCompleteOnboarding} /></>;
   }
 
   return (

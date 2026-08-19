@@ -39,6 +39,21 @@ export default function AuthLanding({ auth }) {
     }
   };
 
+  const signInWithGoogle = async () => {
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      await auth.signInWithGoogle();
+      // The browser normally leaves for Google immediately. This message is
+      // useful if a browser delays that navigation for any reason.
+      setMessage("Opening Google sign-in…");
+    } catch (err) {
+      setError(err.message || "Could not start Google sign-in.");
+      setBusy(false);
+    }
+  };
+
   return (
     <main className="min-h-screen px-4 py-6 sm:px-6 sm:py-10" style={{ background: COLORS.bg, color: COLORS.ink }}>
       <div className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-6xl items-center gap-10 lg:grid-cols-[1.12fr_.88fr]">
@@ -75,6 +90,14 @@ export default function AuthLanding({ auth }) {
             </div>
             <KeyRound size={22} style={{ color: COLORS.primary, flexShrink: 0 }} />
           </div>
+          <button type="button" onClick={signInWithGoogle} disabled={busy} className="flex w-full items-center justify-center gap-3 rounded-lg border px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60" style={{ borderColor: COLORS.border, background: COLORS.surface, color: COLORS.ink }}>
+            <GoogleMark /> {busy ? "Opening Google…" : "Continue with Google"}
+          </button>
+          <div className="my-5 flex items-center gap-3" aria-hidden="true">
+            <span className="h-px flex-1" style={{ background: COLORS.border }} />
+            <span className="text-xs font-medium" style={{ color: COLORS.inkMuted }}>or continue with email</span>
+            <span className="h-px flex-1" style={{ background: COLORS.border }} />
+          </div>
           <form className="flex flex-col gap-4" onSubmit={submit}>
             <label className="flex flex-col gap-1.5 text-sm font-medium" style={{ color: COLORS.ink }}>
               Email
@@ -101,6 +124,15 @@ export default function AuthLanding({ auth }) {
       </div>
     </main>
   );
+}
+
+function GoogleMark() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+    <path fill="#4285F4" d="M21.8 12.23c0-.71-.06-1.22-.2-1.76H12v3.53h5.64c-.11.88-.71 2.2-2.04 3.09l-.02.12 2.96 2.29.2.02c1.83-1.69 3.06-4.18 3.06-7.29Z" />
+    <path fill="#34A853" d="M12 22c2.76 0 5.08-.91 6.77-2.48l-3.22-2.5c-.86.6-2.01 1.02-3.55 1.02a6.14 6.14 0 0 1-5.81-4.24l-.11.01-3.08 2.38-.04.1A10.22 10.22 0 0 0 12 22Z" />
+    <path fill="#FBBC05" d="M6.19 13.8A6.15 6.15 0 0 1 5.85 12c0-.63.12-1.24.33-1.8v-.12L3.07 7.66l-.1.05A10.27 10.27 0 0 0 1.9 12c0 1.54.37 2.99 1.07 4.29l3.22-2.49Z" />
+    <path fill="#EA4335" d="M12 5.96c1.94 0 3.25.84 3.99 1.54l2.91-2.84C17.07 2.97 14.76 2 12 2a10.22 10.22 0 0 0-9.04 5.71l3.22 2.5A6.17 6.17 0 0 1 12 5.96Z" />
+  </svg>;
 }
 
 function Feature({ icon: Icon, title, text }) {

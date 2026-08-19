@@ -29,12 +29,18 @@ const slides = [
   },
 ];
 
-export default function Onboarding({ onComplete }) {
+function initialDisplayName(user) {
+  const metadata = user?.user_metadata || {};
+  const name = metadata.full_name || metadata.name || "";
+  return typeof name === "string" ? name.slice(0, 80) : "";
+}
+
+export default function Onboarding({ onComplete, user }) {
   const [index, setIndex] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [profile, setProfile] = useState({
-    displayName: "",
+    displayName: initialDisplayName(user),
     age: "",
     catTargetYear: String(new Date().getFullYear()),
     preparationStartDate: "",

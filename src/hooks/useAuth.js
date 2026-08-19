@@ -51,11 +51,27 @@ export function useAuth() {
     return data;
   }, []);
 
+  const signInWithGoogle = useCallback(async () => {
+    if (!supabase) throw new Error("Connect Supabase before signing in.");
+
+    // Supabase exchanges the OAuth code and restores the session after this
+    // redirect returns to the app. The current origin lets the same build work
+    // for localhost, previews, and production once each is allow-listed.
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+    if (error) throw error;
+    return data;
+  }, []);
+
   const signOut = useCallback(async () => {
     if (!supabase) return;
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   }, []);
 
-  return { ...authState, signIn, signUp, signOut };
+  return { ...authState, signIn, signUp, signInWithGoogle, signOut };
 }
