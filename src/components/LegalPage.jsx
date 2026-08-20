@@ -104,7 +104,7 @@ function PrivacyPolicy() {
 
       <Section title="6. Retention and your choices">
         <p>Cloud records remain in the account until they are changed or deleted under the service’s retention practices. Local browser data remains until you clear browser storage, use the app’s replacement/import flows, or sign out; signing out clears account-scoped in-memory and local cached data from that browser.</p>
-        <p>You can review and update many fields in Account, edit or delete mock entries, choose Personal mode, and export a JSON backup of your study data. The app does not currently provide a self-serve account-deletion workflow. Do not treat a local browser clear as deletion of cloud-synced records.</p>
+        <p>You can review and update many fields in Account, edit or delete mock entries, choose Personal mode, and export a JSON backup of your study data. You can also use Account → Danger zone to download a backup and permanently delete your account and cloud-synced study records. Do not treat a local browser clear as deletion of cloud-synced records.</p>
       </Section>
 
       <Section title="7. Security and international processing">

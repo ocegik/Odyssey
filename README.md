@@ -148,7 +148,7 @@
 - **React** (single-file component to start, ports cleanly to a full project)
 - **Recharts** for all charts/trend lines
 - **JSON** for data storage/import/export (no xlsx, no database)
-- Supabase provides browser-based cloud sync and optional email/password accounts; there is no custom server-side code
+- Supabase provides browser-based cloud sync and optional email/password accounts. The Vercel `api/delete-account.js` function handles self-service account deletion using a server-only Supabase service-role key.
 - Deployment: GitHub repo → Vercel (free tier), via a standard Vite + React scaffold
 
 ### 5.1 Bundle
@@ -157,7 +157,11 @@ Tabs are lazy-loaded and recharts is split into its own cached chunk (`vite.conf
 ### 5.2 Tests
 `npm test` (vitest) covers the scoring math where a silent wrong answer would be worst: the score-leak decomposition, `mockTotalMarks` null-vs-zero handling, the adaptive target, and reported-percentile recency. Pure functions only — no DOM harness.
 
-### 5.3 Persistence internals
+### 5.3 Account deletion deployment setup
+
+Set `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` in the Vercel project environment. The service-role key must **not** use a `VITE_` prefix and must never be added to a client `.env` file. The Account page downloads the user's JSON backup before presenting the irreversible deletion confirmation; deleting the Supabase Auth user cascades to their profile, mocks, analyses, settings, and syllabus rows.
+
+### 5.4 Persistence internals
 All three synced slices (mocks, settings, syllabus) share `src/hooks/useCloudSyncedState.js` rather than each carrying its own copy of the localStorage-mirror + fetch-reconcile + debounced-push dance. One behavioural rule worth knowing: **the initial remote fetch only replaces local state if the user hasn't edited anything while it was in flight.** Supabase can take seconds on a cold connection, and unconditionally applying the response — as each hook used to — silently discarded anything typed in the meantime.
 
 ---

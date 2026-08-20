@@ -284,6 +284,12 @@ export default function CATMockTracker() {
     URL.revokeObjectURL(url);
   };
 
+  const handleDeleteAccount = async () => {
+    await auth.deleteAccount();
+    clearAccountData();
+    setActiveTab("home");
+  };
+
   const handleImportData = (raw) => {
     const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
@@ -551,6 +557,7 @@ export default function CATMockTracker() {
                 onImportScheduleEntries={importScheduleEntries}
                 onExportData={handleExportData}
                 onImportData={handleImportData}
+                onDeleteAccount={handleDeleteAccount}
               />
             </div>
           )}

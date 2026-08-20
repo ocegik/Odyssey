@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { CheckCircle2, Download, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Download, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
 import { COLORS, SECTIONS, SECTION_META, TYPE, SHADOW } from "../../constants";
 import { CURRENT_STATUS_OPTIONS, GENDER_OPTIONS, LAYOUT_WIDTH_OPTIONS, TEST_SERIES_OPTIONS } from "../../hooks/useSettings";
 import { catExamDateForYear, fmtDateLong } from "../../lib/dateMath";
@@ -49,6 +49,7 @@ export default function AccountTab({
   onImportScheduleEntries,
   onExportData,
   onImportData,
+  onDeleteAccount,
 }) {
   const latestMock = mocks && mocks.length > 0 ? mocks[mocks.length - 1] : null;
   const lastMarks = latestMock ? mockTotalMarks(latestMock) : null;
@@ -61,6 +62,10 @@ export default function AccountTab({
   const [error, setError] = useState("");
   const [dataMessage, setDataMessage] = useState("");
   const [dataError, setDataError] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const targetYears = Array.from({ length: 11 }, (_, offset) => new Date().getFullYear() + offset - 1);
   const catExamDate = catExamDateForYear(settings.catTargetYear);
 
@@ -152,6 +157,34 @@ export default function AccountTab({
     reader.readAsText(file);
   };
 
+  const beginAccountDeletion = () => {
+    // Keep the download inside this direct user interaction so browsers do
+    // not suppress it as a popup. Deletion still needs a second confirmation.
+    onExportData();
+    setDeleteDialogOpen(true);
+    setDeleteConfirmation("");
+    setDeleteError("");
+  };
+
+  const closeDeleteDialog = () => {
+    if (deleting) return;
+    setDeleteDialogOpen(false);
+    setDeleteConfirmation("");
+    setDeleteError("");
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== "DELETE") return;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      await onDeleteAccount();
+    } catch (err) {
+      setDeleteError(err.message || "Could not delete your account. Please try again.");
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <section className="flex flex-col gap-3" aria-labelledby="account-profile-heading">
@@ -221,6 +254,25 @@ export default function AccountTab({
         <p className="text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>Importing a backup replaces your current mocks and preferences.</p>
         {dataError && <p className="text-sm" style={{ color: COLORS.danger }}>{dataError}</p>}
         {dataMessage && !dataError && <p className="text-sm" style={{ color: COLORS.good }}>{dataMessage}</p>}
+      </Panel>
+
+      <Panel title="Danger zone">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm" style={{ color: COLORS.ink, fontWeight: 650 }}>Delete account</p>
+            <p className="mt-1 text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>
+              Download a backup first, then permanently remove your account and its study data.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={beginAccountDeletion}
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 px-3 py-2 text-sm hover:opacity-90"
+            style={{ background: COLORS.danger, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+          >
+            <Trash2 size={14} /> Delete account
+          </button>
+        </div>
       </Panel>
 
       <Panel title="Layout">
@@ -435,6 +487,52 @@ export default function AccountTab({
         )}
       </Panel>
       </section>
+
+      {deleteDialogOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" role="presentation">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-account-title"
+            className="w-full max-w-md p-5"
+            style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}
+          >
+            <div className="flex items-start gap-3">
+              <div className="rounded-full p-2" style={{ background: COLORS.dangerSoft, color: COLORS.danger }}><AlertTriangle size={19} /></div>
+              <div className="flex-1">
+                <h2 id="delete-account-title" style={TYPE.panelTitle}>Delete your account?</h2>
+                <p className="mt-2 text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>
+                  Your data backup has been downloaded. This will permanently delete your account, mocks, analyses, preferences, and syllabus progress. This cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-col gap-1.5">
+              <FieldLabel htmlFor="deleteAccountConfirmation">Type DELETE to confirm</FieldLabel>
+              <input
+                id="deleteAccountConfirmation"
+                value={deleteConfirmation}
+                onChange={(event) => setDeleteConfirmation(event.target.value)}
+                autoComplete="off"
+                autoFocus
+                disabled={deleting}
+                style={inputStyle(false)}
+              />
+            </div>
+            {deleteError && <p className="mt-3 text-sm" role="alert" style={{ color: COLORS.danger }}>{deleteError}</p>}
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button type="button" onClick={onExportData} disabled={deleting} className="px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.ink, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}>
+                Download again
+              </button>
+              <button type="button" onClick={closeDeleteDialog} disabled={deleting} className="px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}>
+                Cancel
+              </button>
+              <button type="button" onClick={handleDeleteAccount} disabled={deleteConfirmation !== "DELETE" || deleting} className="px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60" style={{ background: COLORS.danger, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}>
+                {deleting ? "Deleting…" : "Permanently delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

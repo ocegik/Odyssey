@@ -75,5 +75,34 @@ export function useAuth() {
     if (error) throw error;
   }, []);
 
-  return { ...authState, signIn, signUp, signInWithGoogle, signOut };
+  /**
+   * Auth users can only be removed with Supabase's service-role API. The
+   * browser sends its current access token to our same-origin endpoint, which
+   * validates that token before deleting that exact user. The service key is
+   * deliberately never exposed to Vite/the browser bundle.
+   */
+  const deleteAccount = useCallback(async () => {
+    if (!supabase) throw new Error("Connect Supabase before deleting an account.");
+
+    const { data, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) throw sessionError;
+    if (!data.session?.access_token) {
+      throw new Error("Your session has expired. Please sign in again before deleting your account.");
+    }
+
+    const response = await fetch("/api/delete-account", {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${data.session.access_token}` },
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(body.error || "Could not delete your account. Please try again.");
+    }
+
+    // The remote identity is gone; remove the browser session without making
+    // another request for that now-deleted user.
+    await supabase.auth.signOut({ scope: "local" });
+  }, []);
+
+  return { ...authState, signIn, signUp, signInWithGoogle, signOut, deleteAccount };
 }
