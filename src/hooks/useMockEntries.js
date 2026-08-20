@@ -4,7 +4,6 @@ import { computeDerived, byDateAsc, rollingSeries, buildMockPivot, buildSeries, 
 import { buildPercentileSeries } from "../lib/percentile";
 import { normalizeStoredMocks, toRaw } from "../lib/mockStorage";
 import { fetchRemoteMocks, saveRemoteMocks } from "../lib/cloudStore";
-import { makeSampleData } from "../lib/sampleData";
 import { useCloudSyncedState } from "./useCloudSyncedState";
 import {
   addScoreOnlyMock,
@@ -134,11 +133,6 @@ export function useMockEntries({ userId } = {}) {
     }
   }, [mockRecords, showToast]);
 
-  const loadSample = useCallback(() => {
-    setMockRecords(makeSampleData());
-    showToast("Sample data loaded");
-  }, [showToast]);
-
   const deleteMock = useCallback((mockId) => {
     const removedMock = mockRecords.find((mock) => mock.id === mockId);
     setMockRecords((prev) => removeMock(prev, mockId));
@@ -174,7 +168,7 @@ export function useMockEntries({ userId } = {}) {
     sectionStats, insights, weakestAnalysis, mocks, entriesWithComputed,
     marksSeries, attemptRateSeries, marksPerAttemptSeries, percentileSeries,
     toast, syncStatus, lastSyncedAt,
-    addScoreOnlyAnalysis, editMock, attachAnalysis, loadSample, deleteMock,
+    addScoreOnlyAnalysis, editMock, attachAnalysis, deleteMock,
     importMocks, exportMocks, importScoreOnlyMocks,
     // Detailed analysis is an optional child row of each mock, so this shares
     // the same in-memory dataset/cache rather than maintaining a second copy.

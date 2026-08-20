@@ -160,7 +160,6 @@ export default function CATMockTracker() {
     addScoreOnlyAnalysis,
     editMock,
     attachAnalysis,
-    loadSample,
     deleteMock,
     importMocks,
     exportMocks,
@@ -479,7 +478,6 @@ export default function CATMockTracker() {
             >
               <MockLogTab
                 mocks={mocks}
-                onLoadSample={loadSample}
                 onOpenAnalysis={handleOpenAnalysis}
                 onCreateMock={addScoreOnlyAnalysis}
                 onEditMock={editMock}

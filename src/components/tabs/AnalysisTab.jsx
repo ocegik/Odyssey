@@ -723,22 +723,17 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
                   Download template
                 </button>
               </div>
-              <div className="flex items-center gap-3">
-                {!selectedMock?.analysis && (
-                  <span className="hidden text-xs sm:inline" style={{ color: COLORS.inkMuted }}>
-                    Start your question-by-question review
-                  </span>
-                )}
+              {selectedMock?.analysis && (
                 <button
                   type="button"
                   onClick={regenerateDraft}
-                  className={`inline-flex items-center gap-2 hover:opacity-90 ${selectedMock?.analysis ? "px-3 py-1.5 text-sm" : "px-4 py-2.5 text-base"}`}
-                  style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, boxShadow: selectedMock?.analysis ? "none" : `0 0 0 1px ${COLORS.primary}` }}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm hover:opacity-90"
+                  style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700 }}
                 >
-                  <Plus size={selectedMock?.analysis ? 14 : 17} />
-                  {selectedMock?.analysis ? "Regenerate" : "Add Analysis"}
+                  <Plus size={14} />
+                  Regenerate
                 </button>
-              </div>
+              )}
             </div>
             <button
               type="button"

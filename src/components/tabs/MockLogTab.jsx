@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Check, ChevronDown, ChevronRight, Plus, Sparkles, Trash2, Upload, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Plus, Trash2, Upload, X } from "lucide-react";
 import { COLORS, TYPE, SHADOW } from "../../constants";
 import {
   blankBlockFor,
@@ -29,7 +29,6 @@ function Panel({ title, children, action }) {
 
 export default function MockLogTab({
   mocks,
-  onLoadSample,
   onOpenAnalysis,
   onCreateMock,
   onEditMock,
@@ -376,11 +375,7 @@ export default function MockLogTab({
 
       {mocks.length === 0 && (
         <div className="flex items-center justify-between p-4 flex-wrap gap-3" style={{ background: COLORS.surface2, border: `1px dashed ${COLORS.border}`, borderRadius: 12 }}>
-          <span className="text-sm" style={{ color: COLORS.inkMuted }}>Nothing logged yet — add a mock above, or load sample scores to explore the app quickly.</span>
-          <button onClick={onLoadSample} className="theme-hover flex items-center gap-1.5 px-3 py-1.5 text-sm"
-            style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.ink, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>
-            <Sparkles size={14} /> Load sample scores
-          </button>
+          <span className="text-sm" style={{ color: COLORS.inkMuted }}>Nothing logged yet — add a mock above to start tracking your results.</span>
         </div>
       )}
 
