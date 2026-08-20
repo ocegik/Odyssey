@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { getOAuthCallbackUrl } from "../lib/oauthRedirect";
 
 const INITIAL_STATE = supabase
   ? { status: "loading", user: null }
@@ -54,15 +55,14 @@ export function useAuth() {
   const signInWithGoogle = useCallback(async () => {
     if (!supabase) throw new Error("Connect Supabase before signing in.");
 
-    // Supabase exchanges the OAuth code and restores the session after this
-    // redirect returns to the app. The current origin lets the same build work
-    // for localhost, previews, and production once each is allow-listed.
+    // Supabase's default implicit flow returns its session in the URL fragment.
+    // This app's routes also use the fragment, so putting `#/overview` here
+    // makes the session parameters unparsable. Return to the bare app first;
+    // App redirects a confirmed session to Overview afterwards.
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        // This is a hash-routed app, so the destination must include the
-        // dashboard hash. A bare origin would be normalized to #/home.
-        redirectTo: `${window.location.origin}/#/overview`,
+        redirectTo: getOAuthCallbackUrl(window.location.origin),
       },
     });
     if (error) throw error;
