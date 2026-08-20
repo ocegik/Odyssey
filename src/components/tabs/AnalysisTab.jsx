@@ -24,6 +24,32 @@ import TopicPicker from "../topics/TopicPicker";
 
 const clone = (value) => (value ? JSON.parse(JSON.stringify(value)) : null);
 const tempId = (prefix) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+const DRAFT_STORAGE_PREFIX = "cat-mock-tracker:analysis-draft:";
+
+function loadPendingDraft(mock) {
+  try {
+    const raw = localStorage.getItem(`${DRAFT_STORAGE_PREFIX}${mock.id}`);
+    return raw ? normalizeDetailedAnalysis(JSON.parse(raw), mock.analysis) : null;
+  } catch {
+    return null;
+  }
+}
+
+function savePendingDraft(mockId, draft) {
+  try {
+    localStorage.setItem(`${DRAFT_STORAGE_PREFIX}${mockId}`, JSON.stringify(draft));
+  } catch {
+    // The current page still works if browser storage is unavailable.
+  }
+}
+
+function clearPendingDraft(mockId) {
+  try {
+    localStorage.removeItem(`${DRAFT_STORAGE_PREFIX}${mockId}`);
+  } catch {
+    // No-op when browser storage is unavailable.
+  }
+}
 
 function Panel({ title, children, action, id }) {
   return (
@@ -375,11 +401,17 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
       setStructureForm(null);
       return;
     }
-    setDraft(clone(selectedMock.analysis) || buildAnalysisDraftFromMock(selectedMock));
+    setDraft(loadPendingDraft(selectedMock) || clone(selectedMock.analysis) || buildAnalysisDraftFromMock(selectedMock));
     setStructureForm(mockToForm(selectedMock));
     setImportMessage("");
     setImportError("");
   }, [selectedMock?.id, selectedMock?.analysis]);
+
+  // Analysis now lives on an addressable page, so preserve in-progress edits
+  // across route changes and reloads until the person explicitly saves them.
+  useEffect(() => {
+    if (selectedMock && draft) savePendingDraft(selectedMock.id, draft);
+  }, [selectedMock?.id, draft]);
 
   useEffect(() => {
     if (!selectedMock) return;
@@ -621,6 +653,7 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
       setSaveError("Could not save this analysis. Check the analysis data and try again.");
       setSaveMessage("");
     } else {
+      clearPendingDraft(selectedMock.id);
       setSaveError("");
       setSaveMessage("Saved.");
     }

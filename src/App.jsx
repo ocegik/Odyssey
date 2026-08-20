@@ -32,6 +32,7 @@ const SyllabusTab = lazy(() => import("./components/tabs/SyllabusTab"));
 const CommunityTab = lazy(() => import("./components/tabs/CommunityTab"));
 const QuickMath = lazy(() => import("./components/tabs/QuickMath"));
 const MockLogTab = lazy(() => import("./components/tabs/MockLogTab"));
+const MockAnalysisPage = lazy(() => import("./components/pages/MockAnalysisPage"));
 const TrendsTab = lazy(() => import("./components/tabs/TrendsTab"));
 const AnalysisInsightsDataTab = lazy(
   () => import("./components/tabs/AnalysisInsightsDataTab"),
@@ -138,9 +139,6 @@ function TabFallback() {
 export default function CATMockTracker() {
   const [activeTab, setActiveTab, linkedMockId] = useHashTab("home");
   const [visitedTabs, setVisitedTabs] = useState(() => new Set([activeTab]));
-  const [expandedMockIds, setExpandedMockIds] = useState(
-    () => new Set(linkedMockId ? [linkedMockId] : []),
-  );
   const [theme, setTheme] = useState(loadThemePreference);
   const auth = useAuth();
   const onboarding = useOnboarding(auth.user?.id);
@@ -245,20 +243,6 @@ export default function CATMockTracker() {
     if (shouldRedirectSignedInVisitor) setActiveTab("overview");
   }, [shouldRedirectSignedInVisitor, setActiveTab]);
 
-  // A #/mocks/<id> link (including a redirected legacy #/analysis/<id>
-  // link) should open the same inline editor a person would reach from the
-  // row control. The ID can arrive before cloud-synced mocks finish loading,
-  // so retain it until that row is available.
-  useEffect(() => {
-    if (activeTab !== "mocks" || !linkedMockId) return;
-    setExpandedMockIds((previous) => {
-      if (previous.has(linkedMockId)) return previous;
-      const next = new Set(previous);
-      next.add(linkedMockId);
-      return next;
-    });
-  }, [activeTab, linkedMockId]);
-
   // The normalized analysis row is part of the mock cache in memory. Clear
   // that alongside every other account-scoped slice as soon as logout finishes
   // so another person using this browser never sees a previous account flash.
@@ -266,7 +250,6 @@ export default function CATMockTracker() {
     clearMocksAndAnalysisCache();
     clearSettingsCache();
     clearSyllabusCache();
-    setExpandedMockIds(new Set());
   }, [clearMocksAndAnalysisCache, clearSettingsCache, clearSyllabusCache]);
 
   // Also cover expiry, a sign-out from another tab, and a direct account
@@ -281,22 +264,7 @@ export default function CATMockTracker() {
   }, [auth.user?.id, clearAccountData]);
 
   const handleOpenAnalysis = (mockId) => {
-    setExpandedMockIds((previous) => {
-      if (previous.has(mockId)) return previous;
-      const next = new Set(previous);
-      next.add(mockId);
-      return next;
-    });
-    setActiveTab("mocks", { mockId });
-  };
-
-  const handleToggleAnalysis = (mockId) => {
-    setExpandedMockIds((previous) => {
-      const next = new Set(previous);
-      if (next.has(mockId)) next.delete(mockId);
-      else next.add(mockId);
-      return next;
-    });
+    setActiveTab("mockAnalysis", { mockId });
   };
 
   const handleExportData = () => {
@@ -429,7 +397,7 @@ export default function CATMockTracker() {
           onSignedOut={clearAccountData}
         />
 
-        <TabNav activeTab={activeTab} onChange={handleTabChange} isAdmin={admin.isAdmin} />
+        <TabNav activeTab={activeTab === "mockAnalysis" ? "mocks" : activeTab} onChange={handleTabChange} isAdmin={admin.isAdmin} />
 
         {/* Each tab mounts once (on first visit) and is then kept alive and
             toggled with display:none — switching tabs used to unmount/remount
@@ -511,17 +479,29 @@ export default function CATMockTracker() {
             >
               <MockLogTab
                 mocks={mocks}
-                settings={settings}
                 onLoadSample={loadSample}
                 onOpenAnalysis={handleOpenAnalysis}
-                expandedMockIds={expandedMockIds}
-                onToggleAnalysis={handleToggleAnalysis}
-                onSetExpandedMockIds={setExpandedMockIds}
-                onSaveAnalysis={attachAnalysis}
                 onCreateMock={addScoreOnlyAnalysis}
                 onEditMock={editMock}
                 onDeleteMock={deleteMock}
                 onImportMocks={importScoreOnlyMocks}
+              />
+            </div>
+          )}
+
+          {visitedTabs.has("mockAnalysis") && (
+            <div
+              className="flex flex-col gap-6"
+              style={{ display: activeTab === "mockAnalysis" ? "flex" : "none" }}
+            >
+              <MockAnalysisPage
+                mockId={linkedMockId}
+                mocks={mocks}
+                settings={settings}
+                syncStatus={mocksSyncStatus}
+                onSaveAnalysis={attachAnalysis}
+                onEditMock={editMock}
+                onBack={() => handleTabChange("mocks")}
               />
             </div>
           )}

@@ -11,6 +11,7 @@ const VALID_TABS = [
   "quickMath",
   "privacy",
   "terms",
+  "mockAnalysis",
 ];
 const LEGACY_TAB_ALIASES = {
   settings: "account",
@@ -31,13 +32,28 @@ function safelyDecode(value) {
 export function parseHashRoute(hash, fallback) {
   const rawRoute = String(hash || "").replace(/^#\/?/, "");
   const [path = "", query = ""] = rawRoute.split("?", 2);
-  const [rawTab, rawMockId] = path.split("/").filter(Boolean);
+  const [rawTab, rawMockId, rawView] = path.split("/").filter(Boolean);
   const tab = LEGACY_TAB_ALIASES[rawTab] || rawTab;
+  const queryParams = new URLSearchParams(query);
+  const queryMockId = queryParams.get("mock") || queryParams.get("mockId");
+
+  if (rawTab === "mocks" && rawMockId && rawView === "analysis") {
+    return { tab: "mockAnalysis", mockId: safelyDecode(rawMockId) };
+  }
+
+  // #/mocks/:id was the inline-analysis deep link before dedicated pages.
+  // Keep old bookmarks useful by taking them to the matching new page.
+  if (rawTab === "mocks" && rawMockId) {
+    return { tab: "mockAnalysis", mockId: safelyDecode(rawMockId) };
+  }
+
+  // Legacy #/analysis/:id links have the same intent as the dedicated page.
+  if (rawTab === "analysis" && (rawMockId || queryMockId)) {
+    return { tab: "mockAnalysis", mockId: queryMockId || safelyDecode(rawMockId) };
+  }
 
   if (!VALID_TABS.includes(tab)) return { tab: fallback, mockId: null };
 
-  const queryParams = new URLSearchParams(query);
-  const queryMockId = queryParams.get("mock") || queryParams.get("mockId");
   return {
     tab,
     // Older shared analysis links may have put the ID in a query string;
@@ -47,6 +63,9 @@ export function parseHashRoute(hash, fallback) {
 }
 
 function hashForRoute({ tab, mockId }) {
+  if (tab === "mockAnalysis" && mockId) {
+    return `#/mocks/${encodeURIComponent(mockId)}/analysis`;
+  }
   return `#/${tab}${mockId ? `/${encodeURIComponent(mockId)}` : ""}`;
 }
 

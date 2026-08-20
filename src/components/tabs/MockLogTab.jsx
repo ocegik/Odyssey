@@ -29,13 +29,8 @@ function Panel({ title, children, action }) {
 
 export default function MockLogTab({
   mocks,
-  settings,
   onLoadSample,
   onOpenAnalysis,
-  expandedMockIds,
-  onToggleAnalysis,
-  onSetExpandedMockIds,
-  onSaveAnalysis,
   onCreateMock,
   onEditMock,
   onDeleteMock,
@@ -393,14 +388,8 @@ export default function MockLogTab({
         <h3 style={TYPE.chartTitle}>Mocks</h3>
         <MockLogTable
           mocks={mocks}
-          settings={settings}
-          expandedMockIds={expandedMockIds}
           onOpenAnalysis={onOpenAnalysis}
-          onToggleAnalysis={onToggleAnalysis}
-          onSetExpandedMockIds={onSetExpandedMockIds}
-          onSaveAnalysis={onSaveAnalysis}
           onEditMock={startEditMock}
-          onUpdateMock={onEditMock}
           onDeleteMock={onDeleteMock}
         />
       </div>

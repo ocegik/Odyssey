@@ -31,13 +31,24 @@ describe("mock route compatibility", () => {
     });
   });
 
-  it("retains a linked mock ID while redirecting old analysis URLs", () => {
-    expect(parseHashRoute("#/analysis/mock%2F42", "overview")).toEqual({
-      tab: "mocks",
+  it("routes a mock analysis URL to its dedicated page", () => {
+    expect(parseHashRoute("#/mocks/mock%2F42/analysis", "overview")).toEqual({
+      tab: "mockAnalysis",
       mockId: "mock/42",
     });
+  });
+
+  it("keeps old mock analysis links working", () => {
+    expect(parseHashRoute("#/analysis/mock%2F42", "overview")).toEqual({
+      tab: "mockAnalysis",
+      mockId: "mock/42",
+    });
+    expect(parseHashRoute("#/mocks/mock-42", "overview")).toEqual({
+      tab: "mockAnalysis",
+      mockId: "mock-42",
+    });
     expect(parseHashRoute("#/analysis?mockId=mock-42", "overview")).toEqual({
-      tab: "mocks",
+      tab: "mockAnalysis",
       mockId: "mock-42",
     });
   });

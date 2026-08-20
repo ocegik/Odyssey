@@ -1,12 +1,11 @@
-import { Fragment, memo, useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, ChevronUp, FileCheck2, FilePlus2, Layers3, MoreVertical, Pencil, Search, Trash2 } from "lucide-react";
+import { memo, useMemo, useState } from "react";
+import { ChevronUp, FileCheck2, FilePlus2, Layers3, MoreVertical, Pencil, Search, Trash2 } from "lucide-react";
 import { COLORS, SECTIONS, TYPE, SHADOW } from "../constants";
-import { fmtDate, fmtNum, fmtPct } from "../lib/format";
+import { fmtDate, fmtNum } from "../lib/format";
 import { mockTotalMarks } from "../lib/compute";
 import { inputStyle } from "./ui/FieldLabel";
 import SectionBadge from "./ui/SectionBadge";
 import EmptyState from "./ui/EmptyState";
-import AnalysisTab from "./tabs/AnalysisTab";
 
 function SortIndicator({ active, dir }) {
   if (!active) return null;
@@ -25,21 +24,6 @@ function SortableHeader({ label, active, dir, onClick }) {
       <SortIndicator active={active} dir={dir} />
     </button>
   );
-}
-
-function structureLabel(section) {
-  if (!section) return "";
-  const total = section.totalQuestions || 0;
-  const sets = section.questionBlocks?.filter((block) => block.type === "set").length || section.questionSetCount || 0;
-  return `${total} Q · ${sets} sets`;
-}
-
-function quickStatsLabel(section) {
-  if (!section) return "";
-  const parts = [];
-  if (section.overallAccuracy !== null && section.overallAccuracy !== undefined) parts.push(`${fmtPct(section.overallAccuracy)} acc`);
-  if (section.attemptRate !== null && section.attemptRate !== undefined) parts.push(`${fmtPct(section.attemptRate)} att`);
-  return parts.join(" · ");
 }
 
 function analysisStatus(analysis) {
@@ -147,14 +131,8 @@ function RowActionsMenu({ mockSource, hasAnalysis, onOpenAnalysis, onEdit, onDel
 
 function MockLogTable({
   mocks,
-  settings,
-  expandedMockIds,
   onOpenAnalysis,
-  onToggleAnalysis,
-  onSetExpandedMockIds,
-  onSaveAnalysis,
   onEditMock,
-  onUpdateMock,
   onDeleteMock,
 }) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -180,16 +158,6 @@ function MockLogTable({
     return <EmptyState icon={Layers3} title="No mocks yet" body="Log your first mock to get started." />;
   }
 
-  const allExpanded = rows.length > 0 && rows.every((mock) => expandedMockIds.has(mock.id));
-
-  const toggleRow = (id) => {
-    onToggleAnalysis(id);
-  };
-
-  const toggleAll = () => {
-    onSetExpandedMockIds(allExpanded ? new Set() : new Set(rows.map((mock) => mock.id)));
-  };
-
   const toggleSort = (key) => {
     if (sortKey === key) {
       setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
@@ -205,26 +173,15 @@ function MockLogTable({
         <span className="text-xs" style={{ color: COLORS.inkMuted }}>
           {searchQuery ? `${rows.length} of ${mocks.length} mocks match` : `${rows.length} mock${rows.length === 1 ? "" : "s"} logged`}
         </span>
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search size={13} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", color: COLORS.inkMuted, pointerEvents: "none" }} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(ev) => setSearchQuery(ev.target.value)}
-              placeholder="Filter by source or date"
-              style={{ ...inputStyle(false), height: 32, paddingLeft: 28, paddingTop: 6, paddingBottom: 6, fontSize: 12.5, width: 190 }}
-            />
-          </div>
-          <button
-            type="button"
-            onClick={toggleAll}
-            className="theme-hover inline-flex items-center gap-1.5 px-3 py-1.5 text-xs"
-            style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.ink, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}
-          >
-            {allExpanded ? <ChevronsDownUp size={13} /> : <ChevronsUpDown size={13} />}
-            {allExpanded ? "Collapse all" : "Expand all"}
-          </button>
+        <div className="relative">
+          <Search size={13} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", color: COLORS.inkMuted, pointerEvents: "none" }} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(ev) => setSearchQuery(ev.target.value)}
+            placeholder="Filter by source or date"
+            style={{ ...inputStyle(false), height: 32, paddingLeft: 28, paddingTop: 6, paddingBottom: 6, fontSize: 12.5, width: 190 }}
+          />
         </div>
       </div>
 
@@ -237,7 +194,6 @@ function MockLogTable({
         <table className="w-full text-sm" style={{ borderCollapse: "collapse", tableLayout: "fixed" }}>
           <thead>
             <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>
-              <th className="px-3 py-2.5 text-left" style={{ ...TYPE.label, color: COLORS.inkMuted, width: 1 }} />
               <th className="px-3 py-2.5 text-left" style={{ ...TYPE.label, color: COLORS.inkMuted }}>
                 <SortableHeader label="Mock" active={sortKey === "date"} dir={sortDir} onClick={() => toggleSort("date")} />
               </th>
@@ -256,7 +212,6 @@ function MockLogTable({
               const hasAnalysis = Boolean(mock.analysis);
               const status = analysisStatus(mock.analysis);
               const StatusIcon = status.Icon;
-              const expanded = expandedMockIds.has(mock.id);
               const rowBg = i % 2 ? COLORS.surface : COLORS.surface2;
 
               const handleDelete = () => {
@@ -266,27 +221,12 @@ function MockLogTable({
               };
 
               return (
-                <Fragment key={mock.id}>
                   <tr
+                    key={mock.id}
                     className="hover:bg-black/[0.025]"
-                    onClick={() => toggleRow(mock.id)}
-                    style={{ borderBottom: expanded ? "none" : `1px solid ${COLORS.border}`, background: rowBg, cursor: "pointer" }}
+                    onClick={() => onOpenAnalysis(mock.id)}
+                    style={{ borderBottom: `1px solid ${COLORS.border}`, background: rowBg, cursor: "pointer" }}
                   >
-                    <td className="pl-3 py-2.5">
-                      <button
-                        type="button"
-                        onClick={(ev) => {
-                          ev.stopPropagation();
-                          toggleRow(mock.id);
-                        }}
-                        aria-expanded={expanded}
-                        aria-label={`${expanded ? "Collapse" : "Expand"} ${mock.source}`}
-                        className="theme-hover inline-flex items-center justify-center"
-                        style={{ width: 26, height: 26, borderRadius: 6, color: COLORS.inkMuted }}
-                      >
-                        {expanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
-                      </button>
-                    </td>
                     <td className="px-3 py-2.5">
                       <div className="flex flex-col">
                         <span className="inline-flex items-center gap-1.5" style={{ fontWeight: 650 }}>
@@ -307,12 +247,6 @@ function MockLogTable({
                               <SectionBadge section={section} size="sm" />
                               <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 650 }}>{fmtNum(mock[section]?.totalMarks, 0)}</span>
                             </span>
-                            {expanded && (
-                              <span className="text-xs" style={{ color: COLORS.inkMuted }}>
-                                {structureLabel(mock[section])}
-                                {quickStatsLabel(mock[section]) && ` · ${quickStatsLabel(mock[section])}`}
-                              </span>
-                            )}
                           </span>
                         ))}
                       </div>
@@ -330,22 +264,6 @@ function MockLogTable({
                       />
                     </td>
                   </tr>
-                  {expanded && (
-                    <tr style={{ borderBottom: `1px solid ${COLORS.border}`, background: rowBg }}>
-                    <td colSpan={5} className="px-3 pb-3" style={{ minWidth: 0 }}>
-                        <div className="animate-fade-up min-w-0 pt-1">
-                          <AnalysisTab
-                            mock={mock}
-                            mocks={mocks}
-                            settings={settings}
-                            onSaveAnalysis={onSaveAnalysis}
-                            onEditMock={onUpdateMock}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </Fragment>
               );
             })}
           </tbody>
