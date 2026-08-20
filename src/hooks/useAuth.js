@@ -60,7 +60,9 @@ export function useAuth() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin,
+        // This is a hash-routed app, so the destination must include the
+        // dashboard hash. A bare origin would be normalized to #/home.
+        redirectTo: `${window.location.origin}/#/overview`,
       },
     });
     if (error) throw error;
