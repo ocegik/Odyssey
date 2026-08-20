@@ -207,14 +207,14 @@ export default function MockLogTab({
         )}
         {importMessage && !importError && <p className="text-sm" style={{ color: COLORS.good }}>{importMessage}</p>}
         <form onSubmit={submitMock} className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 rounded-xl border p-4 sm:grid-cols-2 lg:grid-cols-4" style={{ background: COLORS.surface2, borderColor: COLORS.border }}>
             <div className="flex flex-col gap-1.5">
               <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Mock date</label>
-              <input type="date" value={mockForm.date} onChange={setField("date")} style={inputStyle(false)} />
+              <input type="date" value={mockForm.date} onChange={setField("date")} style={{ ...inputStyle(false), height: 46 }} />
             </div>
             <div className="flex flex-col gap-1.5">
               <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Mock / exam name</label>
-              <input value={mockForm.source} onChange={setField("source")} placeholder="SIMCAT 6 / AIMCAT 2507" style={inputStyle(false)} />
+              <input value={mockForm.source} onChange={setField("source")} placeholder="SIMCAT 6 / AIMCAT 2507" style={{ ...inputStyle(false), height: 46 }} />
             </div>
             <div className="flex flex-col gap-1.5">
               <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Overall marks</label>
@@ -222,12 +222,12 @@ export default function MockLogTab({
                 value={mockForm.sections.reduce((sum, section) => sum + (Number(section.score) || 0), 0)}
                 readOnly
                 aria-label="Overall marks"
-                style={{ ...inputStyle(false), color: COLORS.inkMuted }}
+                style={{ ...inputStyle(false), height: 46, color: COLORS.inkMuted }}
               />
             </div>
             <div className="flex flex-col gap-1.5">
               <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Overall percentile</label>
-              <input type="number" min="0" max="100" step="0.01" required placeholder="e.g. 92.4" value={mockForm.overallPercentile} onChange={setField("overallPercentile")} style={inputStyle(false)} />
+              <input type="number" min="0" max="100" step="0.01" required placeholder="e.g. 92.4" value={mockForm.overallPercentile} onChange={setField("overallPercentile")} style={{ ...inputStyle(false), height: 46 }} />
             </div>
           </div>
 
@@ -252,79 +252,84 @@ export default function MockLogTab({
             </button>
           </div>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             {mockForm.sections.map((section, sectionIdx) => (
-              <div key={section.section} className="p-4 flex flex-col gap-3" style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10 }}>
-                <div className="flex flex-wrap items-end justify-between gap-3">
-                  <div className="flex flex-col gap-1.5">
+              <div key={section.section} className="p-3 flex flex-col gap-3" style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10 }}>
+                <div className={`grid items-end gap-3 ${showExtras ? "grid-cols-2 sm:grid-cols-6" : "grid-cols-2 sm:grid-cols-5"}`}>
+                  <div className="col-span-2 flex min-w-0 items-center gap-2 sm:col-span-1">
                     <SectionBadge section={section.section} size="sm" />
                     {!showStructure && (
-                      <span className="text-xs" style={{ color: COLORS.inkMuted }}>{structureSummary(section)}</span>
+                      <span className="truncate text-xs" style={{ color: COLORS.inkMuted }}>{structureSummary(section)}</span>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full sm:w-auto">
-                    <div className="flex flex-col gap-1.5">
-                      <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Score</label>
-                      <input type="number" value={section.score} onChange={setSectionField(sectionIdx, "score")} style={{ ...inputStyle(false), width: 110 }} />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Total questions</label>
-                      <input type="number" min="1" value={section.totalQuestions} onChange={setSectionField(sectionIdx, "totalQuestions")} style={{ ...inputStyle(false), width: 110 }} />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Attempted <span style={{ opacity: 0.6 }}>(optional)</span></label>
-                      <input type="number" min="0" placeholder="—" value={section.attempted} onChange={setSectionField(sectionIdx, "attempted")} style={{ ...inputStyle(false), width: 100 }} />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Correct <span style={{ opacity: 0.6 }}>(optional)</span></label>
-                      <input type="number" min="0" placeholder="—" value={section.correct} onChange={setSectionField(sectionIdx, "correct")} style={{ ...inputStyle(false), width: 100 }} />
-                    </div>
+                  <div className="flex min-w-0 flex-col gap-1.5">
+                    <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Score</label>
+                    <input type="number" value={section.score} onChange={setSectionField(sectionIdx, "score")} style={inputStyle(false)} />
                   </div>
+                  <div className="flex min-w-0 flex-col gap-1.5">
+                    <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Total questions</label>
+                    <input type="number" min="1" value={section.totalQuestions} onChange={setSectionField(sectionIdx, "totalQuestions")} style={inputStyle(false)} />
+                  </div>
+                  <div className="flex min-w-0 flex-col gap-1.5">
+                    <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Attempted <span style={{ opacity: 0.6 }}>(optional)</span></label>
+                    <input type="number" min="0" placeholder="—" value={section.attempted} onChange={setSectionField(sectionIdx, "attempted")} style={inputStyle(false)} />
+                  </div>
+                  <div className="flex min-w-0 flex-col gap-1.5">
+                    <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Correct <span style={{ opacity: 0.6 }}>(optional)</span></label>
+                    <input type="number" min="0" placeholder="—" value={section.correct} onChange={setSectionField(sectionIdx, "correct")} style={inputStyle(false)} />
+                  </div>
+                  {showExtras && (
+                    <div className="animate-fade-up flex min-w-0 flex-col gap-1.5">
+                      <label style={{ ...TYPE.label, color: COLORS.inkMuted, fontSize: 10 }}>Percentile <span style={{ opacity: 0.6 }}>(optional)</span></label>
+                      <input type="number" min="0" max="100" step="0.01" placeholder="—" value={section.percentile} onChange={setSectionField(sectionIdx, "percentile")} style={{ ...inputStyle(false), height: 36, fontSize: 13 }} />
+                    </div>
+                  )}
                 </div>
 
                 {showExtras && (
-                <div className="animate-fade-up grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1.5">
-                    <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Percentile <span style={{ opacity: 0.6 }}>(optional)</span></label>
-                    <input type="number" min="0" max="100" step="0.01" placeholder="—" value={section.percentile} onChange={setSectionField(sectionIdx, "percentile")} style={{ ...inputStyle(false), width: 110 }} />
+                <div className="animate-fade-up flex flex-col gap-1.5 rounded-lg p-2.5" style={{ background: COLORS.surface }}>
+                  <label style={{ ...TYPE.label, color: COLORS.inkMuted, fontSize: 10 }}>Notes <span style={{ opacity: 0.6 }}>(optional)</span></label>
+                  <input placeholder="e.g. rushed the last set" value={section.notes} onChange={setSectionField(sectionIdx, "notes")} style={{ ...inputStyle(false), height: 36, fontSize: 13 }} />
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Notes <span style={{ opacity: 0.6 }}>(optional)</span></label>
-                    <input placeholder="e.g. rushed the last set" value={section.notes} onChange={setSectionField(sectionIdx, "notes")} style={inputStyle(false)} />
-                  </div>
-                </div>
                 )}
 
                 {showStructure && (
-                <div className="animate-fade-up overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
-                  <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 860 }}>
+                <div className="animate-fade-up overflow-x-auto rounded-lg p-2" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}` }}>
+                  <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 620 }}>
+                    <colgroup>
+                      <col style={{ width: "18%" }} />
+                      <col style={{ width: "34%" }} />
+                      <col style={{ width: "16%" }} />
+                      <col style={{ width: "16%" }} />
+                      <col style={{ width: "16%" }} />
+                    </colgroup>
                     <thead>
                       <tr style={{ background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}` }}>
                         {["Type", "Name", "Start Q", "End Q", ""].map((label) => (
-                          <th key={label} className="text-left px-3 py-2.5" style={{ ...TYPE.label, color: COLORS.inkMuted }}>{label}</th>
+                          <th key={label} className={`px-2 py-2 text-left ${label === "Start Q" || label === "End Q" ? "text-center" : ""}`} style={{ ...TYPE.label, color: COLORS.inkMuted }}>{label}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {section.questionBlocks.map((block) => (
                         <tr key={block.id} style={{ borderTop: `1px solid ${COLORS.border}` }}>
-                          <td className="px-3 py-2.5">
-                            <select value={block.type} onChange={setBlockField(sectionIdx, block.id, "type")} style={{ ...selectStyle(false), minWidth: 150, height: 40, fontSize: 14 }}>
+                          <td className="px-2 py-2">
+                            <select value={block.type} onChange={setBlockField(sectionIdx, block.id, "type")} style={{ ...selectStyle(false), minWidth: 100, height: 36, fontSize: 13 }}>
                               <option value="set">Set</option>
                               <option value="independent">Independent</option>
                             </select>
                           </td>
-                          <td className="px-3 py-2.5">
-                            <input value={block.name} onChange={setBlockField(sectionIdx, block.id, "name")} style={{ ...inputStyle(false), minWidth: 240, height: 40, fontSize: 14 }} />
+                          <td className="px-2 py-2">
+                            <input value={block.name} onChange={setBlockField(sectionIdx, block.id, "name")} style={{ ...inputStyle(false), minWidth: 140, height: 36, fontSize: 13 }} />
                           </td>
-                          <td className="px-3 py-2.5">
-                            <input type="number" min="1" value={block.startQuestion} onChange={setBlockField(sectionIdx, block.id, "startQuestion")} style={{ ...inputStyle(false), width: 110, height: 40, fontSize: 14 }} />
+                          <td className="px-2 py-2">
+                            <input type="number" min="1" value={block.startQuestion} onChange={setBlockField(sectionIdx, block.id, "startQuestion")} style={{ ...inputStyle(false), width: 76, height: 36, fontSize: 13, textAlign: "center" }} />
                           </td>
-                          <td className="px-3 py-2.5">
-                            <input type="number" min="1" value={block.endQuestion} onChange={setBlockField(sectionIdx, block.id, "endQuestion")} style={{ ...inputStyle(false), width: 110, height: 40, fontSize: 14 }} />
+                          <td className="px-2 py-2">
+                            <input type="number" min="1" value={block.endQuestion} onChange={setBlockField(sectionIdx, block.id, "endQuestion")} style={{ ...inputStyle(false), width: 76, height: 36, fontSize: 13, textAlign: "center" }} />
                           </td>
-                          <td className="px-3 py-2.5 text-right">
-                            <button type="button" onClick={() => removeBlock(sectionIdx, block.id)} className="theme-hover inline-flex items-center justify-center" style={{ width: 40, height: 40, border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.danger }}>
+                          <td className="px-2 py-2 text-right">
+                            <button type="button" onClick={() => removeBlock(sectionIdx, block.id)} className="theme-hover inline-flex items-center justify-center" style={{ width: 36, height: 36, border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.danger }}>
                               <Trash2 size={15} />
                             </button>
                           </td>

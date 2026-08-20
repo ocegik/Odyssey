@@ -240,59 +240,98 @@ function QuestionReviewRow({
   setQuestion,
   setQuestionTopic,
 }) {
+  const reviewed = question.result !== "Unreviewed";
+  const hasCustomClassification = question.questionType !== "MCQ" || Boolean(question.topicRef?.topicId || question.topic);
+  const [showClassification, setShowClassification] = useState(hasCustomClassification);
   const fieldGrid = isSet ? "xl:grid-cols-3" : "xl:grid-cols-4";
   const notesSpan = isSet ? "sm:col-span-2 xl:col-span-3" : "sm:col-span-2 xl:col-span-4";
+  const resultTone = {
+    Unreviewed: COLORS.inkMuted,
+    Correct: COLORS.good,
+    Wrong: COLORS.danger,
+    Skipped: COLORS.warn,
+  }[question.result] || COLORS.inkMuted;
+
+  const resultSelectStyle = {
+    ...selectStyle(false),
+    height: reviewed ? 40 : 36,
+    fontSize: reviewed ? 14 : 13,
+    borderColor: resultTone,
+    color: resultTone,
+    fontWeight: 700,
+  };
 
   return (
     <div
-      className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-3 p-3"
-      style={{ background: question.result === "Unreviewed" ? COLORS.surface2 : COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8 }}
+      className={`grid grid-cols-[2.5rem_minmax(0,1fr)] gap-3 ${reviewed ? "p-3" : "px-3 py-2"}`}
+      style={{
+        background: reviewed ? COLORS.surface : COLORS.surface2,
+        border: `1px solid ${COLORS.border}`,
+        borderLeft: `3px solid ${resultTone}`,
+        borderRadius: 8,
+      }}
     >
-      <div className="flex flex-col items-center justify-start gap-0.5 pt-1" style={{ color: COLORS.inkMuted }}>
-        <span style={{ ...TYPE.label, fontSize: 10 }}>Q</span>
+      <div className={`flex flex-col items-center gap-0.5 ${reviewed ? "justify-start pt-1" : "justify-center"}`} style={{ color: COLORS.inkMuted }}>
+        {reviewed && <span style={{ ...TYPE.label, fontSize: 10 }}>Q</span>}
         <strong style={{ color: COLORS.ink, fontFamily: "'JetBrains Mono', monospace" }}>{question.questionNumber}</strong>
       </div>
-      <div className={`grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 ${fieldGrid}`}>
+      <div className={`grid min-w-0 grid-cols-1 gap-2 ${reviewed ? `sm:grid-cols-2 ${fieldGrid}` : "sm:grid-cols-[minmax(11rem,15rem)]"}`}>
         <ReviewField label="Result">
-          <select value={question.result} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "result", ev.target.value)} style={{ ...selectStyle(false), height: 38, fontSize: 13 }}>
+          <select value={question.result} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "result", ev.target.value)} style={resultSelectStyle}>
             {["Unreviewed", "Correct", "Wrong", "Skipped"].map((result) => <option key={result}>{result}</option>)}
           </select>
         </ReviewField>
-        <ReviewField label="Outcome reason">
-          {question.result === "Unreviewed" ? (
-            <span className="flex items-center px-3 text-sm" style={{ height: 38, color: COLORS.inkMuted }}>Review result first</span>
-          ) : (
-            <select value={question.outcomeReason} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "outcomeReason", ev.target.value)} style={{ ...selectStyle(false), height: 38, fontSize: 13 }}>
-              {(OUTCOME_REASONS[section]?.[question.result] || []).map((reason) => <option key={reason} value={reason}>{reason}</option>)}
-            </select>
-          )}
-        </ReviewField>
-        <ReviewField label="Type">
-          <select value={question.questionType} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "questionType", ev.target.value)} style={{ ...selectStyle(false), height: 38, fontSize: 13 }}>
-            {["MCQ", "TITA"].map((type) => <option key={type}>{type}</option>)}
-          </select>
-        </ReviewField>
-        {!isSet && (
-          <ReviewField label={topicHeader}>
-            <TopicPicker
-              section={section}
-              topicRef={question.topicRef}
-              legacyTopic={question.topic}
-              onChange={setQuestionTopic(section, blockIdx, questionIdx)}
-              selectStyle={selectStyle}
-              compact
-            />
-          </ReviewField>
+        {reviewed && (
+          <>
+            {showClassification || hasCustomClassification ? (
+              <>
+                <ReviewField label="Type">
+                  <select value={question.questionType} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "questionType", ev.target.value)} style={{ ...selectStyle(false), height: 38, fontSize: 13 }}>
+                    {["MCQ", "TITA"].map((type) => <option key={type}>{type}</option>)}
+                  </select>
+                </ReviewField>
+                {!isSet && (
+                  <ReviewField label={topicHeader}>
+                    <TopicPicker
+                      section={section}
+                      topicRef={question.topicRef}
+                      legacyTopic={question.topic}
+                      onChange={setQuestionTopic(section, blockIdx, questionIdx)}
+                      selectStyle={selectStyle}
+                      compact
+                    />
+                  </ReviewField>
+                )}
+              </>
+            ) : (
+              <div className="flex flex-col gap-1">
+                <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>Classification</span>
+                <button
+                  type="button"
+                  onClick={() => setShowClassification(true)}
+                  className="theme-hover inline-flex h-[38px] items-center self-start rounded-lg px-3 text-xs"
+                  style={{ border: `1px solid ${COLORS.border}`, background: COLORS.surface2, color: COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}
+                >
+                  {question.questionType} · {isSet ? "Set topic" : "No topic"}
+                </button>
+              </div>
+            )}
+            <ReviewField label="Outcome reason">
+              <select value={question.outcomeReason} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "outcomeReason", ev.target.value)} style={{ ...selectStyle(false), height: 38, fontSize: 13 }}>
+                {(OUTCOME_REASONS[section]?.[question.result] || []).map((reason) => <option key={reason} value={reason}>{reason}</option>)}
+              </select>
+            </ReviewField>
+            <ReviewField label="Time (seconds)">
+              <input type="number" min="0" value={question.timeTaken ?? ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "timeTaken", ev.target.value === "" ? null : Number(ev.target.value))} title={seconds(question.timeTaken)} style={{ ...inputStyle(false), height: 38, fontSize: 13 }} />
+            </ReviewField>
+            <ReviewField label="Average time (seconds)">
+              <input type="number" min="0" value={question.averageTime ?? ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "averageTime", ev.target.value === "" ? null : Number(ev.target.value))} title={seconds(question.averageTime)} style={{ ...inputStyle(false), height: 38, fontSize: 13 }} />
+            </ReviewField>
+            <ReviewField label="Notes" className={notesSpan}>
+              <input value={question.notes} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "notes", ev.target.value)} style={{ ...inputStyle(false), height: 38, fontSize: 13 }} />
+            </ReviewField>
+          </>
         )}
-        <ReviewField label="Time (seconds)">
-          <input type="number" min="0" value={question.timeTaken ?? ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "timeTaken", ev.target.value === "" ? null : Number(ev.target.value))} title={seconds(question.timeTaken)} style={{ ...inputStyle(false), height: 38, fontSize: 13 }} />
-        </ReviewField>
-        <ReviewField label="Average time (seconds)">
-          <input type="number" min="0" value={question.averageTime ?? ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "averageTime", ev.target.value === "" ? null : Number(ev.target.value))} title={seconds(question.averageTime)} style={{ ...inputStyle(false), height: 38, fontSize: 13 }} />
-        </ReviewField>
-        <ReviewField label="Notes" className={notesSpan}>
-          <input value={question.notes} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "notes", ev.target.value)} style={{ ...inputStyle(false), height: 38, fontSize: 13 }} />
-        </ReviewField>
       </div>
     </div>
   );
@@ -600,84 +639,27 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
   // mocks is sorted oldest-first, so the entry right before the selected one is its prior mock.
   const selectedMockIndex = mocks.findIndex((mock) => mock.id === selectedMock?.id);
   const priorMarks = selectedMockIndex > 0 ? mockTotalMarks(mocks[selectedMockIndex - 1]) : null;
+  const visibleStats = [
+    <StatCard key="questions" label="Questions" value={summary?.totalQuestions || 0} />,
+    <StatCard
+      key="unreviewed"
+      label="Unreviewed"
+      value={summary?.unreviewed || 0}
+      sub={summary?.unreviewed > 0 ? "Save works anytime — fill these in whenever you remember" : undefined}
+    />,
+  ];
+  if ((summary?.attempted || 0) > 0) visibleStats.push(<StatCard key="accuracy" label="Accuracy" value={fmtPct(summary?.accuracy)} />);
+  if ((summary?.wrong || 0) > 0) visibleStats.push(<StatCard key="wrong" label="Wrong" value={summary.wrong} />);
+  if ((summary?.skipped || 0) > 0) visibleStats.push(<StatCard key="skipped" label="Skipped" value={summary.skipped} />);
+  if ((summary?.timedQuestions || 0) > 0) visibleStats.push(<StatCard key="time" label="Avg time/question" value={seconds(summary.averageTime)} />);
+  const statGridColumns = visibleStats.length <= 2 ? "sm:grid-cols-2" : visibleStats.length <= 4 ? "sm:grid-cols-2 xl:grid-cols-4" : "sm:grid-cols-3 xl:grid-cols-6";
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="p-4 flex flex-col gap-3" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="text-sm" style={{ color: COLORS.inkMuted }}>
-            <strong style={{ color: COLORS.ink }}>{selectedMock.source}</strong> · {fmtDate(selectedMock.date)} · {SECTIONS.filter((section) => selectedMock[section]).length} sections
-          </span>
-          <div className="flex flex-wrap gap-2 justify-end">
-            <input ref={importFileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} />
-            <button
-              type="button"
-              onClick={() => importFileInputRef.current?.click()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-black/[0.04]"
-              style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
-            >
-              <Upload size={14} />
-              Import JSON
-            </button>
-            <button
-              type="button"
-              onClick={downloadTemplate}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-black/[0.04]"
-              style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
-            >
-              <Download size={14} />
-              Download template
-            </button>
-            <button
-              type="button"
-              onClick={regenerateDraft}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:opacity-90"
-              style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
-            >
-              <Plus size={14} />
-              {selectedMock?.analysis ? "Regenerate" : "Add Analysis"}
-            </button>
-          </div>
-        </div>
-
-
-        <button
-          type="button"
-          onClick={() => setShowPasteImport((v) => !v)}
-          className="theme-hover self-start inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs -mt-1 -mb-1"
-          style={{ borderRadius: 8, color: COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}
-        >
-          {showPasteImport ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-          {showPasteImport ? "Hide paste JSON" : "Paste JSON instead of uploading a file"}
-        </button>
-
-        {showPasteImport && (
-          <div className="animate-fade-up flex flex-col gap-2">
-            <textarea
-              value={pasteValue}
-              onChange={(ev) => setPasteValue(ev.target.value)}
-              rows={6}
-              placeholder="Paste analysis JSON here"
-              style={{ ...inputStyle(false), resize: "vertical", fontFamily: "'JetBrains Mono', monospace", fontSize: 12.5 }}
-            />
-            <button
-              type="button"
-              onClick={applyPastedJson}
-              className="self-start inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:opacity-90"
-              style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
-            >
-              <Upload size={14} />
-              Apply pasted JSON
-            </button>
-          </div>
-        )}
-
-        {importError && (
-          <div className="p-3 text-sm" style={{ background: COLORS.dangerSoft, color: COLORS.danger, borderRadius: 8 }}>
-            {importError}
-          </div>
-        )}
-        {importMessage && !importError && <p className="text-sm" style={{ color: COLORS.good }}>{importMessage}</p>}
+      <div className="p-4" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
+        <span className="text-sm" style={{ color: COLORS.inkMuted }}>
+          <strong style={{ color: COLORS.ink }}>{selectedMock.source}</strong> · {fmtDate(selectedMock.date)} · {SECTIONS.filter((section) => selectedMock[section]).length} sections
+        </span>
       </div>
 
       {!draft && (
@@ -686,17 +668,8 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
 
       {draft && (
         <div className="animate-fade-up flex flex-col gap-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
-            <StatCard label="Questions" value={summary?.totalQuestions || 0} />
-            <StatCard
-              label="Unreviewed"
-              value={summary?.unreviewed || 0}
-              sub={summary?.unreviewed > 0 ? "Save works anytime — fill these in whenever you remember" : undefined}
-            />
-            <StatCard label="Accuracy" value={fmtPct(summary?.accuracy)} />
-            <StatCard label="Wrong" value={summary?.wrong || 0} />
-            <StatCard label="Skipped" value={summary?.skipped || 0} />
-            <StatCard label="Avg time/question" value={seconds(summary?.averageTime)} sub={!summary?.timedQuestions ? "We don't have time data yet" : undefined} />
+          <div className={`grid grid-cols-2 gap-3 ${statGridColumns}`}>
+            {visibleStats}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -712,6 +685,83 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
           </div>
 
           <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg p-2.5" style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}` }}>
+              <div className="flex flex-wrap gap-2">
+                <input ref={importFileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} />
+                <button
+                  type="button"
+                  onClick={() => importFileInputRef.current?.click()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-black/[0.04]"
+                  style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+                >
+                  <Upload size={14} />
+                  Import JSON
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadTemplate}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-black/[0.04]"
+                  style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+                >
+                  <Download size={14} />
+                  Download template
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={regenerateDraft}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:opacity-90"
+                style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+              >
+                <Plus size={14} />
+                {selectedMock?.analysis ? "Regenerate" : "Add Analysis"}
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowPasteImport((v) => !v)}
+              className="theme-hover self-start inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs -mt-1"
+              style={{ borderRadius: 8, color: COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}
+            >
+              {showPasteImport ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+              {showPasteImport ? "Hide paste JSON" : "Paste JSON instead of uploading a file"}
+            </button>
+            {showPasteImport && (
+              <div className="animate-fade-up flex flex-col gap-2">
+                <textarea
+                  value={pasteValue}
+                  onChange={(ev) => setPasteValue(ev.target.value)}
+                  rows={6}
+                  placeholder="Paste analysis JSON here"
+                  style={{ ...inputStyle(false), resize: "vertical", fontFamily: "'JetBrains Mono', monospace", fontSize: 12.5 }}
+                />
+                <button
+                  type="button"
+                  onClick={applyPastedJson}
+                  className="self-start inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:opacity-90"
+                  style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
+                >
+                  <Upload size={14} />
+                  Apply pasted JSON
+                </button>
+              </div>
+            )}
+            {importError && (
+              <div className="p-3 text-sm" style={{ background: COLORS.dangerSoft, color: COLORS.danger, borderRadius: 8 }}>
+                {importError}
+              </div>
+            )}
+            {importMessage && !importError && <p className="text-sm" style={{ color: COLORS.good }}>{importMessage}</p>}
+            <label className="flex flex-col gap-1.5 rounded-lg p-3" style={{ background: COLORS.surface2 }}>
+              <span className="text-sm" style={{ color: COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>Overall reflection</span>
+              <textarea
+                value={draft.overallReflection}
+                onChange={setOverall("overallReflection")}
+                rows={3}
+                placeholder="What will you repeat or change next mock?"
+                style={{ ...inputStyle(false), backgroundColor: "transparent", border: "none", borderRadius: 0, padding: 0, resize: "vertical", minHeight: 82 }}
+              />
+            </label>
             <div className="flex flex-wrap justify-end gap-2">
               <button
                 type="button"
@@ -867,16 +917,6 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
                 {notice.text}
               </div>
             ))}
-            <label className="flex flex-col gap-1.5">
-              <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>Overall reflection</span>
-              <textarea
-                value={draft.overallReflection}
-                onChange={setOverall("overallReflection")}
-                rows={3}
-                placeholder="What will you repeat or change next mock?"
-                style={{ ...inputStyle(false), resize: "vertical", minHeight: 82 }}
-              />
-            </label>
             <PerMockInsightsBlock mock={mockForInsights} settings={settings} priorMarks={priorMarks} />
           </div>
 
