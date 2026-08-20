@@ -489,10 +489,9 @@ export default function CATMockTracker() {
             </div>
           )}
 
-          {visitedTabs.has("mockAnalysis") && (
+          {activeTab === "mockAnalysis" && (
             <div
               className="flex flex-col gap-6"
-              style={{ display: activeTab === "mockAnalysis" ? "flex" : "none" }}
             >
               <MockAnalysisPage
                 mockId={linkedMockId}
