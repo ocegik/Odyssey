@@ -37,7 +37,7 @@ There is deliberately no anon policy for these tables. The existing public `app_
 
 ## Applying the foundation
 
-1. In Supabase, open **Authentication → Providers**. Enable Google and add the Google OAuth client ID and secret there; Email can remain enabled as the fallback sign-in method. Set the Site URL and allowed redirect URLs for the deployed app (including each local or preview origin you use). In Google Cloud, the authorised redirect URI must be Supabase's callback URL: `https://<project-ref>.supabase.co/auth/v1/callback`.
+1. In Supabase, open **Authentication → Providers**. Enable Google and add the Google OAuth client ID and secret there; Email can remain enabled as the fallback sign-in method. Under **Authentication → URL Configuration**, set the production Site URL to `https://odysseyprep.vercel.app` and allow `https://odysseyprep.vercel.app/**` as a Redirect URL (plus each local or preview origin you use). Google login returns to `/#/overview`, so that allow-list entry is required for Supabase to preserve the requested dashboard destination. In Google Cloud, the authorised redirect URI must be Supabase's callback URL: `https://<project-ref>.supabase.co/auth/v1/callback`.
 2. In the SQL editor, run the existing `supabase/schema.sql` only if `app_storage` has not already been created.
 3. Run `supabase/phase-1-foundation.sql`.
 4. Deploy the UI with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set. The public anon key is appropriate for the browser client; never expose a service-role key.

@@ -232,6 +232,19 @@ export default function CATMockTracker() {
 
   const handleTabChange = (key) => setActiveTab(key);
 
+  // OAuth can return to any public hash (and an already signed-in person can
+  // open one directly). Wait for useAuth's initial session restoration before
+  // deciding where to send them; otherwise #/home briefly behaves as a
+  // signed-out route and never advances to the dashboard.
+  const shouldRedirectSignedInVisitor =
+    auth.status === "ready" &&
+    Boolean(auth.user) &&
+    (activeTab === "home" || activeTab === "login");
+
+  useEffect(() => {
+    if (shouldRedirectSignedInVisitor) setActiveTab("overview");
+  }, [shouldRedirectSignedInVisitor, setActiveTab]);
+
   // A #/mocks/<id> link (including a redirected legacy #/analysis/<id>
   // link) should open the same inline editor a person would reach from the
   // row control. The ID can arrive before cloud-synced mocks finish loading,
@@ -357,12 +370,16 @@ export default function CATMockTracker() {
     );
   }
 
-  if (activeTab === "home") {
-    return <><GlobalThemeStyles /><Homepage isSignedIn={Boolean(auth.user)} /></>;
-  }
-
   if (auth.status === "loading") {
     return <><GlobalThemeStyles /><div className="grid min-h-screen place-items-center text-sm" style={{ background: COLORS.bg, color: COLORS.inkMuted }}>Checking your account…</div></>;
+  }
+
+  if (shouldRedirectSignedInVisitor) {
+    return <><GlobalThemeStyles /><div className="grid min-h-screen place-items-center text-sm" style={{ background: COLORS.bg, color: COLORS.inkMuted }}>Opening your dashboard…</div></>;
+  }
+
+  if (activeTab === "home") {
+    return <><GlobalThemeStyles /><Homepage isSignedIn={false} /></>;
   }
 
   if (!auth.user) {

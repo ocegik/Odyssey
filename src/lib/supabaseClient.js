@@ -13,5 +13,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
 /* Null when env vars are absent so the app still runs fully offline
    (e.g. during local dev before .env is set up) instead of crashing. */
 export const supabase = supabaseUrl && supabaseAnonKey
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      // Keep this explicit: OAuth returns its authorization data in the URL
+      // and the client must restore that session when the app reloads.
+      detectSessionInUrl: true,
+    },
+  })
   : null;
