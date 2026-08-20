@@ -16,7 +16,7 @@ export default function SyllabusSectionCard({
       <button
         type="button"
         onClick={() => onToggleSectionExpand(section.id)}
-        className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-black/[0.02]"
+        className="theme-hover w-full flex items-center gap-3 px-5 py-4 text-left"
       >
         {isExpanded ? <ChevronDown size={18} style={{ color: COLORS.inkMuted }} /> : <ChevronRight size={18} style={{ color: COLORS.inkMuted }} />}
         <span className="shrink-0" style={{ width: 10, height: 10, borderRadius: 999, background: meta.color }} />

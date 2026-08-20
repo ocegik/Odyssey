@@ -14,7 +14,7 @@ export default function MacroTopicGroup({
       <button
         type="button"
         onClick={() => onToggleExpand(macroTopic.id)}
-        className="w-full flex items-center gap-3 px-3.5 py-3 text-left hover:bg-black/[0.02]"
+        className="theme-hover w-full flex items-center gap-3 px-3.5 py-3 text-left"
       >
         {isExpanded ? <ChevronDown size={15} style={{ color: COLORS.inkMuted }} /> : <ChevronRight size={15} style={{ color: COLORS.inkMuted }} />}
         <div className="flex-1 flex flex-col gap-1.5 min-w-0">

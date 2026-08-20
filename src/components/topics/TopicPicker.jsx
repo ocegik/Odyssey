@@ -4,7 +4,7 @@ import { getTopicChildren, getTopicNode, getTopicPickerOptions } from "../../lib
  * Fast topic selection for analysis: choose one macro, then optionally refine
  * to a leaf within that macro. The stored value is always the canonical ID.
  */
-export default function TopicPicker({ section, topicRef, legacyTopic = "", onChange, selectStyle, compact = false }) {
+export default function TopicPicker({ section, topicRef, legacyTopic = "", onChange, selectStyle, compact = false, disabled = false }) {
   const macroOptions = getTopicPickerOptions(section);
   const selected = getTopicNode(topicRef?.topicId);
   const selectedMacro = selected?.kind === "leaf" ? getTopicNode(selected.parentId) : selected;
@@ -17,6 +17,7 @@ export default function TopicPicker({ section, topicRef, legacyTopic = "", onCha
       <select
         value={macroValue}
         onChange={(event) => onChange(event.target.value || null)}
+        disabled={disabled}
         title={legacyTopic && !topicRef ? `Legacy topic: ${legacyTopic}` : (section === "VARC" ? "Choose section / passage domain" : "Choose a broad topic")}
         style={{ ...selectStyle(false), minWidth: compact ? 150 : 180, height: compact ? 36 : 40, fontSize: compact ? 13 : 14 }}
       >
@@ -27,6 +28,7 @@ export default function TopicPicker({ section, topicRef, legacyTopic = "", onCha
         <select
           value={leafValue}
           onChange={(event) => onChange(event.target.value || selectedMacro.id)}
+          disabled={disabled}
           title={section === "VARC" && selectedMacro.id === "varc-rc" ? "Select Passage Domain or question type" : "Optional syllabus detail"}
           style={{ ...selectStyle(false), minWidth: compact ? 175 : 210, height: compact ? 36 : 40, fontSize: compact ? 13 : 14 }}
         >

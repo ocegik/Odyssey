@@ -247,9 +247,9 @@ function SectionSummary({ section, summary, expanded, onToggle }) {
   );
 }
 
-function ReviewField({ label, children, className = "" }) {
+function ReviewField({ label, children, className = "", style }) {
   return (
-    <label className={`flex min-w-0 flex-col gap-1 ${className}`}>
+    <label className={`flex min-w-0 flex-col gap-1 ${className}`} style={style}>
       <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>{label}</span>
       {children}
     </label>
@@ -267,8 +267,6 @@ function QuestionReviewRow({
   setQuestionTopic,
 }) {
   const reviewed = question.result !== "Unreviewed";
-  const hasCustomClassification = question.questionType !== "MCQ" || Boolean(question.topicRef?.topicId || question.topic);
-  const [showClassification, setShowClassification] = useState(hasCustomClassification);
   const fieldGrid = isSet ? "xl:grid-cols-3" : "xl:grid-cols-4";
   const notesSpan = isSet ? "sm:col-span-2 xl:col-span-3" : "sm:col-span-2 xl:col-span-4";
   const resultTone = {
@@ -280,16 +278,20 @@ function QuestionReviewRow({
 
   const resultSelectStyle = {
     ...selectStyle(false),
-    height: reviewed ? 40 : 36,
-    fontSize: reviewed ? 14 : 13,
+    height: 40,
+    fontSize: 14,
     borderColor: resultTone,
     color: resultTone,
     fontWeight: 700,
   };
+  const detailStyle = {
+    opacity: reviewed ? 1 : 0.46,
+    transition: "opacity 140ms ease",
+  };
 
   return (
     <div
-      className={`grid grid-cols-[2.5rem_minmax(0,1fr)] gap-3 ${reviewed ? "p-3" : "px-3 py-2"}`}
+      className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-3 p-3"
       style={{
         background: reviewed ? COLORS.surface : COLORS.surface2,
         border: `1px solid ${COLORS.border}`,
@@ -297,67 +299,48 @@ function QuestionReviewRow({
         borderRadius: 8,
       }}
     >
-      <div className={`flex flex-col items-center gap-0.5 ${reviewed ? "justify-start pt-1" : "justify-center"}`} style={{ color: COLORS.inkMuted }}>
-        {reviewed && <span style={{ ...TYPE.label, fontSize: 10 }}>Q</span>}
+      <div className="flex flex-col items-center gap-0.5 justify-start pt-1" style={{ color: COLORS.inkMuted }}>
+        <span style={{ ...TYPE.label, fontSize: 10 }}>Q</span>
         <strong style={{ color: COLORS.ink, fontFamily: "'JetBrains Mono', monospace" }}>{question.questionNumber}</strong>
       </div>
-      <div className={`grid min-w-0 grid-cols-1 gap-2 ${reviewed ? `sm:grid-cols-2 ${fieldGrid}` : "sm:grid-cols-[minmax(11rem,15rem)]"}`}>
+      <div className={`grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 ${fieldGrid}`}>
         <ReviewField label="Result">
           <select value={question.result} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "result", ev.target.value)} style={resultSelectStyle}>
             {["Unreviewed", "Correct", "Wrong", "Skipped"].map((result) => <option key={result}>{result}</option>)}
           </select>
         </ReviewField>
-        {reviewed && (
-          <>
-            {showClassification || hasCustomClassification ? (
-              <>
-                <ReviewField label="Type">
-                  <select value={question.questionType} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "questionType", ev.target.value)} style={{ ...selectStyle(false), height: 38, fontSize: 13 }}>
-                    {["MCQ", "TITA"].map((type) => <option key={type}>{type}</option>)}
-                  </select>
-                </ReviewField>
-                {!isSet && (
-                  <ReviewField label={topicHeader}>
-                    <TopicPicker
-                      section={section}
-                      topicRef={question.topicRef}
-                      legacyTopic={question.topic}
-                      onChange={setQuestionTopic(section, blockIdx, questionIdx)}
-                      selectStyle={selectStyle}
-                      compact
-                    />
-                  </ReviewField>
-                )}
-              </>
-            ) : (
-              <div className="flex flex-col gap-1">
-                <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>Classification</span>
-                <button
-                  type="button"
-                  onClick={() => setShowClassification(true)}
-                  className="theme-hover inline-flex h-[38px] items-center self-start rounded-lg px-3 text-xs"
-                  style={{ border: `1px solid ${COLORS.border}`, background: COLORS.surface2, color: COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}
-                >
-                  {question.questionType} · {isSet ? "Set topic" : "No topic"}
-                </button>
-              </div>
-            )}
-            <ReviewField label="Outcome reason">
-              <select value={question.outcomeReason} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "outcomeReason", ev.target.value)} style={{ ...selectStyle(false), height: 38, fontSize: 13 }}>
-                {(OUTCOME_REASONS[section]?.[question.result] || []).map((reason) => <option key={reason} value={reason}>{reason}</option>)}
-              </select>
-            </ReviewField>
-            <ReviewField label="Time (seconds)">
-              <input type="number" min="0" value={question.timeTaken ?? ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "timeTaken", ev.target.value === "" ? null : Number(ev.target.value))} title={seconds(question.timeTaken)} style={{ ...inputStyle(false), height: 38, fontSize: 13 }} />
-            </ReviewField>
-            <ReviewField label="Average time (seconds)">
-              <input type="number" min="0" value={question.averageTime ?? ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "averageTime", ev.target.value === "" ? null : Number(ev.target.value))} title={seconds(question.averageTime)} style={{ ...inputStyle(false), height: 38, fontSize: 13 }} />
-            </ReviewField>
-            <ReviewField label="Notes" className={notesSpan}>
-              <input value={question.notes} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "notes", ev.target.value)} style={{ ...inputStyle(false), height: 38, fontSize: 13 }} />
-            </ReviewField>
-          </>
+        <ReviewField label="Type" style={detailStyle}>
+          <select disabled={!reviewed} value={question.questionType} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "questionType", ev.target.value)} style={{ ...selectStyle(false), height: 38, fontSize: 13 }}>
+            {["MCQ", "TITA"].map((type) => <option key={type}>{type}</option>)}
+          </select>
+        </ReviewField>
+        {!isSet && (
+          <ReviewField label={topicHeader} style={detailStyle}>
+            <TopicPicker
+              section={section}
+              topicRef={question.topicRef}
+              legacyTopic={question.topic}
+              onChange={setQuestionTopic(section, blockIdx, questionIdx)}
+              selectStyle={selectStyle}
+              compact
+              disabled={!reviewed}
+            />
+          </ReviewField>
         )}
+        <ReviewField label="Outcome reason" style={detailStyle}>
+          <select disabled={!reviewed} value={question.outcomeReason} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "outcomeReason", ev.target.value)} style={{ ...selectStyle(false), height: 38, fontSize: 13 }}>
+            {(OUTCOME_REASONS[section]?.[question.result] || []).map((reason) => <option key={reason} value={reason}>{reason}</option>)}
+          </select>
+        </ReviewField>
+        <ReviewField label="Time (seconds)" style={detailStyle}>
+          <input disabled={!reviewed} type="number" min="0" value={question.timeTaken ?? ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "timeTaken", ev.target.value === "" ? null : Number(ev.target.value))} title={seconds(question.timeTaken)} style={{ ...inputStyle(false), height: 38, fontSize: 13 }} />
+        </ReviewField>
+        <ReviewField label="Average time (seconds)" style={detailStyle}>
+          <input disabled={!reviewed} type="number" min="0" value={question.averageTime ?? ""} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "averageTime", ev.target.value === "" ? null : Number(ev.target.value))} title={seconds(question.averageTime)} style={{ ...inputStyle(false), height: 38, fontSize: 13 }} />
+        </ReviewField>
+        <ReviewField label="Notes" className={notesSpan} style={detailStyle}>
+          <input disabled={!reviewed} value={question.notes} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "notes", ev.target.value)} style={{ ...inputStyle(false), height: 38, fontSize: 13 }} />
+        </ReviewField>
       </div>
     </div>
   );
@@ -740,15 +723,22 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
                   Download template
                 </button>
               </div>
-              <button
-                type="button"
-                onClick={regenerateDraft}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:opacity-90"
-                style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
-              >
-                <Plus size={14} />
-                {selectedMock?.analysis ? "Regenerate" : "Add Analysis"}
-              </button>
+              <div className="flex items-center gap-3">
+                {!selectedMock?.analysis && (
+                  <span className="hidden text-xs sm:inline" style={{ color: COLORS.inkMuted }}>
+                    Start your question-by-question review
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={regenerateDraft}
+                  className={`inline-flex items-center gap-2 hover:opacity-90 ${selectedMock?.analysis ? "px-3 py-1.5 text-sm" : "px-4 py-2.5 text-base"}`}
+                  style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, boxShadow: selectedMock?.analysis ? "none" : `0 0 0 1px ${COLORS.primary}` }}
+                >
+                  <Plus size={selectedMock?.analysis ? 14 : 17} />
+                  {selectedMock?.analysis ? "Regenerate" : "Add Analysis"}
+                </button>
+              </div>
             </div>
             <button
               type="button"

@@ -1,5 +1,5 @@
 import { memo, useMemo, useState } from "react";
-import { ChevronDown, ChevronUp, FileCheck2, FilePlus2, Layers3, MoreVertical, Pencil, Search, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronUp, FileCheck2, FilePlus2, Layers3, MoreVertical, Pencil, Search, Trash2 } from "lucide-react";
 import { COLORS, SECTIONS, TYPE, SHADOW } from "../constants";
 import { fmtDate, fmtNum } from "../lib/format";
 import { mockTotalMarks } from "../lib/compute";
@@ -191,7 +191,7 @@ function MockLogTable({
         </div>
       ) : (
       <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
-        <table className="w-full text-sm" style={{ borderCollapse: "collapse", tableLayout: "fixed" }}>
+        <table className="w-full text-sm" style={{ borderCollapse: "collapse", tableLayout: "fixed", minWidth: 640 }}>
           <thead>
             <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>
               <th className="px-3 py-2.5 text-left" style={{ ...TYPE.label, color: COLORS.inkMuted }}>
@@ -201,7 +201,7 @@ function MockLogTable({
               <th className="px-3 py-2.5 text-left" style={{ ...TYPE.label, color: COLORS.inkMuted }}>
                 <SortableHeader label="Marks" active={sortKey === "marks"} dir={sortDir} onClick={() => toggleSort("marks")} />
               </th>
-              <th className="px-3 py-2.5 text-right" style={{ ...TYPE.label, color: COLORS.inkMuted, width: 1 }} />
+              <th className="px-3 py-2.5 text-right" style={{ ...TYPE.label, color: COLORS.inkMuted, width: 68 }} />
             </tr>
           </thead>
           <tbody>
@@ -223,8 +223,14 @@ function MockLogTable({
               return (
                   <tr
                     key={mock.id}
-                    className="hover:bg-black/[0.025]"
+                    className="interactive-row"
                     onClick={() => onOpenAnalysis(mock.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") onOpenAnalysis(mock.id);
+                    }}
+                    role="link"
+                    tabIndex={0}
+                    aria-label={`Open analysis for ${mock.source}, ${fmtDate(mock.date)}`}
                     style={{ borderBottom: `1px solid ${COLORS.border}`, background: rowBg, cursor: "pointer" }}
                   >
                     <td className="px-3 py-2.5">
@@ -236,6 +242,9 @@ function MockLogTable({
                         <span className="mt-0.5 inline-flex items-center gap-1 text-xs" style={{ color: status.tone }}>
                           <StatusIcon size={12} />
                           {status.label}
+                        </span>
+                        <span className="mt-1 inline-flex items-center gap-0.5 text-xs" style={{ color: COLORS.inkMuted, fontWeight: 600 }}>
+                          Open analysis <ChevronRight size={13} />
                         </span>
                       </div>
                     </td>
@@ -254,7 +263,7 @@ function MockLogTable({
                     <td className="px-3 py-2.5" style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 650 }}>
                       {fmtNum(totalMarks, 0)}
                     </td>
-                    <td className="px-3 py-2.5 text-right" onClick={(ev) => ev.stopPropagation()}>
+                    <td className="px-3 py-2.5 text-right" style={{ width: 68 }} onClick={(ev) => ev.stopPropagation()}>
                       <RowActionsMenu
                         mockSource={mock.source}
                         hasAnalysis={hasAnalysis}

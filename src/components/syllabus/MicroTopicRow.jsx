@@ -20,7 +20,7 @@ export default function MicroTopicRow({ microTopic, isCompleted, isExpanded, onT
         <button
           type="button"
           onClick={() => hasQuestionTypes && onToggleExpand(microTopic.id)}
-          className="flex-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-left min-w-0"
+          className="theme-hover flex-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-md px-1.5 py-0.5 text-left min-w-0"
           style={{ cursor: hasQuestionTypes ? "pointer" : "default" }}
           disabled={!hasQuestionTypes}
         >

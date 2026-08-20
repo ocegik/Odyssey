@@ -116,7 +116,7 @@ function GlobalThemeStyles() {
     button { cursor: pointer; transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, opacity 120ms ease, box-shadow 120ms ease, transform 100ms ease; }
     input, select, textarea { transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease; }
     .theme-hover { transition: background-color 120ms ease; }
-    .theme-hover:hover { background: ${COLORS.hover} !important; }
+    .theme-hover:not(:disabled):hover { background: ${COLORS.hover} !important; }
     [data-theme="dark"] .hover\\:bg-black\\/5:hover,
     [data-theme="dark"] .hover\\:bg-black\\/\\[0\\.03\\]:hover,
     [data-theme="dark"] .hover\\:bg-black\\/\\[0\\.025\\]:hover,
