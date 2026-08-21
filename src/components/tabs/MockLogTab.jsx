@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Check, ChevronDown, ChevronRight, Plus, Trash2, Upload, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Download, FileSpreadsheet, Plus, Trash2, Upload, X } from "lucide-react";
 import { COLORS, TYPE, SHADOW } from "../../constants";
 import {
   blankBlockFor,
@@ -15,6 +15,7 @@ import MockLogTable from "../MockLogTable";
 import SectionBadge from "../ui/SectionBadge";
 import { inputStyle, selectStyle } from "../ui/FieldLabel";
 import HelpTip from "../ui/HelpTip";
+import { downloadMockSpreadsheetTemplate, parseMockSpreadsheetFile } from "../../lib/mockSpreadsheetImport";
 
 function Panel({ title, help, children, action }) {
   return (
@@ -44,6 +45,7 @@ export default function MockLogTab({
   const [showStructure, setShowStructure] = useState(false);
   const [showExtras, setShowExtras] = useState(false);
   const [editingMockId, setEditingMockId] = useState(null);
+  const [showImportGuide, setShowImportGuide] = useState(false);
   const importFileInputRef = useRef(null);
   const [importMessage, setImportMessage] = useState("");
   const [importError, setImportError] = useState("");
@@ -122,22 +124,21 @@ export default function MockLogTab({
     }));
   };
 
-  const handleImportFile = (ev) => {
+  const handleImportFile = async (ev) => {
     const file = ev.target.files?.[0];
     ev.target.value = "";
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const count = onImportMocks(reader.result);
-        setImportMessage(`${count} mock${count === 1 ? " was" : "s were"} imported.`);
-        setImportError("");
-      } catch (err) {
-        setImportError(err.message || "The mock JSON could not be imported. Check the file format and try again.");
-        setImportMessage("");
-      }
-    };
-    reader.readAsText(file);
+    try {
+      const raw = /\.(xlsx|xls)$/i.test(file.name)
+        ? await parseMockSpreadsheetFile(file)
+        : await file.text();
+      const count = onImportMocks(raw);
+      setImportMessage(`${count} mock${count === 1 ? " was" : "s were"} imported.`);
+      setImportError("");
+    } catch (err) {
+      setImportError(err.message || "The mock file could not be imported. Check the structure and try again.");
+      setImportMessage("");
+    }
   };
 
   const submitMock = (ev) => {
@@ -163,20 +164,45 @@ export default function MockLogTab({
   return (
     <div className="flex flex-col gap-4">
       <div ref={formTopRef} />
+      {showImportGuide && (
+        <Panel
+          title="Import your old data"
+          help="Imports add mock results to your existing log; they never replace your current mocks."
+          action={<button type="button" onClick={() => setShowImportGuide(false)} className="theme-hover px-2.5 py-1.5 text-xs" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}>Close</button>}
+        >
+          <p className="text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>
+            Bring scores from an older tracker in <strong style={{ color: COLORS.ink }}>Excel (.xlsx)</strong> or <strong style={{ color: COLORS.ink }}>JSON</strong>. Each spreadsheet row is one mock; use the template headers so Odyssey can recognise your columns.
+          </p>
+          <div className="grid grid-cols-1 gap-2 text-xs leading-relaxed sm:grid-cols-3" style={{ color: COLORS.inkMuted }}>
+            <div className="rounded-lg p-3" style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}` }}><strong style={{ color: COLORS.ink }}>Required</strong><br />Date, mock name, score and total questions for VARC, DILR and Quant.</div>
+            <div className="rounded-lg p-3" style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}` }}><strong style={{ color: COLORS.ink }}>Optional</strong><br />Overall percentile, attempted and correct answers. Correct cannot exceed attempted.</div>
+            <div className="rounded-lg p-3" style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}` }}><strong style={{ color: COLORS.ink }}>Date format</strong><br />Use <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>yyyy-mm-dd</code>, e.g. 2026-08-15.</div>
+          </div>
+          <p className="text-xs leading-relaxed" style={{ color: COLORS.inkMuted }}>
+            JSON can be one mock object, an array of mocks, or <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>{'{"mocks":[...]}'}</code>. The Excel template includes the exact columns and an example row.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <input ref={importFileInputRef} type="file" accept="application/json,.json,.xlsx,.xls" className="hidden" onChange={handleImportFile} />
+            <button type="button" onClick={() => importFileInputRef.current?.click()} className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm hover:opacity-90" style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}><Upload size={15} /> Import file</button>
+            <button type="button" onClick={downloadMockSpreadsheetTemplate} className="theme-hover inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.ink, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}><Download size={15} /> Download Excel template</button>
+          </div>
+          {importError && <div className="p-3 text-sm" style={{ background: COLORS.dangerSoft, color: COLORS.danger, borderRadius: 8 }}>{importError}</div>}
+          {importMessage && !importError && <p className="text-sm" style={{ color: COLORS.good }}>{importMessage}</p>}
+        </Panel>
+      )}
       <Panel
         title={editingMockId ? "Edit Mock Result" : "Log Mock Result"}
         help="Enter the total score and basic section data after each mock. Adding attempts and correct answers unlocks accuracy, attempt-rate, and score-leak insights."
         action={
           <div className="flex flex-col items-end gap-1">
-            <input ref={importFileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} />
             <button
               type="button"
-              onClick={() => importFileInputRef.current?.click()}
+              onClick={() => setShowImportGuide((value) => !value)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-black/[0.04]"
               style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 650 }}
             >
-              <Upload size={14} />
-              Import JSON
+              <FileSpreadsheet size={14} />
+              Import your old data
             </button>
           </div>
         }
@@ -199,12 +225,6 @@ export default function MockLogTab({
           Skipped an optional field or mistyped the date? Edit the mock later from its row menu in the table below.
         </p>
         )}
-        {importError && (
-          <div className="p-3 text-sm" style={{ background: COLORS.dangerSoft, color: COLORS.danger, borderRadius: 8 }}>
-            {importError}
-          </div>
-        )}
-        {importMessage && !importError && <p className="text-sm" style={{ color: COLORS.good }}>{importMessage}</p>}
         <form onSubmit={submitMock} className="flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-4 rounded-xl border p-4 sm:grid-cols-2 lg:grid-cols-4" style={{ background: COLORS.surface2, borderColor: COLORS.border }}>
             <div className="flex flex-col gap-1.5">
