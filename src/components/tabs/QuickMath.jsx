@@ -22,6 +22,8 @@ import {
   makeQuickMathQuestion,
   normalizeQuickMathProgress,
 } from "../../lib/quickMath";
+import { createListShareImage, SHARE_COLORS } from "../../lib/shareImage";
+import ShareImageButton from "../ui/ShareImageButton";
 
 function Stat({ label, value, icon: Icon }) {
   return (
@@ -40,7 +42,7 @@ function Stat({ label, value, icon: Icon }) {
   );
 }
 
-export default function QuickMath({ progress: rawProgress, onRecordResult }) {
+export default function QuickMath({ progress: rawProgress, onRecordResult, studentName }) {
   const progress = normalizeQuickMathProgress(rawProgress || emptyQuickMathProgress());
   const [levelId, setLevelId] = useState("foundation");
   const [question, setQuestion] = useState(() => makeQuickMathQuestion("foundation"));
@@ -94,9 +96,9 @@ export default function QuickMath({ progress: rawProgress, onRecordResult }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <div style={{ ...TYPE.label, color: COLORS.inkMuted }}>Practice</div>
-        <h1 className="mt-1" style={TYPE.pageTitle}>Quick Math</h1>
+      <div className="flex items-end justify-between gap-3 flex-wrap">
+        <div><div style={{ ...TYPE.label, color: COLORS.inkMuted }}>Practice</div><h1 className="mt-1" style={TYPE.pageTitle}>Quick Math</h1></div>
+        <ShareImageButton createImage={() => createListShareImage({ title: "Quick Math Results", studentName, subtitle: activeLevel.label, items: [{ label: "Practice XP", text: progress.xp, color: SHARE_COLORS.primary }, { label: "Accuracy", text: `${accuracy(progress.correct, progress.totalAnswered)}%`, color: SHARE_COLORS.dilr }, { label: "Best streak", text: progress.bestStreak, color: SHARE_COLORS.primary }, { label: "Questions solved", text: progress.totalAnswered, color: SHARE_COLORS.quant }], filename: "odyssey-quick-math-results.png" })} />
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

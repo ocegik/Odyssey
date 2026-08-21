@@ -23,6 +23,8 @@ import TopSignals from "../charts/TopSignals";
 import EmptyState from "../ui/EmptyState";
 import GroupHeading from "../ui/GroupHeading";
 import Disclosure from "../ui/Disclosure";
+import { createListShareImage, SHARE_COLORS } from "../../lib/shareImage";
+import ShareImageButton from "../ui/ShareImageButton";
 
 function Panel({ title, children, note }) {
   return (
@@ -237,7 +239,7 @@ function countLabel(count, noun) {
   return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }
 
-export default function AnalysisInsightsDataTab({ mocks }) {
+export default function AnalysisInsightsDataTab({ mocks, studentName }) {
   const [rangeMode, setRangeMode] = useState("all");
   const [specificMockId, setSpecificMockId] = useState(null);
 
@@ -309,6 +311,7 @@ export default function AnalysisInsightsDataTab({ mocks }) {
           <ChartFrame
             title="Recommendations"
             note={advanced.recommendations.length === 0 ? undefined : countLabel(advanced.recommendations.length, "recommendation")}
+            action={advanced.recommendations.length ? <ShareImageButton createImage={() => createListShareImage({ title: "Analysis Recommendations", studentName, items: advanced.recommendations.map((item) => ({ label: item.section || "Recommendation", text: item.text || item.title, color: item.section === "VARC" ? SHARE_COLORS.varc : item.section === "DILR" ? SHARE_COLORS.dilr : item.section === "Quant" ? SHARE_COLORS.quant : SHARE_COLORS.primary })), filename: "odyssey-analysis-recommendations.png" })} /> : null}
             empty={advanced.recommendations.length === 0 ? "No actionable recommendations yet." : null}
           >
             <RecommendationList recommendations={advanced.recommendations} />
@@ -323,6 +326,7 @@ export default function AnalysisInsightsDataTab({ mocks }) {
             <div className="flex flex-col gap-4">
               <ChartFrame
                 title="Patterns"
+                action={sectionSetInsights.length ? <ShareImageButton createImage={() => createListShareImage({ title: "Section & Set Patterns", studentName, items: sectionSetInsights.map((item) => ({ label: item.section || "Pattern", text: item.text, color: item.section === "VARC" ? SHARE_COLORS.varc : item.section === "DILR" ? SHARE_COLORS.dilr : SHARE_COLORS.quant })), filename: "odyssey-section-patterns.png" })} /> : null}
                 empty={sectionSetInsights.length === 0 ? "No additional patterns yet." : null}
               >
                 <InsightList insights={sectionSetInsights} iconFor={detailedInsightIcon} showHero={false} />
@@ -341,6 +345,7 @@ export default function AnalysisInsightsDataTab({ mocks }) {
             <div className="flex flex-col gap-4">
               <ChartFrame
                 title="Patterns"
+                action={topicInsightsRemaining.length ? <ShareImageButton createImage={() => createListShareImage({ title: "Topic & Domain Patterns", studentName, items: topicInsightsRemaining.map((item) => ({ label: item.section || "Pattern", text: item.text, color: item.section === "VARC" ? SHARE_COLORS.varc : item.section === "DILR" ? SHARE_COLORS.dilr : SHARE_COLORS.quant })), filename: "odyssey-topic-patterns.png" })} /> : null}
                 empty={topicInsightsRemaining.length === 0 ? "No topic or domain patterns yet." : null}
               >
                 <InsightList insights={topicInsightsRemaining} showHero={false} />

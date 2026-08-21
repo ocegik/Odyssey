@@ -1,10 +1,12 @@
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { COLORS, SECTIONS, SECTION_META } from "../../constants";
 import ChartFrame from "./ChartFrame";
+import { createChartShareImage, shareSeries } from "../../lib/shareImage";
+import ShareImageButton from "../ui/ShareImageButton";
 
-export default function SectionRadarChart({ data, empty }) {
+export default function SectionRadarChart({ data, empty, studentName }) {
   return (
-    <ChartFrame title="Section profile" note="Accuracy, attempt rate, and marks per attempt, shown on a 0–100 scale" empty={empty}>
+    <ChartFrame title="Section profile" note="Accuracy, attempt rate, and marks per attempt, shown on a 0–100 scale" action={<ShareImageButton createImage={() => createChartShareImage({ title: "Section Profile", studentName, subtitle: "Accuracy, attempt rate and marks per attempt", data: data.map((row) => ({ ...row, label: row.metric })), series: [shareSeries.VARC, shareSeries.DILR, shareSeries.Quant], chartType: "bar", domain: [0, 100], filename: "odyssey-section-profile.png" })} />} empty={empty}>
       <div style={{ width: "100%", height: 280 }}>
         <ResponsiveContainer>
           <RadarChart data={data} margin={{ top: 8, right: 12, left: 12, bottom: 0 }}>

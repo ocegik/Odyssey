@@ -13,6 +13,8 @@ import { COLORS, SECTIONS } from "../../constants";
 import { buildRadarData, buildConsistencyStats } from "../../lib/compute";
 import { aggregateScoreLeak } from "../../lib/scoreLeak";
 import { fmtNum } from "../../lib/format";
+import { createChartShareImage, shareSeries } from "../../lib/shareImage";
+import ShareImageButton from "../ui/ShareImageButton";
 
 function ConsistencyStats({ consistency }) {
   return (
@@ -92,11 +94,11 @@ export default function TrendsTab({
       {/* Always-on: the three charts that answer "who's lagging, and is it
           accuracy or attempts" — the question the app exists for. */}
       <GroupHeading>Core trends</GroupHeading>
-      <ChartFrame title="Section-wise trend — total marks" note={marksTrendNote} help="Each line shows the marks you logged for a section. Add section targets in Account to compare each result with its target; otherwise the optional overall target appears as one reference line." empty={noData}>
+      <ChartFrame title="Section-wise trend — total marks" note={marksTrendNote} action={!noData && <ShareImageButton createImage={() => createChartShareImage({ title: "Section Marks Trend", studentName: settings?.studentName, data: marksSeries, series: [shareSeries.VARC, shareSeries.DILR, shareSeries.Quant], filename: "odyssey-section-marks-trend.png" })} />} help="Each line shows the marks you logged for a section. Add section targets in Account to compare each result with its target; otherwise the optional overall target appears as one reference line." empty={noData}>
         <MultiSectionLineChart data={marksSeries} referenceLines={targetLines} targets={sectionTargets} />
       </ChartFrame>
-      <AccuracyComparisonChart sectionStats={sectionStats} />
-      <ChartFrame title="Attempt-rate trend" note="% of section questions attempted" help="Attempt rate is attempted questions divided by total questions in that section. It helps distinguish a score drop caused by trying fewer questions from one caused by lower accuracy." empty={noData}>
+      <AccuracyComparisonChart sectionStats={sectionStats} studentName={settings?.studentName} />
+      <ChartFrame title="Attempt-rate trend" note="% of section questions attempted" action={!noData && <ShareImageButton createImage={() => createChartShareImage({ title: "Attempt-rate Trend", studentName: settings?.studentName, data: attemptRateSeries, series: [shareSeries.VARC, shareSeries.DILR, shareSeries.Quant], domain: [0, 100], suffix: "%", filename: "odyssey-attempt-rate-trend.png" })} />} help="Attempt rate is attempted questions divided by total questions in that section. It helps distinguish a score drop caused by trying fewer questions from one caused by lower accuracy." empty={noData}>
         <MultiSectionLineChart data={attemptRateSeries} suffix="%" domain={[0, 100]} />
       </ChartFrame>
 
@@ -107,7 +109,7 @@ export default function TrendsTab({
       <Disclosure id="trends.leak" title="Where marks are being lost" summary={scoreLeakSummary(leak)}>
         <ScoreLeakPanel leak={leak} />
         <div className="mt-4">
-          <ChartFrame title="Marks-per-attempt trend" note="Marks scored per question attempted" help="This divides a section's score by questions attempted. A rising value generally indicates better question selection or accuracy; it is not a percentage." empty={noData}>
+          <ChartFrame title="Marks-per-attempt trend" note="Marks scored per question attempted" action={!noData && <ShareImageButton createImage={() => createChartShareImage({ title: "Marks per Attempt Trend", studentName: settings?.studentName, data: marksPerAttemptSeries, series: [shareSeries.VARC, shareSeries.DILR, shareSeries.Quant], filename: "odyssey-marks-per-attempt-trend.png" })} />} help="This divides a section's score by questions attempted. A rising value generally indicates better question selection or accuracy; it is not a percentage." empty={noData}>
             <MultiSectionLineChart data={marksPerAttemptSeries} />
           </ChartFrame>
         </div>
@@ -115,20 +117,20 @@ export default function TrendsTab({
 
       <Disclosure id="trends.percentile" title="Percentile trend" summary={percentileSummary(percentileSeries)}>
         <div className="flex flex-col gap-4 pt-4">
-          <PercentileTrendChart data={percentileSeries} targetPercentile={settings?.overallTargetPercentile} />
+          <PercentileTrendChart data={percentileSeries} targetPercentile={settings?.overallTargetPercentile} studentName={settings?.studentName} />
         </div>
       </Disclosure>
 
       <Disclosure id="trends.shape" title="Section shape" summary={radarSummary(sectionStats)}>
         <div className="pt-4">
-          <SectionRadarChart data={radarData} empty={radarEmpty} />
+          <SectionRadarChart data={radarData} empty={radarEmpty} studentName={settings?.studentName} />
         </div>
       </Disclosure>
 
       <Disclosure id="trends.consistency" title="Consistency & sources" summary={consistencySummary(consistency)}>
         <div className="flex flex-col gap-4 pt-4">
           <ConsistencyStats consistency={consistency} />
-          <SourceComparisonChart entriesWithComputed={entriesWithComputed} />
+          <SourceComparisonChart entriesWithComputed={entriesWithComputed} studentName={settings?.studentName} />
         </div>
       </Disclosure>
     </div>

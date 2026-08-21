@@ -2,8 +2,10 @@ import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { COLORS, SECTIONS } from "../../constants";
 import ChartFrame from "./ChartFrame";
+import { createChartShareImage, shareSeries } from "../../lib/shareImage";
+import ShareImageButton from "../ui/ShareImageButton";
 
-export default function AccuracyComparisonChart({ sectionStats }) {
+export default function AccuracyComparisonChart({ sectionStats, studentName }) {
   const [mode, setMode] = useState("latest");
   const data = SECTIONS.map((sec) => {
     const latest = sectionStats[sec].latest;
@@ -19,6 +21,7 @@ export default function AccuracyComparisonChart({ sectionStats }) {
   return (
     <ChartFrame
       title="Accuracy comparison"
+      action={hasAny && <ShareImageButton createImage={() => createChartShareImage({ title: "Accuracy Comparison", studentName, subtitle: mode === "latest" ? "Latest mock" : "Rolling average (5)", data, series: [{ ...shareSeries.Overall, key: "Overall", label: "Accuracy" }], chartType: "bar", domain: [0, 100], suffix: "%", filename: "odyssey-accuracy-comparison.png" })} />}
       note={
         <div className="flex gap-1">
           {["latest", "rolling"].map((m) => (

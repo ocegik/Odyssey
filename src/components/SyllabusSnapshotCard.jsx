@@ -3,6 +3,8 @@ import { COLORS, SECTION_META, SHADOW, TYPE } from "../constants";
 import { SYLLABUS_TREE } from "../lib/syllabusModel";
 import ProgressBar from "./ui/ProgressBar";
 import FrequencyBadge from "./syllabus/FrequencyBadge";
+import { createChartShareImage, shareSeries } from "../lib/shareImage";
+import ShareImageButton from "./ui/ShareImageButton";
 
 function SectionMiniRow({ section, stat }) {
   const meta = SECTION_META[section.colorKey];
@@ -63,7 +65,7 @@ function EmptyListNote({ text }) {
    hierarchy. All numbers come from syllabusModel selectors, never
    recomputed here, so this stays in sync with the Syllabus tab by
    construction. */
-export default function SyllabusSnapshotCard({ stats, highFrequencyRemaining, leastCompletedMacroTopics, onOpenSyllabus }) {
+export default function SyllabusSnapshotCard({ stats, highFrequencyRemaining, leastCompletedMacroTopics, onOpenSyllabus, studentName }) {
   const { overall, bySection } = stats;
   const remaining = overall.total - overall.completed;
 
@@ -74,6 +76,8 @@ export default function SyllabusSnapshotCard({ stats, highFrequencyRemaining, le
           <ListChecks size={15} style={{ color: COLORS.inkMuted }} />
           <h3 style={TYPE.chartTitle}>Syllabus progress</h3>
         </div>
+        <div className="flex items-center gap-2">
+          <ShareImageButton createImage={() => createChartShareImage({ title: "Syllabus Progress", studentName, data: [{ label: "Completion", VARC: bySection.VARC?.percent, DILR: bySection.DILR?.percent, Quant: bySection.Quant?.percent }], series: [shareSeries.VARC, shareSeries.DILR, shareSeries.Quant], chartType: "bar", domain: [0, 100], suffix: "%", metrics: [{ label: "Overall completion", value: `${overall.percent}%` }], filename: "odyssey-syllabus-progress.png" })} />
         {onOpenSyllabus && (
           <button
             onClick={onOpenSyllabus}
@@ -83,6 +87,7 @@ export default function SyllabusSnapshotCard({ stats, highFrequencyRemaining, le
             Open syllabus <ArrowRight size={12} />
           </button>
         )}
+        </div>
       </div>
 
       <div className="flex items-end gap-6 flex-wrap">

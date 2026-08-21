@@ -1,5 +1,5 @@
-import { Suspense, lazy, useMemo, useState } from "react";
-import { ArrowRight, ClipboardCheck, Download, Flame, Lightbulb, Sparkles } from "lucide-react";
+import { Suspense, lazy, useMemo } from "react";
+import { ArrowRight, ClipboardCheck, Flame, Lightbulb, Sparkles } from "lucide-react";
 import { COLORS, SECTIONS, SHADOW, TYPE } from "../../constants";
 import { fmtDate, fmtNum, fmtPct } from "../../lib/format";
 import { computePacing, mockTotalMarks, computeAdaptiveTarget, avgOfLastN, bestMarks } from "../../lib/compute";
@@ -15,7 +15,8 @@ import SectionTargetPanel, { buildTargetRows, targetGapSummary } from "../Sectio
 import Disclosure from "../ui/Disclosure";
 import { QUICK_MATH_LEVELS, accuracy, getLevelProgress, isLevelUnlocked, normalizeQuickMathProgress } from "../../lib/quickMath";
 import { catExamDateForYear } from "../../lib/dateMath";
-import { downloadMockMarksTrendImage } from "../../lib/shareImage";
+import { createChartShareImage, createListShareImage, shareSeries, SHARE_COLORS } from "../../lib/shareImage";
+import ShareImageButton from "../ui/ShareImageButton";
 
 const OverallMarksChart = lazy(() => import("../charts/OverallMarksChart"));
 
@@ -103,7 +104,7 @@ function LatestMockSpotlight({ mocks }) {
   );
 }
 
-function QuickMathCard({ progress: rawProgress, onOpenQuickMath }) {
+function QuickMathCard({ progress: rawProgress, onOpenQuickMath, studentName }) {
   const progress = normalizeQuickMathProgress(rawProgress);
   const currentLevel = [...QUICK_MATH_LEVELS]
     .reverse()
@@ -127,6 +128,8 @@ function QuickMathCard({ progress: rawProgress, onOpenQuickMath }) {
               : "Short mental-math drills for CAT preparation."}
           </p>
         </div>
+        <div className="flex items-center gap-2">
+        <ShareImageButton createImage={() => createListShareImage({ title: "Quick Math Progress", studentName, subtitle: currentLevel.label, items: [{ label: "Level", text: currentLevel.label, color: SHARE_COLORS.primary }, { label: "Accuracy", text: `${accuracy(progress.correct, progress.totalAnswered)}%`, color: SHARE_COLORS.dilr }, { label: "Current streak", text: `${progress.currentStreak}`, color: SHARE_COLORS.primary }], filename: "odyssey-quick-math-progress.png" })} />
         <button
           type="button"
           onClick={onOpenQuickMath}
@@ -135,6 +138,7 @@ function QuickMathCard({ progress: rawProgress, onOpenQuickMath }) {
         >
           Practice <ArrowRight size={15} />
         </button>
+        </div>
       </div>
 
       <div className="mt-5 grid grid-cols-3 gap-3">
@@ -166,7 +170,6 @@ function QuickMathCard({ progress: rawProgress, onOpenQuickMath }) {
 }
 
 export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionStats, settings, syllabusProgress, onOpenSyllabus, onOpenQuickMath }) {
-  const [isDownloadingTrend, setIsDownloadingTrend] = useState(false);
   const graphData = buildOverallMarksData(mocks);
   const latestMock = mocks.length > 0 ? mocks[mocks.length - 1] : null;
   const catTargetDate = catExamDateForYear(settings?.catTargetYear);
@@ -181,19 +184,6 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionS
   const leastCompletedMacroTopics = useMemo(() => getLeastCompletedMacroTopics(syllabusStats, 4), [syllabusStats]);
 
   const targetRows = useMemo(() => buildTargetRows(sectionStats, settings), [sectionStats, settings]);
-  const handleDownloadTrend = async () => {
-    setIsDownloadingTrend(true);
-    try {
-      await downloadMockMarksTrendImage({
-        data: graphData,
-        studentName: settings?.studentName,
-        latestMarks: lastMarks,
-        bestMarks: bestMarksValue,
-      });
-    } finally {
-      setIsDownloadingTrend(false);
-    }
-  };
   return (
     <div className="flex flex-col gap-4">
       <CountdownHero
@@ -215,12 +205,13 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionS
       <QuickMathCard
         progress={settings?.quickMathProgress}
         onOpenQuickMath={onOpenQuickMath}
+        studentName={settings?.studentName}
       />
 
       <LatestMockSpotlight mocks={mocks} />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4 items-start">
-        <ChartFrame title="Insights" icon={Lightbulb} empty={insights.length === 0 ? emptyInsightText(mocks) : null}>
+        <ChartFrame title="Insights" icon={Lightbulb} action={insights.length ? <ShareImageButton createImage={() => createListShareImage({ title: "Mock Insights", studentName: settings?.studentName, items: insights.map((insight) => ({ label: `${insight.section}${insight.title ? ` · ${insight.title}` : ""}`, text: insight.text, color: insight.section === "VARC" ? SHARE_COLORS.varc : insight.section === "DILR" ? SHARE_COLORS.dilr : SHARE_COLORS.quant })), filename: "odyssey-mock-insights.png" })} /> : null} empty={insights.length === 0 ? emptyInsightText(mocks) : null}>
           <InsightList insights={insights} />
         </ChartFrame>
 
@@ -232,6 +223,7 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionS
         highFrequencyRemaining={highFrequencyRemaining}
         leastCompletedMacroTopics={leastCompletedMacroTopics}
         onOpenSyllabus={onOpenSyllabus}
+        studentName={settings?.studentName}
       />
 
       {/* Below the daily glance: still one click away, but not competing
@@ -252,18 +244,7 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionS
             <p className="text-sm" style={{ color: COLORS.inkMuted }}>No scored mocks have been logged yet.</p>
           ) : (
             <>
-              <div className="mb-3 flex justify-end">
-                <button
-                  type="button"
-                  onClick={handleDownloadTrend}
-                  disabled={isDownloadingTrend}
-                  className="theme-hover inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs disabled:cursor-wait disabled:opacity-60"
-                  style={{ background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 7, color: COLORS.inkMuted, fontFamily: "'Inter', sans-serif", fontWeight: 600 }}
-                >
-                  <Download size={14} />
-                  {isDownloadingTrend ? "Preparing…" : "Share"}
-                </button>
-              </div>
+              <div className="mb-3 flex justify-end"><ShareImageButton createImage={() => createChartShareImage({ title: "Mock Marks Trend", studentName: settings?.studentName, data: graphData, series: [shareSeries.overall], metrics: [{ label: "Latest marks", value: fmtNum(lastMarks, 1) }, { label: "Best marks", value: fmtNum(bestMarksValue, 1) }], filename: "odyssey-mock-marks-trend.png" })} /></div>
               <Suspense fallback={<div style={{ height: 280 }} aria-busy="true" />}>
                 <OverallMarksChart data={graphData} />
               </Suspense>

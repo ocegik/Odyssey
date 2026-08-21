@@ -435,6 +435,7 @@ export default function CATMockTracker() {
               <QuickMath
                 progress={settings.quickMathProgress}
                 onRecordResult={recordQuickMathResult}
+                studentName={settings.studentName}
               />
             </div>
           )}
@@ -517,7 +518,7 @@ export default function CATMockTracker() {
                 display: activeTab === "analysisInsights" ? "flex" : "none",
               }}
             >
-              <AnalysisInsightsDataTab mocks={mocks} />
+              <AnalysisInsightsDataTab mocks={mocks} studentName={settings.studentName} />
             </div>
           )}
 

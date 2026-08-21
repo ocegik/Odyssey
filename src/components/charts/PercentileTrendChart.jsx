@@ -2,6 +2,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { COLORS, SECTIONS, SECTION_META } from "../../constants";
 import { fmtNum } from "../../lib/format";
 import ChartFrame from "./ChartFrame";
+import { createChartShareImage, shareSeries } from "../../lib/shareImage";
+import ShareImageButton from "../ui/ShareImageButton";
 
 /**
  * Percentile over time, per section plus overall.
@@ -15,7 +17,7 @@ import ChartFrame from "./ChartFrame";
  * in a narrow high band, and a fixed 0-100 axis flattens every real movement
  * into a straight line.
  */
-export default function PercentileTrendChart({ data, targetPercentile }) {
+export default function PercentileTrendChart({ data, targetPercentile, studentName }) {
   const empty = data.length === 0
     ? "Log a mock with its overall percentile to see this trend."
     : null;
@@ -23,6 +25,7 @@ export default function PercentileTrendChart({ data, targetPercentile }) {
   return (
     <ChartFrame
       title="Percentile trend"
+      action={!empty && <ShareImageButton createImage={() => createChartShareImage({ title: "Percentile Trend", studentName, data, series: [shareSeries.VARC, shareSeries.DILR, shareSeries.Quant, shareSeries.Overall], suffix: "%ile", filename: "odyssey-percentile-trend.png" })} />}
       note="Overall and sectional percentiles from the test series you logged"
       empty={empty}
     >

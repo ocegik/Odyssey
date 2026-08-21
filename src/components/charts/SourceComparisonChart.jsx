@@ -2,8 +2,10 @@ import { useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { COLORS, SECTIONS, SECTION_META } from "../../constants";
 import ChartFrame from "./ChartFrame";
+import { createChartShareImage, shareSeries } from "../../lib/shareImage";
+import ShareImageButton from "../ui/ShareImageButton";
 
-export default function SourceComparisonChart({ entriesWithComputed }) {
+export default function SourceComparisonChart({ entriesWithComputed, studentName }) {
   const data = useMemo(() => {
     const bySource = {};
     entriesWithComputed.forEach((e) => {
@@ -15,7 +17,7 @@ export default function SourceComparisonChart({ entriesWithComputed }) {
   }, [entriesWithComputed]);
 
   return (
-    <ChartFrame title="Source-wise comparison" note="Average section marks by test source" empty={data.length === 0 ? "Log mocks from at least two sources to compare your results." : null}>
+    <ChartFrame title="Source-wise comparison" note="Average section marks by test source" action={data.length > 0 && <ShareImageButton createImage={() => createChartShareImage({ title: "Source-wise Comparison", studentName, data: data.map((row) => ({ ...row, label: row.source })), series: [shareSeries.VARC, shareSeries.DILR, shareSeries.Quant], chartType: "bar", filename: "odyssey-source-comparison.png" })} />} empty={data.length === 0 ? "Log mocks from at least two sources to compare your results." : null}>
       <div style={{ width: "100%", height: 260 }}>
         <ResponsiveContainer>
           <BarChart data={data} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
