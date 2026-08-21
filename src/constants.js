@@ -42,6 +42,15 @@ export const COLORS = {
   focusRing: "var(--color-focus-ring)",
 };
 
+/* Primary and warning accents are intentionally fixed across themes. */
+const FIXED_ACCENT_COLORS = {
+  warn: "#E8BD63",
+  warnSoft: "#4F3D1E",
+  primary: "#B554AA",
+  primaryHover: "#C170B8",
+  focusRing: "rgba(181,84,170,0.5)",
+};
+
 export const THEME_COLORS = {
   light: {
     bg: "#F5F6F1",
@@ -59,15 +68,11 @@ export const THEME_COLORS = {
     good: "#3F8F5F",
     danger: "#B8433D",
     dangerSoft: "#F3DFDE",
-    warn: "#BD8420",
-    warnSoft: "#F2E5C9",
     info: "#1F6E7F",
     infoSoft: "#DCEBEC",
-    primary: "#5E3159",
-    primaryHover: "#3C2039",
     onPrimary: "#FFFFFF",
     hover: "rgba(30,36,32,0.05)",
-    focusRing: "rgba(94,49,89,0.4)",
+    ...FIXED_ACCENT_COLORS,
     shadowCard: "0 1px 2px rgba(30,36,32,0.05)",
     shadowFloating: "0 4px 16px rgba(30,36,32,0.18)",
   },
@@ -87,15 +92,11 @@ export const THEME_COLORS = {
     good: "#70CB94",
     danger: "#F48A80",
     dangerSoft: "#4D312A",
-    warn: "#E8BD63",
-    warnSoft: "#4F3D1E",
     info: "#5CBED0",
     infoSoft: "#1F4750",
-    primary: "#B554AA",
-    primaryHover: "#C170B8",
     onPrimary: "#FFFFFF",
     hover: "rgba(255,255,255,0.06)",
-    focusRing: "rgba(181,84,170,0.5)",
+    ...FIXED_ACCENT_COLORS,
     shadowCard: "0 1px 2px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.02)",
     shadowFloating: "0 10px 28px rgba(0,0,0,0.6)",
   },
