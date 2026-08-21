@@ -268,12 +268,11 @@ function QuestionReviewRow({
   setQuestion,
   setQuestionTopic,
   setQuestionTypeTopic,
-  applySetTopic,
 }) {
   const reviewed = question.result !== "Unreviewed";
-  const usesPerQuestionSetTaxonomy = isSet && (section === "VARC" || section === "DILR");
-  const fieldGrid = usesPerQuestionSetTaxonomy || !isSet ? "xl:grid-cols-4" : "xl:grid-cols-3";
-  const notesSpan = usesPerQuestionSetTaxonomy || !isSet ? "sm:col-span-2 xl:col-span-4" : "sm:col-span-2 xl:col-span-3";
+  const hasSemanticQuestionType = isSet && (section === "VARC" || section === "DILR");
+  const fieldGrid = hasSemanticQuestionType || !isSet ? "xl:grid-cols-4" : "xl:grid-cols-3";
+  const notesSpan = hasSemanticQuestionType || !isSet ? "sm:col-span-2 xl:col-span-4" : "sm:col-span-2 xl:col-span-3";
   const resultTone = {
     Unreviewed: COLORS.inkMuted,
     Correct: COLORS.good,
@@ -319,37 +318,7 @@ function QuestionReviewRow({
             {["MCQ", "TITA"].map((type) => <option key={type}>{type}</option>)}
           </select>
         </ReviewField>
-        {usesPerQuestionSetTaxonomy && (
-          <ReviewField label="Passage / set topic" style={detailStyle}>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <TopicPicker
-                section={section}
-                topicRef={question.topicRef}
-                legacyTopic={question.topic}
-                onChange={setQuestionTopic(section, blockIdx, questionIdx)}
-                selectStyle={selectStyle}
-                topicIds={SET_TOPIC_IDS[section]}
-                placeholder="Choose topic…"
-                title="Choose the shared passage or DILR set topic"
-                compact
-                disabled={!reviewed}
-              />
-              {question.topicRef && (
-                <button
-                  type="button"
-                  disabled={!reviewed}
-                  onClick={() => applySetTopic(section, blockIdx, question.topicRef.topicId)}
-                  className="theme-hover px-2 py-1 text-xs"
-                  title="Copy this topic to every question in this set"
-                  style={{ border: `1px solid ${COLORS.border}`, borderRadius: 6, background: COLORS.surface, color: COLORS.inkMuted }}
-                >
-                  Apply to set
-                </button>
-              )}
-            </div>
-          </ReviewField>
-        )}
-        {usesPerQuestionSetTaxonomy && (
+        {hasSemanticQuestionType && (
           <ReviewField label="Question type" style={detailStyle}>
             <TopicPicker
               section={section}
@@ -662,8 +631,8 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
               ...block,
               questions: block.questions.map((question) => ({
                 ...question,
-                topic: getTopicNode(topicId)?.name || "",
-                topicRef: { topicId, source: "user", taxonomyVersion: TOPIC_REGISTRY_VERSION },
+                topic: topicId ? getTopicNode(topicId)?.name || "" : "",
+                topicRef: topicId ? { topicId, source: "user", taxonomyVersion: TOPIC_REGISTRY_VERSION } : null,
               })),
             }
           : block
@@ -1048,6 +1017,7 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
                   {sectionAnalysis.blocks.map((block, blockIdx) => {
                     const isSet = block.type === "set";
                     const topicHeader = "Topic";
+                    const setTopicQuestion = block.questions.find((question) => question.topicRef || question.topic) || block.questions[0];
                     return (
                     <div key={block.id} className="flex flex-col gap-3 p-3" style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10 }}>
                       <div className="flex items-center gap-2 flex-wrap">
@@ -1067,6 +1037,22 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
                             />
                           </div>
                         )}
+                        {isSet && (section === "VARC" || section === "DILR") && (
+                          <div className="flex items-center gap-1.5 ml-auto">
+                            <span className="text-xs" style={{ color: COLORS.inkMuted }}>{section === "VARC" ? "Passage topic:" : "Set topic:"}</span>
+                            <TopicPicker
+                              section={section}
+                              topicRef={setTopicQuestion?.topicRef}
+                              legacyTopic={setTopicQuestion?.topic}
+                              onChange={(topicId) => applySetTopic(section, blockIdx, topicId)}
+                              selectStyle={selectStyle}
+                              topicIds={SET_TOPIC_IDS[section]}
+                              placeholder="Choose topic…"
+                              title={section === "VARC" ? "Choose the passage topic for this set" : "Choose the DILR set topic"}
+                              compact
+                            />
+                          </div>
+                        )}
                       </div>
                       <div className="flex flex-col gap-2">
                         {block.questions.map((question, questionIdx) => (
@@ -1081,7 +1067,6 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
                             setQuestion={setQuestion}
                             setQuestionTopic={setQuestionTopic}
                             setQuestionTypeTopic={setQuestionTypeTopic}
-                            applySetTopic={applySetTopic}
                           />
                         ))}
                       </div>
