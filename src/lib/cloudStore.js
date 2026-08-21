@@ -338,6 +338,19 @@ export function mockRowsToDataset(rows) {
   };
 }
 
+/**
+ * The app sees legacy-backed mocks by `legacy_mock_id`, while rows created
+ * before that identifier was populated are represented by their database id.
+ * Compare using the same public id that `mockRowsToDataset()` exposes so a
+ * delete cannot leave either kind of row behind to reappear on the next load.
+ */
+export function removedMockDatabaseIds(existingMocks, retainedMocks) {
+  const retainedIds = new Set((retainedMocks || []).map((mock) => mock.id));
+  return (existingMocks || [])
+    .filter((mock) => !retainedIds.has(mock.legacy_mock_id || mock.id))
+    .map((mock) => mock.id);
+}
+
 function mockToParentRow(mock, userId) {
   const createdAt = timestampForDatabase(mock.createdAt);
   return {
@@ -388,7 +401,10 @@ export async function fetchRemoteMocks() {
     console.error("Supabase fetch failed for mocks:", error.message);
     return null;
   }
-  return data?.length ? mockRowsToDataset(data) : null;
+  // An empty, successful query is meaningful: it says this account has no
+  // mocks. Returning a dataset instead of null lets cloud reconciliation clear
+  // an old local cache rather than resurrecting a deleted mock after reload.
+  return mockRowsToDataset(data || []);
 }
 
 export async function saveRemoteMocks(value) {
@@ -473,10 +489,7 @@ export async function saveRemoteMocks(value) {
     }
   }
 
-  const retainedMockIds = new Set(mocks.map((mock) => mock.id));
-  const removedParentIds = (existingMocks || [])
-    .filter((mock) => mock.legacy_mock_id && !retainedMockIds.has(mock.legacy_mock_id))
-    .map((mock) => mock.id);
+  const removedParentIds = removedMockDatabaseIds(existingMocks, mocks);
   if (removedParentIds.length) {
     const { error: removedMocksError } = await supabase
       .from("mocks")

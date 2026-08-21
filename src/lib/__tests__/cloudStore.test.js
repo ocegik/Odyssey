@@ -4,6 +4,7 @@ import {
   detailedAnalysisToRow,
   learningStateToSyllabusRows,
   mockRowsToDataset,
+  removedMockDatabaseIds,
   syllabusRowsToLearningState,
 } from "../cloudStore";
 
@@ -57,6 +58,24 @@ describe("syllabus cloud storage mapping", () => {
 });
 
 describe("mock cloud storage mapping", () => {
+  it("represents an empty successful mock query as an empty dataset", () => {
+    expect(mockRowsToDataset([])).toEqual({ version: 3, mocks: [] });
+  });
+
+  it("removes both legacy-backed and database-id-backed mock rows", () => {
+    const existing = [
+      { id: "db-retained-legacy", legacy_mock_id: "m_retained" },
+      { id: "db-deleted-legacy", legacy_mock_id: "m_deleted" },
+      { id: "db-retained-native", legacy_mock_id: null },
+      { id: "db-deleted-native", legacy_mock_id: null },
+    ];
+
+    expect(removedMockDatabaseIds(existing, [
+      { id: "m_retained" },
+      { id: "db-retained-native" },
+    ])).toEqual(["db-deleted-legacy", "db-deleted-native"]);
+  });
+
   it("reassembles parent and section rows into the existing mock dataset blob", () => {
     const rows = [{
       id: "f9a81a14-d79f-448c-a23c-d088cf571cc0",
