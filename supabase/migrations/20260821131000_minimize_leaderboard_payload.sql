@@ -1,8 +1,5 @@
--- Community dashboard data
--- Run after phase-1-foundation.sql and onboarding.sql. This keeps raw user
--- data private under RLS while making only opt-in leaderboard fields and
--- platform-wide counts available to signed-in users.
-
+-- The UI derives ordinal rank from array order. Do not return rank (or any
+-- other metadata) with the community leaderboard payload.
 create or replace function public.get_community_dashboard()
 returns jsonb
 language sql

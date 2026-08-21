@@ -63,7 +63,17 @@ as $$
     'total_mocks', totals.total_mocks,
     'mocks_last_30_days', totals.mocks_last_30_days,
     'active_learners', totals.active_learners,
-    'leaderboard', coalesce((select jsonb_agg(to_jsonb(leaderboard) order by leaderboard.rank) from leaderboard), '[]'::jsonb)
+    'leaderboard', coalesce((
+      select jsonb_agg(
+        jsonb_build_object(
+          'display_name', leaderboard.display_name,
+          'mock_count', leaderboard.mock_count,
+          'latest_score', leaderboard.latest_score
+        )
+        order by leaderboard.rank
+      )
+      from leaderboard
+    ), '[]'::jsonb)
   )
   from totals;
 $$;
