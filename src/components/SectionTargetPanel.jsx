@@ -1,6 +1,7 @@
 import { SECTIONS, SECTION_META, COLORS, TYPE } from "../constants";
 import { fmtNum } from "../lib/format";
 import ProgressBar from "./ui/ProgressBar";
+import HelpTip from "./ui/HelpTip";
 
 /**
  * Per-section target vs current form.
@@ -48,10 +49,11 @@ export default function SectionTargetPanel({ rows }) {
 
   return (
     <div className="flex flex-col gap-4 pt-4">
-      <span className="text-xs" style={{ color: COLORS.inkMuted }}>
+      <span className="flex items-center gap-1 text-xs" style={{ color: COLORS.inkMuted }}>
         {totalCurrent !== null
           ? `Rolling 5-mock average — ${fmtNum(totalCurrent, 0)} / ${fmtNum(totalTarget, 0)} across targeted sections`
           : "Your rolling 5-mock average against section targets"}
+        <HelpTip label="How target progress is calculated">Current form is the rolling average from your five most recent scored mocks in each section. This avoids treating one unusually easy or difficult mock as your new baseline.</HelpTip>
       </span>
 
       <div className="flex flex-col gap-3.5">

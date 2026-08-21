@@ -3,6 +3,7 @@ import { COLORS, SECTION_META, SHADOW, TYPE } from "../../constants";
 import { SYLLABUS_TREE } from "../../lib/syllabusModel";
 import StatCard from "../ui/StatCard";
 import ProgressBar from "../ui/ProgressBar";
+import HelpTip from "../ui/HelpTip";
 
 export default function SyllabusDashboard({ stats, topicMetrics, revisionQueue }) {
   const { overall, bySection } = stats;
@@ -20,6 +21,7 @@ export default function SyllabusDashboard({ stats, topicMetrics, revisionQueue }
         <div className="flex items-center gap-2">
           <ListTree size={15} style={{ color: COLORS.inkMuted }} />
           <h3 style={TYPE.chartTitle}>Section progress</h3>
+          <HelpTip label="How section progress works">Completion is based on the micro topics you manually mark complete. It is separate from question performance and is meant to show syllabus coverage, not mastery.</HelpTip>
         </div>
         <div className="flex flex-col gap-3">
           {SYLLABUS_TREE.map((section) => {

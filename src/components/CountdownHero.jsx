@@ -3,6 +3,7 @@ import { Hourglass, CalendarClock, ClipboardList, TrendingUp, Target, Trophy, Cl
 import { COLORS, TYPE, SHADOW } from "../constants";
 import { fmtDate, fmtNum } from "../lib/format";
 import { catExamDateForYear, daysUntil, fmtDateLong, relativeDayLabel, prepProgressPercent, upcomingSchedule } from "../lib/dateMath";
+import HelpTip from "./ui/HelpTip";
 
 const UPCOMING_LIMIT = 4; // the hero mock + up to 3 more in the mini list
 
@@ -60,13 +61,14 @@ function ProgressBar({ percent }) {
   );
 }
 
-function CardShell({ icon: Icon, label, accent, right, children }) {
+function CardShell({ icon: Icon, label, accent, help, right, children }) {
   return (
     <div className="p-5 flex flex-col gap-3 h-full" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Icon size={16} style={{ color: accent }} />
           <h3 style={TYPE.panelTitle}>{label}</h3>
+          {help && <HelpTip label={`About ${label}`}>{help}</HelpTip>}
         </div>
         {right}
       </div>
@@ -79,7 +81,7 @@ function CatProgressCard({ catTargetYear, preparationStartDate, overallTargetPer
   const catTargetDate = catExamDateForYear(catTargetYear);
   if (!catTargetDate) {
     return (
-      <CardShell icon={Hourglass} label="CAT Progress" accent={COLORS.primary}>
+      <CardShell icon={Hourglass} label="CAT Progress" accent={COLORS.primary} help="The countdown uses the CAT target year and preparation start date in Account. Preparation progress is the share of that planned window that has elapsed, not a measure of syllabus completion.">
         <span className="text-sm" style={{ color: COLORS.inkMuted }}>Set a CAT target year in Account</span>
       </CardShell>
     );
@@ -89,7 +91,7 @@ function CatProgressCard({ catTargetYear, preparationStartDate, overallTargetPer
   const percent = prepProgressPercent(preparationStartDate, catTargetDate);
 
   return (
-    <CardShell icon={Hourglass} label="CAT Progress" accent={COLORS.primary}>
+    <CardShell icon={Hourglass} label="CAT Progress" accent={COLORS.primary} help="The countdown uses the CAT target year and preparation start date in Account. Preparation progress is the share of that planned window that has elapsed, not a measure of syllabus completion.">
       <div className="flex-1 flex flex-col justify-center gap-5">
         <div className="flex items-start justify-between gap-4">
           {daysLeft < 0 ? (
@@ -123,7 +125,7 @@ function NextMockCard({ mockSchedule, nextTargetMarks }) {
 
   if (!nextMock) {
     return (
-      <CardShell icon={CalendarClock} label="Next Mock" accent={COLORS.info}>
+      <CardShell icon={CalendarClock} label="Next Mock" accent={COLORS.info} help="This is the earliest upcoming entry from your Mock Schedule. The target is adjusted from your latest score and your overall target score.">
         <span className="text-sm" style={{ color: COLORS.inkMuted }}>Add a scheduled mock in Account</span>
       </CardShell>
     );
@@ -134,6 +136,7 @@ function NextMockCard({ mockSchedule, nextTargetMarks }) {
       icon={CalendarClock}
       label="Next Mock"
       accent={COLORS.info}
+      help="This is the earliest upcoming entry from your Mock Schedule. The target is adjusted from your latest score and your overall target score."
       right={<Pill color={COLORS.info}>{relativeDayLabel(nextMock.date)}</Pill>}
     >
       <div className="flex flex-col gap-1">
@@ -192,7 +195,7 @@ export function QuickStatsCard({ mocksLogged, latestMarks, avgLast3, bestMarksVa
   ];
 
   return (
-    <CardShell icon={ClipboardList} label="Quick Stats" accent={COLORS.ink}>
+    <CardShell icon={ClipboardList} label="Quick Stats" accent={COLORS.ink} help="Latest marks are from your newest scored mock. The average uses your last three scored mocks, while current pace is based on recently logged mocks per week.">
       <div className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3 lg:grid-cols-5">
         {stats.map((stat) => (
           <StatItem key={stat.label} {...stat} />

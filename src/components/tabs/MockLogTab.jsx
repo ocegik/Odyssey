@@ -14,12 +14,16 @@ import {
 import MockLogTable from "../MockLogTable";
 import SectionBadge from "../ui/SectionBadge";
 import { inputStyle, selectStyle } from "../ui/FieldLabel";
+import HelpTip from "../ui/HelpTip";
 
-function Panel({ title, children, action }) {
+function Panel({ title, help, children, action }) {
   return (
     <div className="p-5 flex flex-col gap-4" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 style={TYPE.panelTitle}>{title}</h2>
+        <div className="flex items-center gap-1.5">
+          <h2 style={TYPE.panelTitle}>{title}</h2>
+          {help && <HelpTip label={`About ${title}`}>{help}</HelpTip>}
+        </div>
         {action}
       </div>
       {children}
@@ -161,6 +165,7 @@ export default function MockLogTab({
       <div ref={formTopRef} />
       <Panel
         title={editingMockId ? "Edit Mock Result" : "Log Mock Result"}
+        help="Enter the total score and basic section data after each mock. Adding attempts and correct answers unlocks accuracy, attempt-rate, and score-leak insights."
         action={
           <div className="flex flex-col items-end gap-1">
             <input ref={importFileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} />
@@ -211,7 +216,10 @@ export default function MockLogTab({
               <input value={mockForm.source} onChange={setField("source")} placeholder="SIMCAT 6 / AIMCAT 2507" style={{ ...inputStyle(false), height: 46 }} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Overall marks</label>
+              <div className="flex items-center gap-1" style={{ ...TYPE.label, color: COLORS.inkMuted }}>
+                Overall marks
+                <HelpTip label="How overall marks are calculated">This is calculated automatically from the three section scores below.</HelpTip>
+              </div>
               <input
                 value={mockForm.sections.reduce((sum, section) => sum + (Number(section.score) || 0), 0)}
                 readOnly
@@ -220,7 +228,10 @@ export default function MockLogTab({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Overall percentile <span style={{ opacity: 0.6 }}>(optional)</span></label>
+              <div className="flex items-center gap-1" style={{ ...TYPE.label, color: COLORS.inkMuted }}>
+                Overall percentile <span style={{ opacity: 0.6 }}>(optional)</span>
+                <HelpTip label="About overall percentile">Use the percentile reported by that mock's test series. It makes results from different mock sources more comparable than marks alone.</HelpTip>
+              </div>
               <input type="number" min="0" max="100" step="0.01" placeholder="e.g. 92.4" value={mockForm.overallPercentile} onChange={setField("overallPercentile")} style={{ ...inputStyle(false), height: 46 }} />
             </div>
           </div>
@@ -235,6 +246,7 @@ export default function MockLogTab({
               {showStructure ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
               {showStructure ? "Hide question structure" : "Customize question structure (sets & ranges)"}
             </button>
+            <HelpTip label="About question structure">Set up sets and question ranges before opening detailed analysis. This lets Odyssey group questions correctly when you review that mock later.</HelpTip>
             <button
               type="button"
               onClick={() => setShowExtras((v) => !v)}

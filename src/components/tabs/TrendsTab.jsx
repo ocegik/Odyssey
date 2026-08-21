@@ -92,11 +92,11 @@ export default function TrendsTab({
       {/* Always-on: the three charts that answer "who's lagging, and is it
           accuracy or attempts" — the question the app exists for. */}
       <GroupHeading>Core trends</GroupHeading>
-      <ChartFrame title="Section-wise trend — total marks" note={marksTrendNote} empty={noData}>
+      <ChartFrame title="Section-wise trend — total marks" note={marksTrendNote} help="Each line shows the marks you logged for a section. Add section targets in Account to compare each result with its target; otherwise the optional overall target appears as one reference line." empty={noData}>
         <MultiSectionLineChart data={marksSeries} referenceLines={targetLines} targets={sectionTargets} />
       </ChartFrame>
       <AccuracyComparisonChart sectionStats={sectionStats} />
-      <ChartFrame title="Attempt-rate trend" note="% of section questions attempted" empty={noData}>
+      <ChartFrame title="Attempt-rate trend" note="% of section questions attempted" help="Attempt rate is attempted questions divided by total questions in that section. It helps distinguish a score drop caused by trying fewer questions from one caused by lower accuracy." empty={noData}>
         <MultiSectionLineChart data={attemptRateSeries} suffix="%" domain={[0, 100]} />
       </ChartFrame>
 
@@ -107,7 +107,7 @@ export default function TrendsTab({
       <Disclosure id="trends.leak" title="Where marks are being lost" summary={scoreLeakSummary(leak)}>
         <ScoreLeakPanel leak={leak} />
         <div className="mt-4">
-          <ChartFrame title="Marks-per-attempt trend" note="Marks scored per question attempted" empty={noData}>
+          <ChartFrame title="Marks-per-attempt trend" note="Marks scored per question attempted" help="This divides a section's score by questions attempted. A rising value generally indicates better question selection or accuracy; it is not a percentage." empty={noData}>
             <MultiSectionLineChart data={marksPerAttemptSeries} />
           </ChartFrame>
         </div>

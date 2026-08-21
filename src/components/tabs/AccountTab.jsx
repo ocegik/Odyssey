@@ -8,6 +8,7 @@ import { mockTotalMarks, computeAdaptiveTarget } from "../../lib/compute";
 import { FieldLabel, inputStyle, selectStyle } from "../ui/FieldLabel";
 import EmptyState from "../ui/EmptyState";
 import AccountTypeSelector from "../AccountTypeSelector";
+import HelpTip from "../ui/HelpTip";
 
 const EMPTY_SCHEDULE_FORM = { date: "", examName: "", dateType: "fixed", windowStart: "", windowEnd: "" };
 
@@ -23,11 +24,14 @@ function scheduleWindowLabel(entry, fmtDate) {
   return "Fixed";
 }
 
-function Panel({ title, children, action }) {
+function Panel({ title, help, children, action }) {
   return (
     <div className="p-5 flex flex-col gap-4" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 style={TYPE.panelTitle}>{title}</h2>
+        <div className="flex items-center gap-1.5">
+          <h2 style={TYPE.panelTitle}>{title}</h2>
+          {help && <HelpTip label={`About ${title}`}>{help}</HelpTip>}
+        </div>
         {action}
       </div>
       {children}
@@ -306,7 +310,7 @@ export default function AccountTab({
         </div>
       </Panel>
 
-      <Panel title="Targets">
+      <Panel title="Targets" help="Targets power the dashboard countdown, target lines in Trends, and the section gap view. They are planning benchmarks, not predicted CAT results.">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
             <FieldLabel htmlFor="catTargetYear">CAT target year</FieldLabel>
@@ -315,7 +319,7 @@ export default function AccountTab({
             </select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="catExamDate">CAT exam date</FieldLabel>
+            <FieldLabel htmlFor="catExamDate" hint="This is the expected CAT date for the selected year and is used for the countdown. It cannot be edited directly.">CAT exam date</FieldLabel>
             <input id="catExamDate" value={fmtDateLong(catExamDate)} readOnly style={inputStyle(false)} />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -323,11 +327,11 @@ export default function AccountTab({
             <input id="preparationStartDate" type="date" value={settings.preparationStartDate} onChange={setProfileField("preparationStartDate")} style={inputStyle(false)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="overallTargetMarks" optional>Overall target marks</FieldLabel>
+            <FieldLabel htmlFor="overallTargetMarks" optional hint="Your preferred overall score. It is used to set a next-mock target and an optional reference line in Trends.">Overall target marks</FieldLabel>
             <input id="overallTargetMarks" type="number" min="0" value={settings.overallTargetMarks ?? ""} onChange={setProfileField("overallTargetMarks")} style={inputStyle(false)} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="overallTargetPercentile" optional>Overall target percentile</FieldLabel>
+            <FieldLabel htmlFor="overallTargetPercentile" optional hint="Your aspirational percentile. It is shown in the CAT countdown and as a reference line on the percentile trend.">Overall target percentile</FieldLabel>
             <input id="overallTargetPercentile" type="number" min="0" max="100" step="0.01" value={settings.overallTargetPercentile ?? ""} onChange={setProfileField("overallTargetPercentile")} style={inputStyle(false)} />
           </div>
         </div>
@@ -369,6 +373,7 @@ export default function AccountTab({
 
       <Panel
         title="Mock Schedule"
+        help="Scheduled mocks appear on the Overview as your next mock. A range or flexible window lets you record test-series availability while still setting the day you plan to attempt it."
         action={
           <>
             <input ref={fileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} />

@@ -1,15 +1,19 @@
 import { COLORS, TYPE } from "../../constants";
+import HelpTip from "./HelpTip";
 
-export function FieldLabel({ children, optional, htmlFor }) {
+export function FieldLabel({ children, optional, htmlFor, hint }) {
   return (
-    <label htmlFor={htmlFor} className="flex items-center gap-1.5" style={{ ...TYPE.label, color: COLORS.inkMuted }}>
-      {children}
-      {optional && (
-        <span className="px-1.5 rounded normal-case" style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, fontSize: "10px", fontWeight: 500, letterSpacing: "normal", color: COLORS.inkMuted }}>
-          optional
-        </span>
-      )}
-    </label>
+    <div className="flex items-center gap-1.5">
+      <label htmlFor={htmlFor} style={{ ...TYPE.label, color: COLORS.inkMuted }}>
+        {children}
+        {optional && (
+          <span className="ml-1.5 px-1.5 rounded normal-case" style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, fontSize: "10px", fontWeight: 500, letterSpacing: "normal", color: COLORS.inkMuted }}>
+            optional
+          </span>
+        )}
+      </label>
+      {hint && <HelpTip label={`About ${typeof children === "string" ? children : "this field"}`}>{hint}</HelpTip>}
+    </div>
   );
 }
 
