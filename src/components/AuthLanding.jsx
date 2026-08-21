@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, BarChart3, KeyRound, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, BarChart3, KeyRound, ShieldCheck } from "lucide-react";
 import { COLORS } from "../constants";
 import { LegalLinks } from "./LegalPage";
 
@@ -60,9 +60,7 @@ export default function AuthLanding({ auth }) {
       <div className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-6xl items-center gap-10 lg:grid-cols-[1.12fr_.88fr]">
         <section className="max-w-xl">
           <a href="#/home" className="mobile-tap-target mb-8 flex w-fit items-center gap-2.5 rounded-lg focus:outline-none">
-            <div className="grid h-10 w-10 place-items-center rounded-xl" style={{ background: COLORS.primary, color: COLORS.onPrimary }}>
-              <Sparkles size={20} />
-            </div>
+            <img src="/newicon/favicon.svg" className="h-10 w-10" alt="" aria-hidden="true" />
             <div>
               <p className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Odyssey</p>
               <p className="text-xs" style={{ color: COLORS.inkMuted }}>CAT mock tracker</p>
@@ -72,7 +70,7 @@ export default function AuthLanding({ auth }) {
             <BarChart3 size={14} /> CAT preparation companion
           </p>
           <h1 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            Odyssey is a CAT mock-test tracking app.
+            OdysseyPrep is a CAT mock-test tracking app.
           </h1>
           <p className="mt-5 max-w-lg text-base leading-relaxed sm:text-lg" style={{ color: COLORS.inkMuted }}>
             It helps CAT aspirants record mock-test results, review performance across VARC, DILR, and Quant, and organise their syllabus and revision work in one place.

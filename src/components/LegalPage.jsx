@@ -55,7 +55,7 @@ function BulletList({ children }) {
 function ContactNotice() {
   return (
     <p>
-      Odyssey is operated by an individual developer. For privacy requests,
+      OdysseyPrep is operated by an individual developer. For privacy requests,
       account issues, or questions about these terms, contact{" "}
       <a
         className="font-semibold underline underline-offset-2"
@@ -86,7 +86,7 @@ function PrivacyPolicy() {
               className="mt-2 text-sm leading-6"
               style={{ color: COLORS.inkMuted }}
             >
-              Odyssey stores the study information you enter so it can show your
+              OdysseyPrep stores the study information you enter so it can show your
               preparation history. We store your data with Supabase and use it
               only to operate the service — never for advertising or to train AI
               models. Community accounts share a limited set of leaderboard
@@ -99,12 +99,12 @@ function PrivacyPolicy() {
 
       <Section title="1. Scope">
         <p>
-          This policy explains how Odyssey collects, uses, and protects your
+          This policy explains how OdysseyPrep collects, uses, and protects your
           information across the app's account, preparation-tracking,
           cloud-sync, backup, and community features.
         </p>
         <p>
-          It does not cover services you use alongside Odyssey, such as Google
+          It does not cover services you use alongside OdysseyPrep, such as Google
           or Supabase. Those providers handle information under their own
           privacy notices.
         </p>
@@ -174,7 +174,7 @@ function PrivacyPolicy() {
           records.
         </p>
         <p>
-          Odyssey is operated by its developer, and — if the team grows — other
+          OdysseyPrep is operated by its developer, and — if the team grows — other
           members of that team. As operator, we can access account and study
           data in the ordinary course of running, maintaining, and securing the
           service. This is not a special "admin" access tier; it is what
@@ -257,7 +257,7 @@ function PrivacyPolicy() {
 
       <Section title="8. Children">
         <p>
-          Odyssey is intended for CAT aspirants and is not directed to children.
+          OdysseyPrep is intended for CAT aspirants and is not directed to children.
           Please do not use the service, or provide personal information, if you
           are not of legal age to do so in your jurisdiction without a parent or
           guardian's consent.
@@ -292,7 +292,7 @@ function TermsOfService() {
           </span>
           <div>
             <h2 style={TYPE.panelTitle}>
-              Odyssey is a preparation tool, not an exam authority
+              OdysseyPrep is a preparation tool, not an exam authority
             </h2>
             <p
               className="mt-2 text-sm leading-6"
@@ -308,7 +308,7 @@ function TermsOfService() {
 
       <Section title="1. Acceptance">
         <p>
-          By creating an account or using Odyssey, you agree to these Terms and
+          By creating an account or using OdysseyPrep, you agree to these Terms and
           our Privacy Policy. If you do not agree, please do not use the
           service.
         </p>
@@ -316,13 +316,13 @@ function TermsOfService() {
 
       <Section title="2. The service">
         <p>
-          Odyssey is a CAT mock-tracking application that lets you record and
+          OdysseyPrep is a CAT mock-tracking application that lets you record and
           analyse preparation information, maintain a syllabus and schedule, and
           — with a signed-in account — access that information from any device.
         </p>
         <p>
           References to CAT, IIM, or specific test-series names reflect study
-          context or labels you enter yourself. Odyssey is an independent tool
+          context or labels you enter yourself. OdysseyPrep is an independent tool
           and is not affiliated with, or an official service of, any
           examination, admissions, or coaching body.
         </p>
@@ -367,7 +367,7 @@ function TermsOfService() {
 
       <Section title="5. Acceptable use">
         <p>
-          You agree not to misuse Odyssey, interfere with its operation, attempt
+          You agree not to misuse OdysseyPrep, interfere with its operation, attempt
           to bypass account or security controls, scrape or harvest other users'
           data, upload malicious content, reverse-engineer the service beyond
           what the law permits, or use the service in violation of applicable
@@ -385,7 +385,7 @@ function TermsOfService() {
           ends when you delete the corresponding data or your account.
         </p>
         <p>
-          The Odyssey name, interface, software, and non-user content are
+          The OdysseyPrep name, interface, software, and non-user content are
           protected by applicable intellectual-property law. These Terms grant
           you a limited, personal, revocable right to use the service — they do
           not transfer ownership of it to you.
@@ -461,8 +461,8 @@ export default function LegalPage({ page, theme, onToggleTheme }) {
   const Icon = isPrivacy ? LockKeyhole : BookOpen;
   const title = isPrivacy ? "Privacy Policy" : "Terms of Service";
   const description = isPrivacy
-    ? "How Odyssey collects, uses, and protects your information."
-    : "The rules for using Odyssey and its preparation features.";
+    ? "How OdysseyPrep collects, uses, and protects your information."
+    : "The rules for using OdysseyPrep and its preparation features.";
 
   return (
     <main
@@ -480,7 +480,7 @@ export default function LegalPage({ page, theme, onToggleTheme }) {
             className="inline-flex items-center gap-2 text-sm font-semibold hover:opacity-75"
             style={{ color: COLORS.ink }}
           >
-            <ArrowLeft size={16} /> Odyssey
+            <ArrowLeft size={16} /> OdysseyPrep
           </a>
           <button
             type="button"
@@ -508,7 +508,7 @@ export default function LegalPage({ page, theme, onToggleTheme }) {
               className="text-xs font-bold uppercase tracking-[0.16em]"
               style={{ color: COLORS.primary }}
             >
-              Odyssey legal
+              OdysseyPrep legal
             </p>
             <h1 className="mt-2" style={TYPE.pageTitle}>
               {title}
@@ -558,7 +558,7 @@ export default function LegalPage({ page, theme, onToggleTheme }) {
           style={{ borderColor: COLORS.border }}
         >
           <span className="text-xs" style={{ color: COLORS.inkMuted }}>
-            © {new Date().getFullYear()} Odyssey
+            © {new Date().getFullYear()} OdysseyPrep
           </span>
           <LegalLinks compact />
         </footer>

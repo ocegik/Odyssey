@@ -4,7 +4,6 @@ import {
   BookOpenCheck,
   CalendarCheck2,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 import { COLORS, SHADOW } from "../constants";
 import { LegalLinks } from "./LegalPage";
@@ -12,9 +11,7 @@ import { LegalLinks } from "./LegalPage";
 function Logo() {
   return (
     <a href="#/home" className="flex items-center gap-2.5" aria-label="Odyssey home">
-      <span className="grid h-10 w-10 place-items-center rounded-xl" style={{ background: COLORS.primary, color: COLORS.onPrimary }}>
-        <Sparkles size={20} />
-      </span>
+      <img src="/newicon/favicon.svg" className="h-10 w-10" alt="" aria-hidden="true" />
       <span>
         <span className="block text-xl font-bold tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Odyssey</span>
         <span className="block text-xs" style={{ color: COLORS.inkMuted }}>CAT preparation companion</span>
@@ -62,7 +59,7 @@ export default function Homepage({ isSignedIn = false }) {
               <BookOpenCheck size={14} /> For CAT aspirants
             </p>
             <h1 className="mt-5 text-4xl font-bold leading-tight tracking-tight sm:text-5xl" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              A simple place to understand your CAT preparation.
+              OdysseyPrep: a simple place to understand your CAT preparation.
             </h1>
             <p className="mt-6 max-w-xl text-base leading-7 sm:text-lg" style={{ color: COLORS.inkMuted }}>
               Odyssey is an independent web application for people preparing for the Common Admission Test (CAT). It brings mock-test tracking, syllabus progress, and revision planning together in one personal workspace.

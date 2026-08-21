@@ -5,11 +5,7 @@ import AuthControl from "./AuthControl";
 
 function LogoMark() {
   return (
-    <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true" style={{ flexShrink: 0 }}>
-      <rect x="0" y="0" width="32" height="32" rx="7" fill={COLORS.primary} />
-      <circle cx="16" cy="16" r="8" fill="none" stroke={COLORS.onPrimary} strokeWidth="4.5" />
-      <circle cx="21.66" cy="10.34" r="3.2" fill={COLORS.warn} />
-    </svg>
+    <img src="/newicon/favicon.svg" width="30" height="30" alt="" aria-hidden="true" style={{ flexShrink: 0 }} />
   );
 }
 
