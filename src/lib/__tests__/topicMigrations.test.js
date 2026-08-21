@@ -26,13 +26,13 @@ describe("analysis topic compatibility migration", () => {
     const question = analysis.sections.Quant.blocks[0].questions[0];
     expect(question.topic).toBe("Arithmetic");
     expect(question.topicRef).toMatchObject({ topicId: "qa-arithmetic", source: "migration" });
-    expect(analysis.schemaVersion).toBe(3);
+    expect(analysis.schemaVersion).toBe(4);
   });
 
   it("maps detailed legacy labels to the appropriate canonical node", () => {
     const analysis = analysisWithTopic("DILR", "Data Sufficiency");
     const question = analysis.sections.DILR.blocks[0].questions[0];
-    expect(question.topicRef.topicId).toBe("dilr-di-data-sufficiency");
+    expect(question.topicRef.topicId).toBe("dilr-set-data-sufficiency");
   });
 
   it("does not guess an ambiguous historical label", () => {
@@ -57,6 +57,58 @@ describe("analysis topic compatibility migration", () => {
     const block = analysis.sections.Quant.blocks[0];
     const question = block.questions[0];
     expect(getEffectiveTopicId(block, question)).toBe("qa-arithmetic");
+  });
+
+  it("moves VARC set tags onto every question and clears the legacy block field", () => {
+    const analysis = normalizeDetailedAnalysis({
+      sections: {
+        VARC: {
+          blocks: [{
+            type: "set",
+            topic: "Economics",
+            questions: [{ questionNumber: 1 }, { questionNumber: 2 }],
+          }],
+        },
+      },
+    });
+    const block = analysis.sections.VARC.blocks[0];
+    expect(block.topicRef).toBeNull();
+    expect(block.topic).toBe("");
+    expect(block.questions.map((question) => question.topicRef?.topicId)).toEqual([
+      "varc-rc-economics-business",
+      "varc-rc-economics-business",
+    ]);
+    expect(block.questions.every((question) => question.questionTypeRef === null)).toBe(true);
+  });
+
+  it("preserves a legacy mixed set label for re-tagging instead of discarding it", () => {
+    const analysis = normalizeDetailedAnalysis({
+      sections: {
+        VARC: {
+          blocks: [{ type: "set", topic: "Mixed / Interdisciplinary", questions: [{ questionNumber: 1 }] }],
+        },
+      },
+    });
+    const question = analysis.sections.VARC.blocks[0].questions[0];
+    expect(question.topic).toBe("Mixed / Interdisciplinary");
+    expect(question.topicRef).toBeNull();
+  });
+
+  it("keeps a legacy set reference visible when it has no safe new topic mapping", () => {
+    const analysis = normalizeDetailedAnalysis({
+      sections: {
+        VARC: {
+          blocks: [{
+            type: "set",
+            topicRef: { topicId: "varc-rc-domain-familiarity", source: "user" },
+            questions: [{ questionNumber: 1 }],
+          }],
+        },
+      },
+    });
+    const question = analysis.sections.VARC.blocks[0].questions[0];
+    expect(question.topic).toBe("Passage Domain");
+    expect(question.topicRef).toBeNull();
   });
 
   it("aggregates legacy and canonical representations into one topic record", () => {

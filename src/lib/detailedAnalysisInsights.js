@@ -27,8 +27,15 @@ export function flattenAnalysisQuestions(mocks) {
       const sectionAnalysis = mock.analysis.sections[section];
       if (!sectionAnalysis?.blocks) return [];
       return sectionAnalysis.blocks.flatMap((block) =>
-        (block.questions || []).map((question) => ({
-          ...question,
+        (block.questions || []).map((question) => {
+          const topicRef = getEffectiveTopicRef(block, question);
+          const topicRefs = [...new Map(
+            [topicRef, question.questionTypeRef]
+              .filter((ref) => ref?.topicId)
+              .map((ref) => [ref.topicId, ref])
+          ).values()];
+          return {
+            ...question,
           mockId: mock.id,
           mockDate: mock.date,
           mockSource: mock.source,
@@ -38,15 +45,18 @@ export function flattenAnalysisQuestions(mocks) {
           blockType: block.type,
           blockName: block.name,
           topic: getEffectiveTopic(block, question),
-          topicRef: getEffectiveTopicRef(block, question),
-          topicId: getEffectiveTopicRef(block, question)?.topicId || null,
+          topicRef,
+          topicId: topicRef?.topicId || null,
+          topicRefs,
+          questionTypeId: question.questionTypeRef?.topicId || null,
           // "Unreviewed" questions carry no information yet — excluded from
           // attempted (same as an actual Skipped) so a mock still mid-review
           // doesn't skew accuracy/topic/timing stats with placeholder rows.
           attempted: question.result === "Correct" || question.result === "Wrong",
           timeDelta: question.timeTaken !== null && question.averageTime !== null ? question.timeTaken - question.averageTime : null,
           slow: question.timeTaken !== null && question.averageTime !== null ? question.timeTaken > question.averageTime + SLOW_DELTA_SECONDS : false,
-        }))
+          };
+        })
       );
     });
   });

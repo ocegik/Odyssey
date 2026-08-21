@@ -17,6 +17,7 @@ function emptyMetric(topicId) {
     totalTime: 0,
     conceptErrors: 0,
     lastAttemptDate: null,
+    loggedQuestions: [],
   };
 }
 
@@ -45,13 +46,25 @@ export function buildTopicMetrics(mocks) {
   const questions = flattenAnalysisQuestions(mocks);
 
   questions.forEach((question) => {
-    const assigned = getTopicNode(question.topicId);
-    if (!assigned) return;
+    const assignedNodes = [...new Map(
+      (question.topicRefs?.length ? question.topicRefs : [{ topicId: question.topicId }])
+        .map((ref) => getTopicNode(ref?.topicId))
+        .filter(Boolean)
+        .map((node) => [node.id, node])
+    ).values()];
+    if (assignedNodes.length === 0) return;
 
-    const rollupNodes = [assigned, ...getTopicAncestors(assigned.id)];
+    // A question can now carry both a set topic and a semantic question type.
+    // Count it once at shared ancestors (e.g. Reading Comprehension), while
+    // retaining one direct record at each explicitly selected leaf.
+    const directIds = new Set(assignedNodes.map((node) => node.id));
+    const rollupNodes = [...new Map(
+      assignedNodes.flatMap((assigned) => [assigned, ...getTopicAncestors(assigned.id)])
+        .map((node) => [node.id, node])
+    ).values()];
     rollupNodes.forEach((node) => {
       const metric = byTopicId[node.id] || (byTopicId[node.id] = emptyMetric(node.id));
-      const isDirect = node.id === assigned.id;
+      const isDirect = directIds.has(node.id);
       metric.total += 1;
       if (isDirect) metric.directTotal += 1;
       if (question.attempted) {
@@ -71,6 +84,13 @@ export function buildTopicMetrics(mocks) {
       if (question.attempted && (!metric.lastAttemptDate || question.mockDate > metric.lastAttemptDate)) {
         metric.lastAttemptDate = question.mockDate;
       }
+      metric.loggedQuestions.push({
+        mockId: question.mockId,
+        mockDate: question.mockDate,
+        mockSource: question.mockSource,
+        section: question.section,
+        questionNumber: question.questionNumber,
+      });
     });
   });
 
@@ -78,7 +98,7 @@ export function buildTopicMetrics(mocks) {
     byTopicId[topicId] = finalizeMetric(byTopicId[topicId]);
   });
 
-  const analyzedQuestions = questions.filter((question) => question.topicId);
+  const analyzedQuestions = questions.filter((question) => question.topicRefs?.length || question.topicId);
   return {
     byTopicId,
     summary: {

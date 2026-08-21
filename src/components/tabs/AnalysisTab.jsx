@@ -4,6 +4,7 @@ import { COLORS, SECTIONS, TYPE, SHADOW } from "../../constants";
 import { fmtDate, fmtNum, fmtPct } from "../../lib/format";
 import { buildAnalysisSummary, makeSampleDetailedAnalysis, normalizeDetailedAnalysis, OUTCOME_REASONS } from "../../lib/analysisModel";
 import { getTopicNode, TOPIC_REGISTRY_VERSION } from "../../lib/topicRegistry";
+import { ANALYSIS_QUESTION_TYPE_IDS, SET_TOPIC_IDS } from "../../lib/analysisTaxonomies";
 import { mockTotalMarks } from "../../lib/compute";
 import { reviewAnalysisAgainstMock } from "../../lib/analysisValidation";
 import {
@@ -76,6 +77,7 @@ function defaultQuestion(questionNumber, section) {
     questionType: "MCQ",
     topic: "",
     topicRef: null,
+    questionTypeRef: null,
     timeTaken: null,
     averageTime: null,
     notes: "",
@@ -265,10 +267,13 @@ function QuestionReviewRow({
   topicHeader,
   setQuestion,
   setQuestionTopic,
+  setQuestionTypeTopic,
+  applySetTopic,
 }) {
   const reviewed = question.result !== "Unreviewed";
-  const fieldGrid = isSet ? "xl:grid-cols-3" : "xl:grid-cols-4";
-  const notesSpan = isSet ? "sm:col-span-2 xl:col-span-3" : "sm:col-span-2 xl:col-span-4";
+  const usesPerQuestionSetTaxonomy = isSet && (section === "VARC" || section === "DILR");
+  const fieldGrid = usesPerQuestionSetTaxonomy || !isSet ? "xl:grid-cols-4" : "xl:grid-cols-3";
+  const notesSpan = usesPerQuestionSetTaxonomy || !isSet ? "sm:col-span-2 xl:col-span-4" : "sm:col-span-2 xl:col-span-3";
   const resultTone = {
     Unreviewed: COLORS.inkMuted,
     Correct: COLORS.good,
@@ -309,11 +314,56 @@ function QuestionReviewRow({
             {["Unreviewed", "Correct", "Wrong", "Skipped"].map((result) => <option key={result}>{result}</option>)}
           </select>
         </ReviewField>
-        <ReviewField label="Type" style={detailStyle}>
+        <ReviewField label="Answer format" style={detailStyle}>
           <select disabled={!reviewed} value={question.questionType} onChange={(ev) => setQuestion(section, blockIdx, questionIdx, "questionType", ev.target.value)} style={{ ...selectStyle(false), height: 38, fontSize: 13 }}>
             {["MCQ", "TITA"].map((type) => <option key={type}>{type}</option>)}
           </select>
         </ReviewField>
+        {usesPerQuestionSetTaxonomy && (
+          <ReviewField label="Passage / set topic" style={detailStyle}>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <TopicPicker
+                section={section}
+                topicRef={question.topicRef}
+                legacyTopic={question.topic}
+                onChange={setQuestionTopic(section, blockIdx, questionIdx)}
+                selectStyle={selectStyle}
+                topicIds={SET_TOPIC_IDS[section]}
+                placeholder="Choose topic…"
+                title="Choose the shared passage or DILR set topic"
+                compact
+                disabled={!reviewed}
+              />
+              {question.topicRef && (
+                <button
+                  type="button"
+                  disabled={!reviewed}
+                  onClick={() => applySetTopic(section, blockIdx, question.topicRef.topicId)}
+                  className="theme-hover px-2 py-1 text-xs"
+                  title="Copy this topic to every question in this set"
+                  style={{ border: `1px solid ${COLORS.border}`, borderRadius: 6, background: COLORS.surface, color: COLORS.inkMuted }}
+                >
+                  Apply to set
+                </button>
+              )}
+            </div>
+          </ReviewField>
+        )}
+        {usesPerQuestionSetTaxonomy && (
+          <ReviewField label="Question type" style={detailStyle}>
+            <TopicPicker
+              section={section}
+              topicRef={question.questionTypeRef}
+              onChange={setQuestionTypeTopic(section, blockIdx, questionIdx)}
+              selectStyle={selectStyle}
+              topicIds={ANALYSIS_QUESTION_TYPE_IDS[section]}
+              placeholder="Choose type…"
+              title="Choose the kind of question asked"
+              compact
+              disabled={!reviewed}
+            />
+          </ReviewField>
+        )}
         {!isSet && (
           <ReviewField label={topicHeader} style={detailStyle}>
             <TopicPicker
@@ -384,7 +434,10 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
       setStructureForm(null);
       return;
     }
-    setDraft(loadPendingDraft(selectedMock) || clone(selectedMock.analysis) || buildAnalysisDraftFromMock(selectedMock));
+    setDraft(
+      loadPendingDraft(selectedMock)
+      || (selectedMock.analysis ? normalizeDetailedAnalysis(selectedMock.analysis, selectedMock.analysis) : buildAnalysisDraftFromMock(selectedMock))
+    );
     setStructureForm(mockToForm(selectedMock));
     setImportMessage("");
     setImportError("");
@@ -577,6 +630,50 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
     });
   };
 
+  const setQuestionTypeTopic = (section, blockIdx, questionIdx) => (topicId) => {
+    setDraft((current) => {
+      const blocks = current.sections[section].blocks.map((block, bIdx) => (
+        bIdx === blockIdx
+          ? {
+              ...block,
+              questions: block.questions.map((question, qIdx) => (
+                qIdx === questionIdx
+                  ? { ...question, questionTypeRef: topicId ? { topicId, source: "user", taxonomyVersion: TOPIC_REGISTRY_VERSION } : null }
+                  : question
+              )),
+            }
+          : block
+      ));
+      return {
+        ...current,
+        sections: {
+          ...current.sections,
+          [section]: { ...current.sections[section], blocks },
+        },
+      };
+    });
+  };
+
+  const applySetTopic = (section, blockIdx, topicId) => {
+    setDraft((current) => {
+      const blocks = current.sections[section].blocks.map((block, bIdx) => (
+        bIdx === blockIdx
+          ? {
+              ...block,
+              questions: block.questions.map((question) => ({
+                ...question,
+                topic: getTopicNode(topicId)?.name || "",
+                topicRef: { topicId, source: "user", taxonomyVersion: TOPIC_REGISTRY_VERSION },
+              })),
+            }
+          : block
+      ));
+      return { ...current, sections: { ...current.sections, [section]: { ...current.sections[section], blocks } } };
+    });
+  };
+
+  // Quant keeps its established set-level topic structure. VARC/DILR use the
+  // per-question handlers above instead.
   const setBlockTopic = (section, blockIdx) => (topicId) => {
     setDraft((current) => {
       const blocks = current.sections[section].blocks.map((block, bIdx) => (
@@ -588,13 +685,7 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
             }
           : block
       ));
-      return {
-        ...current,
-        sections: {
-          ...current.sections,
-          [section]: { ...current.sections[section], blocks },
-        },
-      };
+      return { ...current, sections: { ...current.sections, [section]: { ...current.sections[section], blocks } } };
     });
   };
 
@@ -956,16 +1047,16 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
                 <div className="flex flex-col gap-4">
                   {sectionAnalysis.blocks.map((block, blockIdx) => {
                     const isSet = block.type === "set";
-                    const topicHeader = section === "VARC" ? "Passage Domain" : "Topic";
+                    const topicHeader = "Topic";
                     return (
                     <div key={block.id} className="flex flex-col gap-3 p-3" style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10 }}>
                       <div className="flex items-center gap-2 flex-wrap">
                         <SectionBadge section={section} size="sm" />
                         <span className="text-sm" style={{ fontWeight: 650 }}>{block.name || block.type}</span>
                         <span className="text-xs" style={{ color: COLORS.inkMuted }}>{block.questions.length} Qs</span>
-                        {isSet && (
+                        {isSet && section === "Quant" && (
                           <div className="flex items-center gap-1.5 ml-auto">
-                            <span className="text-xs" style={{ color: COLORS.inkMuted }}>{section === "VARC" ? "Passage Domain:" : "Set topic:"}</span>
+                            <span className="text-xs" style={{ color: COLORS.inkMuted }}>Set topic:</span>
                             <TopicPicker
                               section={section}
                               topicRef={block.topicRef}
@@ -989,6 +1080,8 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
                             topicHeader={topicHeader}
                             setQuestion={setQuestion}
                             setQuestionTopic={setQuestionTopic}
+                            setQuestionTypeTopic={setQuestionTypeTopic}
+                            applySetTopic={applySetTopic}
                           />
                         ))}
                       </div>

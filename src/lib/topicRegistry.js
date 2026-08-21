@@ -9,7 +9,7 @@ import { SYLLABUS_TREE } from "./syllabusModel";
  * all resolve the same stable IDs.
  */
 
-export const TOPIC_REGISTRY_VERSION = 1;
+export const TOPIC_REGISTRY_VERSION = 2;
 
 const SECTION_ROOT_BY_ANALYSIS_SECTION = {
   VARC: "varc",

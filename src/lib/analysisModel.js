@@ -2,9 +2,16 @@ import { SECTIONS } from "../constants";
 import { uid } from "./format";
 import { accuracyOf } from "./aggregate";
 import { getTopicNode, TOPIC_NODES, isValidTagTopic } from "./topicRegistry";
-import { legacyLabelForTopicId, legacyTopicMappings, resolveTopicReference } from "./topicMigrations";
+import { isAnalysisQuestionTypeId } from "./analysisTaxonomies";
+import {
+  isSetTopicReference,
+  legacyLabelForTopicId,
+  legacyTopicMappings,
+  resolveAnalysisQuestionTypeReference,
+  resolveTopicReference,
+} from "./topicMigrations";
 
-export const ANALYSIS_SCHEMA_VERSION = 3;
+export const ANALYSIS_SCHEMA_VERSION = 4;
 
 /**
  * "Unreviewed" is distinct from "Skipped": it's the default for a question
@@ -113,11 +120,19 @@ export function getEffectiveTopicId(block, question) {
   return getEffectiveTopicRef(block, question)?.topicId || null;
 }
 
-function normalizeQuestion(rawQuestion, idx, section) {
+function normalizeQuestion(rawQuestion, idx, section, setTopicOnly = false) {
   const result = normalizeResult(rawQuestion.result);
   const reason = asString(rawQuestion.outcomeReason).trim();
   const allowedReasons = OUTCOME_REASONS[section]?.[result] || [];
-  const topicRef = normalizeTopicRef(section, rawQuestion.topicRef, rawQuestion.topic);
+  const resolvedTopicRef = normalizeTopicRef(section, rawQuestion.topicRef, rawQuestion.topic);
+  // VARC/DILR set topics are deliberately restricted to their compact
+  // per-question taxonomies. A legacy mixed field that cannot safely map to
+  // one remains visible as a legacy string rather than being silently lost.
+  const topicRef = setTopicOnly && !isSetTopicReference(section, resolvedTopicRef) ? null : resolvedTopicRef;
+  const inheritedQuestionTypeRef = setTopicOnly && isAnalysisQuestionTypeId(section, resolvedTopicRef?.topicId)
+    ? { ...resolvedTopicRef, source: "migration" }
+    : null;
+  const topicLabel = rawQuestion.topic || (setTopicOnly ? legacyLabelForTopicId(rawQuestion.topicRef?.topicId) : "");
   return {
     id: rawQuestion.id || questionId(),
     questionNumber: Number(rawQuestion.questionNumber || idx + 1),
@@ -126,8 +141,11 @@ function normalizeQuestion(rawQuestion, idx, section) {
     questionType: normalizeQuestionType(rawQuestion.questionType),
     // `topic` remains as a compatibility display field until the picker is
     // migrated. New code should use topicRef.topicId.
-    topic: normalizeTopic(section, rawQuestion.topic, topicRef),
+    topic: normalizeTopic(section, topicLabel, topicRef),
     topicRef,
+    // `questionType` continues to mean answer format (MCQ/TITA). This is the
+    // semantic per-question type used for VARC/DILR syllabus tagging.
+    questionTypeRef: resolveAnalysisQuestionTypeReference(section, rawQuestion.questionTypeRef) || inheritedQuestionTypeRef,
     timeTaken: asNumberOrNull(rawQuestion.timeTaken),
     averageTime: asNumberOrNull(rawQuestion.averageTime),
     notes: asString(rawQuestion.notes),
@@ -137,14 +155,30 @@ function normalizeQuestion(rawQuestion, idx, section) {
 function normalizeBlock(rawBlock, idx, section) {
   const questions = Array.isArray(rawBlock.questions) ? rawBlock.questions : [];
   const type = asString(rawBlock.type) || "independent";
+  const movesSetTopicToQuestions = type === "set" && (section === "VARC" || section === "DILR");
   const topicRef = normalizeTopicRef(section, rawBlock.topicRef, rawBlock.topic);
+  const normalizedQuestions = questions.map((question, questionIdx) => {
+    if (!movesSetTopicToQuestions || question.topic || question.topicRef) {
+      return normalizeQuestion(question, questionIdx, section, movesSetTopicToQuestions);
+    }
+    // Migration path: existing set-level values become per-question values.
+    // If a historical mixed label cannot map to the new set taxonomy, it is
+    // preserved on each question as a visible legacy string for re-tagging.
+    return normalizeQuestion({
+      ...question,
+      topic: rawBlock.topic || legacyLabelForTopicId(rawBlock.topicRef?.topicId),
+      topicRef: rawBlock.topicRef || null,
+    }, questionIdx, section, true);
+  });
   return {
     id: rawBlock.id || blockId(),
     type,
     name: asString(rawBlock.name),
-    topic: type === "set" ? normalizeTopic(section, rawBlock.topic, topicRef) : "",
-    topicRef: type === "set" ? topicRef : null,
-    questions: questions.map((question, questionIdx) => normalizeQuestion(question, questionIdx, section)),
+    // Kept only for Quant set compatibility. VARC/DILR set classification is
+    // now per-question, so saving normalized analysis removes this old field.
+    topic: type === "set" && !movesSetTopicToQuestions ? normalizeTopic(section, rawBlock.topic, topicRef) : "",
+    topicRef: type === "set" && !movesSetTopicToQuestions ? topicRef : null,
+    questions: normalizedQuestions,
   };
 }
 
@@ -286,6 +320,7 @@ function fillableQuestion(questionNumber) {
     questionType: "MCQ",
     topic: "",
     topicRef: null,
+    questionTypeRef: null,
     timeTaken: null,
     averageTime: null,
     notes: "",
@@ -366,11 +401,12 @@ function buildTemplateInformation(mock, sections) {
       "section.percentile": "Number from 0 to 100, or null.",
       "section.notes": "String section-level notes.",
       "block.type": "Must be set or independent.",
-      "block.topicRef": "For set blocks, use a canonical topicRef with a macro or leaf topicId, or leave blank. Legacy block.topic strings remain accepted.",
+      "block.topicRef": "Quant set blocks may use a canonical topicRef. VARC/DILR set topics now belong on each question; legacy block.topic strings are migrated down when imported.",
       "question.result": "Choose one of Correct, Wrong, Skipped, or Unreviewed.",
       "question.outcomeReason": "For Correct/Wrong/Skipped, choose one value from outcomeReasonsBySectionAndResult for that section/result. Leave blank for Unreviewed.",
       "question.questionType": "Choose MCQ or TITA.",
-      "question.topicRef": "For independent questions, use a canonical topicRef with a topicId, or leave blank. Set questions inherit block.topicRef. Legacy question.topic strings remain accepted.",
+      "question.topicRef": "Canonical topicRef with a topicId. VARC/DILR set questions use their section's compact Passage/set topic taxonomy; legacy topic strings remain accepted and are migrated when safe.",
+      "question.questionTypeRef": "For VARC/DILR set questions, optional canonical semantic question-type reference (Inference, Data extraction, etc.). This is distinct from question.questionType, which remains MCQ/TITA.",
       "question.timeTaken": "Seconds as a number, or null.",
       "question.averageTime": "Benchmark seconds as a number, or null.",
       "question.notes": "String question-level notes.",

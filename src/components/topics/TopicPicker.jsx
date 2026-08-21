@@ -4,7 +4,33 @@ import { getTopicChildren, getTopicNode, getTopicPickerOptions } from "../../lib
  * Fast topic selection for analysis: choose one macro, then optionally refine
  * to a leaf within that macro. The stored value is always the canonical ID.
  */
-export default function TopicPicker({ section, topicRef, legacyTopic = "", onChange, selectStyle, compact = false, disabled = false }) {
+export default function TopicPicker({ section, topicRef, legacyTopic = "", onChange, selectStyle, compact = false, disabled = false, topicIds = null, placeholder = "-", title = null }) {
+  if (topicIds) {
+    const selectedId = topicIds.includes(topicRef?.topicId) ? topicRef.topicId : "";
+    return (
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <select
+          value={selectedId}
+          onChange={(event) => onChange(event.target.value || null)}
+          disabled={disabled}
+          title={legacyTopic && !topicRef ? `Legacy topic: ${legacyTopic}` : title || "Choose a syllabus topic"}
+          style={{ ...selectStyle(false), minWidth: compact ? 175 : 210, height: compact ? 36 : 40, fontSize: compact ? 13 : 14 }}
+        >
+          <option value="">{legacyTopic && !topicRef ? "Choose replacement…" : placeholder}</option>
+          {topicIds.map((topicId) => {
+            const topic = getTopicNode(topicId);
+            return topic ? <option key={topic.id} value={topic.id}>{topic.name}</option> : null;
+          })}
+        </select>
+        {legacyTopic && !topicRef && (
+          <span className="text-xs" style={{ color: "var(--ink-muted, #6b7280)" }}>
+            Legacy: {legacyTopic}
+          </span>
+        )}
+      </div>
+    );
+  }
+
   const macroOptions = getTopicPickerOptions(section);
   const selected = getTopicNode(topicRef?.topicId);
   const selectedMacro = selected?.kind === "leaf" ? getTopicNode(selected.parentId) : selected;

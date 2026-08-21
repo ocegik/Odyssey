@@ -38,17 +38,17 @@ describe("canonical topic registry", () => {
       "qa",
     ]);
     const rcChildren = getTopicChildren("varc-rc");
-    expect(rcChildren.map((t) => t.id)).toContain("varc-rc-philosophy");
-    expect(rcChildren.map((t) => t.id)).toContain("varc-rc-politics-society");
-    expect(rcChildren.map((t) => t.id)).toContain("varc-rc-biology-medicine");
-    expect(rcChildren.find((t) => t.id === "varc-rc-philosophy").name).toBe("Philosophy");
-    expect(rcChildren.find((t) => t.id === "varc-rc-politics-society").name).toBe("Politics & Society");
+    expect(rcChildren.map((t) => t.id)).toContain("varc-rc-philosophy-abstract");
+    expect(rcChildren.map((t) => t.id)).toContain("varc-rc-society-culture");
+    expect(rcChildren.map((t) => t.id)).toContain("varc-rc-science");
+    expect(rcChildren.find((t) => t.id === "varc-rc-philosophy-abstract").name).toBe("Philosophy & Abstract Ideas");
+    expect(rcChildren.find((t) => t.id === "varc-rc-society-culture").name).toBe("Society & Culture");
   });
 
   it("validates topic IDs against the analysis section", () => {
     expect(isValidTagTopic("qa-arithmetic", "Quant")).toBe(true);
     expect(isValidTagTopic("qa-arithmetic-percentages", "Quant")).toBe(true);
-    expect(isValidTagTopic("varc-rc-philosophy", "VARC")).toBe(true);
+    expect(isValidTagTopic("varc-rc-philosophy-abstract", "VARC")).toBe(true);
     expect(isValidTagTopic("qa-arithmetic", "VARC")).toBe(false);
     expect(isValidTagTopic("qa", "Quant")).toBe(false);
     expect(isValidTagTopic("does-not-exist", "Quant")).toBe(false);
