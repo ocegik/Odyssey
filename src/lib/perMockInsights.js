@@ -47,7 +47,7 @@ export function buildPerMockInsights(mock, settings = {}, priorMarks = null) {
   if (topWrong && wrong > 0) {
     insights.push({
       id: "top-wrong",
-      label: "Biggest mistake category",
+      label: "Most common error type",
       value: topWrong.label,
       tone: "negative",
       sub: `${topWrong.count}/${wrong} wrong questions (${fmtPct(topWrong.count / wrong)})${topWrongSection ? `, led by ${topWrongSection.label}` : ""}.`,
@@ -57,7 +57,7 @@ export function buildPerMockInsights(mock, settings = {}, priorMarks = null) {
   if (topSkipped && skipped > 0) {
     insights.push({
       id: "top-skip",
-      label: "Skip pattern",
+      label: "Most common reason for skipping",
       value: topSkipped.label,
       tone: "negative",
       sub: `${topSkipped.count}/${skipped} skipped questions (${fmtPct(topSkipped.count / skipped)})${topSkippedSection ? `, led by ${topSkippedSection.label}` : ""}.`,
@@ -70,20 +70,20 @@ export function buildPerMockInsights(mock, settings = {}, priorMarks = null) {
     const delta = totalMarks - targetMarks;
     insights.push({
       id: "target-score",
-      label: "Target comparison",
+      label: "Against your target",
       value: delta >= 0 ? `+${fmtNum(delta, 0)}` : fmtNum(delta, 0),
       tone: delta >= 0 ? "positive" : "negative",
-      sub: `${fmtNum(totalMarks, 0)} marks vs ${fmtNum(targetMarks, 0)} target.`,
+      sub: `${fmtNum(totalMarks, 0)} marks against a ${fmtNum(targetMarks, 0)} target.`,
     });
   }
 
   if (questions.length > 0 && insights.length === 0) {
     insights.push({
       id: "analysis-captured",
-      label: "Mock analysis",
+      label: "Analysis recorded",
       value: `${questions.length} questions`,
       tone: "neutral",
-      sub: "Analysis is available for this mock.",
+      sub: "Question-level analysis is available for this mock.",
     });
   }
 

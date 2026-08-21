@@ -18,10 +18,10 @@ export default function Header({ theme, onToggleTheme, syncStatuses, auth, onSig
           <LogoMark />
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <h1 style={TYPE.pageTitle}>Odyssey</h1>
-            <span className="text-xs" style={{ color: COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>CAT Mock Tracker</span>
+            <span className="text-xs" style={{ color: COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>CAT preparation workspace</span>
           </div>
         </div>
-        <p className="text-sm" style={{ color: COLORS.inkMuted }}>Sectional performance across VARC · DILR · Quant</p>
+        <p className="text-sm" style={{ color: COLORS.inkMuted }}>Review mock performance across VARC · DILR · Quant</p>
       </div>
       <div className="flex w-full gap-2 flex-wrap items-center sm:w-auto sm:flex-nowrap">
         <SyncBadge statuses={syncStatuses} />

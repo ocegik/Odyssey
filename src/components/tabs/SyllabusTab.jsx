@@ -40,7 +40,7 @@ export default function SyllabusTab({
       )}
 
       {filteredTree.length === 0 ? (
-        <EmptyState icon={SearchX} title="No topics match" body="Try clearing the search or resetting the status/frequency filters." />
+        <EmptyState icon={SearchX} title="No topics match these filters" body="Clear the search or adjust the status and frequency filters." />
       ) : (
         <div className="flex flex-col gap-3.5">
           {filteredTree.map((section) => (

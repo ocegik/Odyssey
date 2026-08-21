@@ -23,7 +23,7 @@ export default function PercentileTrendChart({ data, targetPercentile }) {
   return (
     <ChartFrame
       title="Percentile trend"
-      note="Section and overall percentile by mock — normalized for paper difficulty"
+      note="Overall and sectional percentiles from the test series you logged"
       empty={empty}
     >
       <div style={{ width: "100%", height: 280 }}>

@@ -31,9 +31,9 @@ function buildOverallMarksData(mocks) {
 }
 
 function emptyInsightText(mocks) {
-  if (mocks.length === 0) return "Log a mock to view insights.";
-  if (mocks.length < 3) return "Log more mocks to reveal trends.";
-  return "No major changes in recent mocks.";
+  if (mocks.length === 0) return "Log a mock to see personalised insights.";
+  if (mocks.length < 3) return "Log more mocks before drawing a trend.";
+  return "Recent mocks do not show a clear change.";
 }
 
 /* The one thing a user opening the app actually wants first: how did the
@@ -122,8 +122,8 @@ function QuickMathCard({ progress: rawProgress, onOpenQuickMath }) {
           </div>
           <p className="mt-1 text-sm leading-5" style={{ color: COLORS.inkMuted }}>
             {progress.totalAnswered
-              ? `You’re practicing at ${currentLevel.label} level. Keep your streak going.`
-              : "Mental-math drills for CAT preparation."}
+              ? `You are practising at the ${currentLevel.label} level.`
+              : "Short mental-math drills for CAT preparation."}
           </p>
         </div>
         <button
@@ -234,7 +234,7 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionS
       >
         <div className="pt-4">
           {graphData.length === 0 ? (
-            <p className="text-sm" style={{ color: COLORS.inkMuted }}>No scored mocks yet.</p>
+            <p className="text-sm" style={{ color: COLORS.inkMuted }}>No scored mocks have been logged yet.</p>
           ) : (
             <Suspense fallback={<div style={{ height: 280 }} aria-busy="true" />}>
               <OverallMarksChart data={graphData} />

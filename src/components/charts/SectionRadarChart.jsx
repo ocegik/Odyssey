@@ -4,7 +4,7 @@ import ChartFrame from "./ChartFrame";
 
 export default function SectionRadarChart({ data, empty }) {
   return (
-    <ChartFrame title="Section shape" note="Accuracy · attempt rate · marks/attempt, normalized to 0–100" empty={empty}>
+    <ChartFrame title="Section profile" note="Accuracy, attempt rate, and marks per attempt, shown on a 0–100 scale" empty={empty}>
       <div style={{ width: "100%", height: 280 }}>
         <ResponsiveContainer>
           <RadarChart data={data} margin={{ top: 8, right: 12, left: 12, bottom: 0 }}>

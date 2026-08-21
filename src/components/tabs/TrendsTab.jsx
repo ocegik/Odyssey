@@ -25,7 +25,7 @@ function ConsistencyStats({ consistency }) {
           sub={
             row.accuracyStdDev !== null
               ? `Accuracy swing across ${row.sampleSize} mocks · ±${fmtNum(row.marksStdDev, 1)} marks`
-              : "Log 3+ mocks in this section to see a consistency read"
+              : "Log at least 3 mocks in this section to calculate consistency"
           }
         />
       ))}
@@ -38,7 +38,7 @@ function ConsistencyStats({ consistency }) {
    reason to open it, while a real number does. */
 function consistencySummary(consistency) {
   const rated = consistency.filter((row) => row.accuracyStdDev !== null);
-  if (rated.length === 0) return "Needs 3+ mocks per section";
+  if (rated.length === 0) return "At least 3 mocks per section are needed";
   const swingiest = rated.reduce((worst, row) => (row.accuracyStdDev > worst.accuracyStdDev ? row : worst));
   return `Most volatile: ${swingiest.section} ±${fmtNum(swingiest.accuracyStdDev * 100, 1)}% accuracy`;
 }
@@ -69,7 +69,7 @@ export default function TrendsTab({
   sectionStats,
   settings,
 }) {
-  const noData = mocks.length === 0 ? "Log a few mocks to see the trend line." : null;
+  const noData = mocks.length === 0 ? "Log scored mocks to build a trend line." : null;
   const overallTargetMarks = settings?.overallTargetMarks;
   const targetLines = overallTargetMarks !== null && overallTargetMarks !== undefined
     ? [{ label: "Overall target", value: overallTargetMarks, color: COLORS.inkMuted }]
@@ -80,10 +80,10 @@ export default function TrendsTab({
     ? "Dashed lines are per-section Account targets"
     : targetLines.length
       ? "Dashed line is the Account target score"
-      : "Primary view for spotting who's lagging";
+      : "Compare how each section is moving over time";
 
   const radarData = useMemo(() => buildRadarData(sectionStats), [sectionStats]);
-  const radarEmpty = SECTIONS.every((s) => !sectionStats[s]?.latest) ? "Log a few mocks to see section shape." : null;
+  const radarEmpty = SECTIONS.every((s) => !sectionStats[s]?.latest) ? "Log scored mocks to build a section profile." : null;
   const consistency = useMemo(() => buildConsistencyStats(sectionStats), [sectionStats]);
   const leak = useMemo(() => aggregateScoreLeak(entriesWithComputed, LEAK_WINDOW), [entriesWithComputed]);
 
@@ -104,7 +104,7 @@ export default function TrendsTab({
           remembered per device. See hooks/useDisclosure. */}
       <GroupHeading>Go deeper</GroupHeading>
 
-      <Disclosure id="trends.leak" title="Where your marks go" summary={scoreLeakSummary(leak)}>
+      <Disclosure id="trends.leak" title="Where marks are being lost" summary={scoreLeakSummary(leak)}>
         <ScoreLeakPanel leak={leak} />
         <div className="mt-4">
           <ChartFrame title="Marks-per-attempt trend" note="Marks scored per question attempted" empty={noData}>

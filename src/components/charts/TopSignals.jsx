@@ -11,8 +11,8 @@ export default function TopSignals({ signals }) {
   return (
     <ChartFrame
       title="Top signals"
-      note="Ranked across section, set, and topic patterns"
-      empty={!signals || signals.length === 0 ? "Not enough repeated signal yet — keep logging analyzed mocks." : null}
+      note="Patterns across sections, sets, and topics"
+      empty={!signals || signals.length === 0 ? "Log and analyse more mocks to identify repeated patterns." : null}
     >
       <div className="flex flex-col gap-3">
         {signals.map((signal, index) => {

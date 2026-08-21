@@ -80,7 +80,7 @@ function CatProgressCard({ catTargetYear, preparationStartDate, overallTargetPer
   if (!catTargetDate) {
     return (
       <CardShell icon={Hourglass} label="CAT Progress" accent={COLORS.primary}>
-        <span className="text-sm" style={{ color: COLORS.inkMuted }}>Set your CAT target year</span>
+        <span className="text-sm" style={{ color: COLORS.inkMuted }}>Set a CAT target year in Account</span>
       </CardShell>
     );
   }
@@ -124,7 +124,7 @@ function NextMockCard({ mockSchedule, nextTargetMarks }) {
   if (!nextMock) {
     return (
       <CardShell icon={CalendarClock} label="Next Mock" accent={COLORS.info}>
-        <span className="text-sm" style={{ color: COLORS.inkMuted }}>Add a mock to your schedule</span>
+        <span className="text-sm" style={{ color: COLORS.inkMuted }}>Add a scheduled mock in Account</span>
       </CardShell>
     );
   }

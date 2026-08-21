@@ -79,10 +79,10 @@ export default class ErrorBoundary extends Component {
         >
           <div className="flex items-center gap-2.5">
             <AlertTriangle size={20} style={{ color: COLORS.danger }} />
-            <h1 style={TYPE.panelTitle}>Something went wrong</h1>
+            <h1 style={TYPE.panelTitle}>The app could not finish loading</h1>
           </div>
 
-          <p className="text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>Download a backup, then reload the app.</p>
+          <p className="text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>Download a backup of this browser’s data, then reload the app.</p>
 
 
           <div className="flex flex-wrap gap-2">

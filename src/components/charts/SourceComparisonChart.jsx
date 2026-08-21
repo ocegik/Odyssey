@@ -15,7 +15,7 @@ export default function SourceComparisonChart({ entriesWithComputed }) {
   }, [entriesWithComputed]);
 
   return (
-    <ChartFrame title="Source-wise comparison" note="Avg. total marks per section" empty={data.length === 0 ? "Log mocks from more than one source to compare difficulty." : null}>
+    <ChartFrame title="Source-wise comparison" note="Average section marks by test source" empty={data.length === 0 ? "Log mocks from at least two sources to compare your results." : null}>
       <div style={{ width: "100%", height: 260 }}>
         <ResponsiveContainer>
           <BarChart data={data} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>

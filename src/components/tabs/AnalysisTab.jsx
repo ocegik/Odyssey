@@ -432,9 +432,9 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
       setAnalysisNotices([]);
       setSaveError("");
       setImportError("");
-      setImportMessage("Analysis JSON imported — review below, then save.");
+      setImportMessage("Analysis JSON imported. Review it below, then save the analysis.");
     } catch (err) {
-      setImportError(err.message || "Could not import that analysis JSON.");
+      setImportError(err.message || "The analysis JSON could not be imported. Check the file format and try again.");
       setImportMessage("");
     }
   };
@@ -538,7 +538,7 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
     setDraft((current) => mergeDraftOntoMockStructure(patchedMock, current));
     setAnalysisNotices([]);
     setSaveError("");
-    setSaveMessage("Paper structure updated. Existing answers were kept by question number; save analysis when ready.");
+    setSaveMessage("Paper structure updated. Existing answers were kept by question number; save the analysis to keep these changes.");
     setShowStructureEditor(false);
   };
 
@@ -693,12 +693,12 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
     setAnalysisNotices(reviewAnalysisAgainstMock(selectedMock, draft));
     const saved = onSaveAnalysis(selectedMock.id, draft);
     if (saved === false) {
-      setSaveError("Could not save this analysis. Check the analysis data and try again.");
+      setSaveError("The analysis could not be saved. Check the entered data and try again.");
       setSaveMessage("");
     } else {
       clearPendingDraft(selectedMock.id);
       setSaveError("");
-      setSaveMessage("Saved.");
+      setSaveMessage("Analysis saved.");
     }
   };
 
@@ -721,7 +721,7 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
       key="unreviewed"
       label="Unreviewed"
       value={summary?.unreviewed || 0}
-      sub={summary?.unreviewed > 0 ? "Save works anytime — fill these in whenever you remember" : undefined}
+      sub={summary?.unreviewed > 0 ? "You can save a partial review and return to these questions later." : undefined}
     />,
   ];
   if ((summary?.attempted || 0) > 0) visibleStats.push(<StatCard key="accuracy" label="Accuracy" value={fmtPct(summary?.accuracy)} />);
@@ -739,7 +739,7 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
       </div>
 
       {!draft && (
-        <EmptyState icon={ClipboardList} title="No analysis draft" body="Generate an analysis from this mock's saved structure." />
+        <EmptyState icon={ClipboardList} title="No question analysis yet" body="Create an analysis from this mock’s saved structure." />
       )}
 
       {draft && (
@@ -836,7 +836,7 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
                 value={draft.overallReflection}
                 onChange={setOverall("overallReflection")}
                 rows={3}
-                placeholder="What will you repeat or change next mock?"
+                placeholder="What will you keep, change, or review before the next mock?"
                 style={{ ...inputStyle(false), backgroundColor: "transparent", border: "none", borderRadius: 0, padding: 0, resize: "vertical", minHeight: 82 }}
               />
             </label>

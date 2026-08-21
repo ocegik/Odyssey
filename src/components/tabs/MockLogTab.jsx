@@ -126,10 +126,10 @@ export default function MockLogTab({
     reader.onload = () => {
       try {
         const count = onImportMocks(reader.result);
-        setImportMessage(`Imported ${count} mock${count === 1 ? "" : "s"}`);
+        setImportMessage(`${count} mock${count === 1 ? " was" : "s were"} imported.`);
         setImportError("");
       } catch (err) {
-        setImportError(err.message || "Could not import that mock JSON.");
+        setImportError(err.message || "The mock JSON could not be imported. Check the file format and try again.");
         setImportMessage("");
       }
     };
@@ -375,7 +375,7 @@ export default function MockLogTab({
 
       {mocks.length === 0 && (
         <div className="flex items-center justify-between p-4 flex-wrap gap-3" style={{ background: COLORS.surface2, border: `1px dashed ${COLORS.border}`, borderRadius: 12 }}>
-          <span className="text-sm" style={{ color: COLORS.inkMuted }}>Nothing logged yet — add a mock above to start tracking your results.</span>
+          <span className="text-sm" style={{ color: COLORS.inkMuted }}>No mocks logged yet. Add a mock above to begin your record.</span>
         </div>
       )}
 

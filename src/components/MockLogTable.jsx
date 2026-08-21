@@ -28,7 +28,7 @@ function SortableHeader({ label, active, dir, onClick }) {
 
 function analysisStatus(analysis) {
   if (!analysis) {
-    return { label: "No analysis yet", tone: COLORS.inkMuted, Icon: FilePlus2 };
+    return { label: "No question analysis", tone: COLORS.inkMuted, Icon: FilePlus2 };
   }
 
   const questions = Object.values(analysis.sections || {}).flatMap((section) =>
@@ -41,7 +41,7 @@ function analysisStatus(analysis) {
   );
 
   if (totalQuestions > 0 && unreviewed === 0) {
-    return { label: "Analysis complete", tone: COLORS.good, Icon: FileCheck2 };
+    return { label: "Question analysis complete", tone: COLORS.good, Icon: FileCheck2 };
   }
 
   if (totalQuestions > 0) {
@@ -52,7 +52,7 @@ function analysisStatus(analysis) {
     };
   }
 
-  return { label: "Analysis started", tone: COLORS.info, Icon: FileCheck2 };
+  return { label: "Question analysis in progress", tone: COLORS.info, Icon: FileCheck2 };
 }
 
 function RowActionsMenu({ mockSource, hasAnalysis, onOpenAnalysis, onEdit, onDelete }) {
@@ -141,7 +141,7 @@ function MobileMockCard({ mock, onOpenAnalysis, onEdit, onDelete }) {
   const StatusIcon = status.Icon;
 
   const handleDelete = () => {
-    if (window.confirm(`Delete "${mock.source}" (${fmtDate(mock.date)})? This can't be undone.`)) {
+    if (window.confirm(`Delete "${mock.source}" (${fmtDate(mock.date)})? This action cannot be undone.`)) {
       onDelete(mock.id);
     }
   };
@@ -223,7 +223,7 @@ function MockLogTable({
   }, [filtered, sortKey, sortDir]);
 
   if (mocks.length === 0) {
-    return <EmptyState icon={Layers3} title="No mocks yet" body="Log your first mock to get started." />;
+    return <EmptyState icon={Layers3} title="No mocks logged" body="Log a mock to start building your preparation record." />;
   }
 
   const toggleSort = (key) => {
@@ -296,7 +296,7 @@ function MockLogTable({
               const rowBg = i % 2 ? COLORS.surface : COLORS.surface2;
 
               const handleDelete = () => {
-                if (window.confirm(`Delete "${mock.source}" (${fmtDate(mock.date)})? This can't be undone.`)) {
+                if (window.confirm(`Delete "${mock.source}" (${fmtDate(mock.date)})? This action cannot be undone.`)) {
                   onDeleteMock(mock.id);
                 }
               };

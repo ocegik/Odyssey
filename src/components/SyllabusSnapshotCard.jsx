@@ -106,9 +106,9 @@ export default function SyllabusSnapshotCard({ stats, highFrequencyRemaining, le
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1" style={{ borderTop: `1px solid ${COLORS.border}` }}>
         <div className="flex flex-col gap-2 pt-3">
-          <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>High-frequency, not yet covered</span>
+          <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>High-frequency topics still open</span>
           {highFrequencyRemaining.length === 0 ? (
-            <EmptyListNote text="All high-frequency topics are covered." />
+            <EmptyListNote text="No high-frequency topics are marked open." />
           ) : (
             <div className="flex flex-col gap-2">
               {highFrequencyRemaining.map((topic) => <HighFrequencyRow key={topic.id} topic={topic} />)}
@@ -117,9 +117,9 @@ export default function SyllabusSnapshotCard({ stats, highFrequencyRemaining, le
         </div>
 
         <div className="flex flex-col gap-2 pt-3">
-          <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>Focus areas</span>
+          <span style={{ ...TYPE.label, color: COLORS.inkMuted }}>Topics with the least coverage</span>
           {leastCompletedMacroTopics.length === 0 ? (
-            <EmptyListNote text="Every macro topic is fully covered." />
+            <EmptyListNote text="Every main topic is marked complete." />
           ) : (
             <div className="flex flex-col gap-2.5">
               {leastCompletedMacroTopics.map((macro) => <FocusAreaRow key={macro.id} macro={macro} />)}

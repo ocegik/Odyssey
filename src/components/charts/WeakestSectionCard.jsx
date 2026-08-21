@@ -7,7 +7,7 @@ export default function WeakestSectionCard({ analysis }) {
   if (!analysis) {
     return (
       <div className="p-5" style={{ background: COLORS.surface2, border: `1px dashed ${COLORS.border}`, borderRadius: 12 }}>
-        <p className="text-sm" style={{ color: COLORS.inkMuted }}>Log mocks across sections to compare performance.</p>
+        <p className="text-sm" style={{ color: COLORS.inkMuted }}>Log scored mocks for each section to compare recent performance.</p>
       </div>
     );
   }
@@ -19,7 +19,7 @@ export default function WeakestSectionCard({ analysis }) {
         <span className="text-xs px-2 py-0.5" style={{ background: meta.color, color: COLORS.surface, borderRadius: 999, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, letterSpacing: "0.05em" }}>
           FLAGGED
         </span>
-        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: "15px", color: meta.color }}>Weakest section: {analysis.weakestSection}</span>
+        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: "15px", color: meta.color }}>Lowest recent section: {analysis.weakestSection}</span>
       </div>
       <p className="text-sm" style={{ color: COLORS.ink, lineHeight: 1.5 }}>{analysis.note}</p>
       <div className="flex gap-4 flex-wrap pt-1">

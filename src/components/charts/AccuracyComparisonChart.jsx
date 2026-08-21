@@ -30,7 +30,7 @@ export default function AccuracyComparisonChart({ sectionStats }) {
           ))}
         </div>
       }
-      empty={!hasAny ? "Log at least one mock per section to compare accuracy." : null}
+      empty={!hasAny ? "Log attempt and correct counts for each section to compare accuracy." : null}
     >
       <div style={{ width: "100%", height: 260 }}>
         <ResponsiveContainer>

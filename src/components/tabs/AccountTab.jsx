@@ -97,14 +97,14 @@ export default function AccountTab({
     try {
       if (editingId) {
         onUpdateScheduleEntry(editingId, scheduleForm);
-        setMessage("Schedule entry updated");
+        setMessage("Schedule entry updated.");
       } else {
         onAddScheduleEntry(scheduleForm);
-        setMessage("Schedule entry added");
+        setMessage("Schedule entry added.");
       }
       clearScheduleForm();
     } catch (err) {
-      setError(err.message || "Could not save that schedule entry.");
+      setError(err.message || "The schedule entry could not be saved. Check the details and try again.");
     }
   };
 
@@ -127,10 +127,10 @@ export default function AccountTab({
     reader.onload = () => {
       try {
         const count = onImportScheduleEntries(reader.result);
-        setMessage(`Imported ${count} schedule ${count === 1 ? "entry" : "entries"}`);
+        setMessage(`${count} schedule ${count === 1 ? "entry was" : "entries were"} imported.`);
         setError("");
       } catch (err) {
-        setError(err.message || "Could not import that schedule JSON.");
+        setError(err.message || "The schedule JSON could not be imported. Check the file format and try again.");
       }
     };
     reader.readAsText(file);
@@ -141,17 +141,17 @@ export default function AccountTab({
     const file = ev.target.files?.[0];
     ev.target.value = "";
     if (!file) return;
-    if (!window.confirm("Import will replace all mocks and preferences currently on this device with the backup file. This can't be undone. Continue?")) {
+    if (!window.confirm("Importing this backup replaces all current mocks and preferences on this device. This action cannot be undone. Continue?")) {
       return;
     }
     const reader = new FileReader();
     reader.onload = () => {
       try {
         const count = onImportData(reader.result);
-        setDataMessage(`Imported ${count} mock${count === 1 ? "" : "s"} and preferences`);
+        setDataMessage(`${count} mock${count === 1 ? " was" : "s were"} imported with the saved preferences.`);
         setDataError("");
       } catch (err) {
-        setDataError(err.message || "Could not import that backup JSON.");
+        setDataError(err.message || "The backup could not be imported. Check the file format and try again.");
       }
     };
     reader.readAsText(file);
@@ -180,7 +180,7 @@ export default function AccountTab({
     try {
       await onDeleteAccount();
     } catch (err) {
-      setDeleteError(err.message || "Could not delete your account. Please try again.");
+      setDeleteError(err.message || "The account could not be deleted. Try again.");
       setDeleting(false);
     }
   };
@@ -251,12 +251,12 @@ export default function AccountTab({
           </div>
         }
       >
-        <p className="text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>Importing a backup replaces your current mocks and preferences.</p>
+        <p className="text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>Importing a backup replaces the current mocks and preferences on this device.</p>
         {dataError && <p className="text-sm" style={{ color: COLORS.danger }}>{dataError}</p>}
         {dataMessage && !dataError && <p className="text-sm" style={{ color: COLORS.good }}>{dataMessage}</p>}
       </Panel>
 
-      <Panel title="Danger zone">
+      <Panel title="Account deletion">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm" style={{ color: COLORS.ink, fontWeight: 650 }}>Delete account</p>
@@ -449,7 +449,7 @@ export default function AccountTab({
         {message && !error && <p className="text-sm" style={{ color: COLORS.good }}>{message}</p>}
 
         {settings.mockSchedule.length === 0 ? (
-          <EmptyState icon={Upload} title="No scheduled mocks" body="Add a mock or import your schedule." />
+          <EmptyState icon={Upload} title="No scheduled mocks" body="Add a scheduled mock or import a schedule file." />
         ) : (
           <>
             <div className="table-scroll" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>

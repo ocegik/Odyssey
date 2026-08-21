@@ -16,9 +16,9 @@ const BANDS = [
 
 /** One-line headline for a collapsed Disclosure — see components/ui/Disclosure. */
 export function scoreLeakSummary(leak) {
-  if (!leak || leak.sectionsWithData.length === 0) return "Add attempt data";
+  if (!leak || leak.sectionsWithData.length === 0) return "Add attempt data to calculate this";
   const { biggestLeak } = leak;
-  if (!biggestLeak) return "No recoverable marks — a clean sweep";
+  if (!biggestLeak) return "No marks lost in the available breakdown";
   return `${biggestLeak.section}: ${fmtNum(biggestLeak.value, 0)} marks/mock to ${biggestLeak.label}`;
 }
 
@@ -102,8 +102,8 @@ export default function ScoreLeakPanel({ leak }) {
     return (
       <EmptyState
         icon={Droplet}
-        title="Not enough detail yet"
-        body="Add total questions, attempted, correct, and score to view this breakdown."
+        title="More mock detail is needed"
+        body="Add total questions, attempted, correct, and score to calculate this breakdown."
       />
     );
   }
@@ -114,10 +114,10 @@ export default function ScoreLeakPanel({ leak }) {
     <div className="flex flex-col gap-4 pt-4">
       {biggestLeak && (
         <p className="text-sm leading-relaxed p-3" style={{ background: COLORS.infoSoft, color: COLORS.ink, borderRadius: 8 }}>
-          Biggest recoverable pool:{" "}
+          Largest marks gap per mock:{" "}
           <strong style={{ color: SECTION_META[biggestLeak.section].color }}>{biggestLeak.section}</strong> gives up{" "}
           <strong style={{ fontFamily: "'JetBrains Mono', monospace" }}>{fmtNum(biggestLeak.value, 1)}</strong> marks a mock to{" "}
-          {biggestLeak.label} — that's {biggestLeak.fix} problem.
+          {biggestLeak.label}. Focus first on {biggestLeak.fix} issue.
         </p>
       )}
 

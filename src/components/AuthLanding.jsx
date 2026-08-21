@@ -29,12 +29,12 @@ export default function AuthLanding({ auth }) {
     try {
       if (mode === "signup") {
         const data = await auth.signUp({ email, password });
-        setMessage(data.session ? "Your account is ready." : "Check your inbox to confirm your email, then sign in.");
+        setMessage(data.session ? "Your account has been created." : "Confirm your email from your inbox, then sign in.");
       } else {
         await auth.signIn({ email, password });
       }
     } catch (err) {
-      setError(err.message || "Could not complete that request.");
+      setError(err.message || "The account request could not be completed. Check your details and try again.");
     } finally {
       setBusy(false);
     }
@@ -50,7 +50,7 @@ export default function AuthLanding({ auth }) {
       // useful if a browser delays that navigation for any reason.
       setMessage("Opening Google sign-in…");
     } catch (err) {
-      setError(err.message || "Could not start Google sign-in.");
+      setError(err.message || "Google sign-in could not be started. Try again.");
       setBusy(false);
     }
   };
@@ -70,17 +70,17 @@ export default function AuthLanding({ auth }) {
             <BarChart3 size={14} /> CAT preparation companion
           </p>
           <h1 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            OdysseyPrep is a CAT mock-test tracking app.
+            Track CAT mocks. Plan the work that follows.
           </h1>
           <p className="mt-5 max-w-lg text-base leading-relaxed sm:text-lg" style={{ color: COLORS.inkMuted }}>
-            It helps CAT aspirants record mock-test results, review performance across VARC, DILR, and Quant, and organise their syllabus and revision work in one place.
+            Log mock results, review performance across VARC, DILR, and Quant, and organise syllabus and revision work in one place.
           </p>
           <p className="mt-3 max-w-lg text-sm leading-relaxed" style={{ color: COLORS.inkMuted }}>
             Odyssey is an independent study-planning tool. It is not affiliated with the CAT examination, IIMs, or any test-series provider.
           </p>
           <div className="mt-8 grid gap-3 sm:grid-cols-2">
-            <Feature icon={BarChart3} title="Track and review" text="Log mock scores, accuracy, attempts, and section-level performance over time." />
-            <Feature icon={ShieldCheck} title="Plan your preparation" text="Maintain syllabus progress, targets, and revision work in your account." />
+            <Feature icon={BarChart3} title="Track and review" text="Log mock scores, attempts, accuracy, and sectional performance over time." />
+            <Feature icon={ShieldCheck} title="Plan your preparation" text="Keep syllabus progress, targets, and revision work in your account." />
           </div>
         </section>
 
@@ -88,7 +88,7 @@ export default function AuthLanding({ auth }) {
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
               <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{mode === "signup" ? "Create your account" : "Welcome back"}</h2>
-              <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>{mode === "signup" ? "Start tracking your prep in a minute." : "Sign in to continue where you left off."}</p>
+              <p className="mt-1 text-sm" style={{ color: COLORS.inkMuted }}>{mode === "signup" ? "Set up a private workspace for your preparation." : "Sign in to access your preparation workspace."}</p>
             </div>
             <KeyRound size={22} style={{ color: COLORS.primary, flexShrink: 0 }} />
           </div>

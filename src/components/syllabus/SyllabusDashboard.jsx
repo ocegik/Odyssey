@@ -40,12 +40,12 @@ export default function SyllabusDashboard({ stats, topicMetrics, revisionQueue }
         </div>
         {overall.completed === overall.total && overall.total > 0 && (
           <div className="flex items-center gap-2 pt-1 text-sm" style={{ color: COLORS.good }}>
-            <CheckCircle2 size={15} /> Full syllabus covered — time to focus on revision and mock accuracy.
+            <CheckCircle2 size={15} /> Every topic is marked complete. Use revision and mock analysis to maintain coverage.
           </div>
         )}
         {overall.completed === 0 && (
           <div className="flex items-center gap-2 pt-1 text-sm" style={{ color: COLORS.inkMuted }}>
-            <Target size={15} /> Check off micro topics as you cover them to start tracking progress here.
+            <Target size={15} /> Mark micro topics complete as you cover them to track progress here.
           </div>
         )}
       </div>

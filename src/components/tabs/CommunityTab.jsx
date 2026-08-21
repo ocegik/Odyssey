@@ -78,7 +78,7 @@ export default function CommunityTab({ mocks, syllabusProgress, quickMathProgres
         setCommunity({
           status: "error",
           data: null,
-          error: "Community stats are unavailable. Please try again later.",
+          error: "Community statistics are unavailable right now. Reload this page to try again.",
         });
         return;
       }
@@ -91,9 +91,9 @@ export default function CommunityTab({ mocks, syllabusProgress, quickMathProgres
 
   const personalCards = [
     { icon: ClipboardCheck, label: "Mocks logged", value: numberFormatter.format(personal.totalMocks), note: "all time", accent: COLORS.info },
-    { icon: Flame, label: "Mocks in last 30 days", value: numberFormatter.format(personal.mocksLast30Days), note: "your recent logging rhythm", accent: COLORS.varc },
-    { icon: Trophy, label: "Best score", value: score(personal.bestScore), note: personal.scoredMockCount ? `from ${personal.scoredMockCount} scored mock${personal.scoredMockCount === 1 ? "" : "s"}` : "log scores to track your best", accent: COLORS.warn },
-    { icon: Target, label: "Latest percentile", value: personal.latestPercentile === null ? "—" : `${fmtNum(personal.latestPercentile, 2)}%ile`, note: personal.latestPercentile === null ? "add a percentile when logging a mock" : "from your most recent percentile", accent: COLORS.primary },
+    { icon: Flame, label: "Mocks in the last 30 days", value: numberFormatter.format(personal.mocksLast30Days), note: "your recent logging pattern", accent: COLORS.varc },
+    { icon: Trophy, label: "Best score", value: score(personal.bestScore), note: personal.scoredMockCount ? `from ${personal.scoredMockCount} scored mock${personal.scoredMockCount === 1 ? "" : "s"}` : "log scores to record your best", accent: COLORS.warn },
+    { icon: Target, label: "Latest percentile", value: personal.latestPercentile === null ? "—" : `${fmtNum(personal.latestPercentile, 2)}%ile`, note: personal.latestPercentile === null ? "add the percentile when logging a mock" : "from the most recent logged percentile", accent: COLORS.primary },
   ];
 
   return (
@@ -151,7 +151,7 @@ export default function CommunityTab({ mocks, syllabusProgress, quickMathProgres
                   <span className="text-right text-sm" style={{ color: COLORS.ink, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}>{entry.mockCount} <span className="text-xs" style={{ color: COLORS.inkMuted, fontFamily: "'Inter', sans-serif", fontWeight: 500 }}>mocks</span></span>
                 </div>
               ))}
-              {!community.data.leaderboard.length && <p className="px-4 py-8 text-center text-sm" style={{ color: COLORS.inkMuted }}>No community members have logged a mock in the last 30 days yet.</p>}
+              {!community.data.leaderboard.length && <p className="px-4 py-8 text-center text-sm" style={{ color: COLORS.inkMuted }}>No community member has logged a mock in the last 30 days.</p>}
             </div>
           )}
         </Card>
@@ -168,7 +168,7 @@ export default function CommunityTab({ mocks, syllabusProgress, quickMathProgres
               <div className="p-4" style={{ background: COLORS.surface2, borderRadius: 10 }}><UsersRound size={16} style={{ color: COLORS.primary }} /><strong className="block mt-4" style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 24, color: COLORS.ink }}>{numberFormatter.format(community.data.totalStudents)}</strong><p className="mt-1 text-xs leading-5" style={{ color: COLORS.inkMuted }}>students on Odyssey</p></div>
               <div className="p-4" style={{ background: COLORS.surface2, borderRadius: 10 }}><ClipboardCheck size={16} style={{ color: COLORS.info }} /><strong className="block mt-4" style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 24, color: COLORS.ink }}>{numberFormatter.format(community.data.totalMocks)}</strong><p className="mt-1 text-xs leading-5" style={{ color: COLORS.inkMuted }}>mocks logged</p></div>
               <div className="p-4" style={{ background: COLORS.surface2, borderRadius: 10 }}><Flame size={16} style={{ color: COLORS.varc }} /><strong className="block mt-4" style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 24, color: COLORS.ink }}>{numberFormatter.format(community.data.mocksLast30Days)}</strong><p className="mt-1 text-xs leading-5" style={{ color: COLORS.inkMuted }}>logged this month</p></div>
-              <div className="p-4" style={{ background: COLORS.surface2, borderRadius: 10 }}><Sparkles size={16} style={{ color: COLORS.good }} /><strong className="block mt-4" style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 24, color: COLORS.ink }}>{numberFormatter.format(community.data.activeLearners)}</strong><p className="mt-1 text-xs leading-5" style={{ color: COLORS.inkMuted }}>active mock-loggers</p></div>
+              <div className="p-4" style={{ background: COLORS.surface2, borderRadius: 10 }}><Sparkles size={16} style={{ color: COLORS.good }} /><strong className="block mt-4" style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 24, color: COLORS.ink }}>{numberFormatter.format(community.data.activeLearners)}</strong><p className="mt-1 text-xs leading-5" style={{ color: COLORS.inkMuted }}>members logging mocks recently</p></div>
             </div>
           )}
         </Card>

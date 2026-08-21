@@ -8,22 +8,22 @@ import { catExamDateForYear, fmtDateLong } from "../lib/dateMath";
 const slides = [
   {
     eyebrow: "CAT mock tracker",
-    title: "Make every mock count.",
-    text: "Track your progress across VARC, DILR, and Quant.",
+    title: "Use each mock as a record of your preparation.",
+    text: "Track marks, attempts, and accuracy across VARC, DILR, and Quant.",
     icon: LineChart,
     shortTitle: "Welcome",
   },
   {
     eyebrow: "Set your timeline",
-    title: "Plan your CAT preparation.",
-    text: "Set your target year and preparation start date.",
+    title: "Set the timeline for your CAT preparation.",
+    text: "Add your target year and preparation start date. You can update both later.",
     icon: Target,
     shortTitle: "Your plan",
   },
   {
     eyebrow: "Personalize",
-    title: "Add your preferences.",
-    text: "Optional details you can update anytime.",
+    title: "Add the details that help organise your workspace.",
+    text: "These fields are optional and can be updated later.",
     icon: CheckCircle2,
     shortTitle: "Personalize",
   },
@@ -73,7 +73,7 @@ export default function Onboarding({ onComplete, user }) {
     try {
       await onComplete(profile);
     } catch (err) {
-      setError(err.message || "Could not save your onboarding choice. Please try again.");
+      setError(err.message || "Your setup could not be saved. Check the required fields and try again.");
       setBusy(false);
     }
   };
@@ -103,7 +103,7 @@ export default function Onboarding({ onComplete, user }) {
 
         <section className="flex min-w-0 flex-col p-5 sm:p-8 lg:p-10">
           <div className="flex items-center justify-between gap-4">
-            <span className="hidden text-sm font-semibold lg:block" style={{ color: COLORS.inkMuted }}>Set up your workspace</span>
+            <span className="hidden text-sm font-semibold lg:block" style={{ color: COLORS.inkMuted }}>Set up your preparation workspace</span>
             <span className="hidden text-sm font-semibold lg:block" style={{ color: COLORS.inkMuted }}>Step {index + 1} of {slides.length}</span>
             <div className="h-1.5 w-full overflow-hidden rounded-full lg:hidden" style={{ background: COLORS.border }} aria-label={`Step ${index + 1} of ${slides.length}`}>
               <div className="h-full rounded-full transition-all" style={{ width: `${((index + 1) / slides.length) * 100}%`, background: COLORS.primary }} />
@@ -131,7 +131,7 @@ export default function Onboarding({ onComplete, user }) {
             <div className="flex items-center justify-between gap-2 sm:justify-end">
               {index > 0 && <button type="button" onClick={() => setIndex((current) => current - 1)} disabled={busy} className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold disabled:opacity-60" style={{ borderRadius: 8, color: COLORS.ink }}><ArrowLeft size={16} /> Back</button>}
               <button type="button" onClick={isPersonalizationStep ? finish : () => setIndex((current) => current + 1)} disabled={busy} className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold disabled:opacity-60" style={{ background: COLORS.primary, color: COLORS.onPrimary, borderRadius: 8, fontFamily: "'Space Grotesk', sans-serif" }}>
-                {busy ? "Saving…" : isPersonalizationStep ? "Get started" : "Continue"} <ArrowRight size={16} />
+                {busy ? "Saving…" : isPersonalizationStep ? "Open workspace" : "Continue"} <ArrowRight size={16} />
               </button>
             </div>
           </div>

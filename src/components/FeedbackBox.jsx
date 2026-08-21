@@ -11,7 +11,7 @@ const APP_VERSION = import.meta.env.VITE_APP_VERSION || "1.0.0";
 const CATEGORIES = [
   { value: "bug", label: "Bug" },
   { value: "idea", label: "Idea" },
-  { value: "confusing", label: "Something confusing" },
+  { value: "confusing", label: "Clarity issue" },
   { value: "other", label: "Other" },
 ];
 
@@ -32,14 +32,14 @@ function Status({ status, fallbackHref }) {
   if (status === "sent") {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-2 text-xs" role="status" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.good, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>
-        <Check size={13} /> Sent ✓
+        <Check size={13} /> Feedback sent
       </span>
     );
   }
   if (status === "failed") {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-2 text-xs leading-5" role="status" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.danger, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>
-        <TriangleAlert size={13} className="shrink-0" /> Couldn't send — <a href={fallbackHref} className="underline">use this email link instead</a>.
+        <TriangleAlert size={13} className="shrink-0" /> Feedback could not be sent. <a href={fallbackHref} className="underline">Send it by email instead</a>.
       </span>
     );
   }
@@ -89,7 +89,7 @@ export default function FeedbackBox({ variant = "compact" }) {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 style={TYPE.panelTitle}>Share feedback</h2>
-          <p className="mt-1 text-xs" style={{ color: COLORS.inkMuted }}>Help make Odyssey clearer and more useful.</p>
+          <p className="mt-1 text-xs" style={{ color: COLORS.inkMuted }}>Report an issue or suggest an improvement.</p>
         </div>
         {variant === "compact" && <button type="button" aria-label="Close feedback form" onClick={() => setExpanded(false)} className="grid place-items-center" style={{ color: COLORS.inkMuted, width: 28, height: 28, borderRadius: 7 }}><X size={16} /></button>}
       </div>
@@ -101,7 +101,7 @@ export default function FeedbackBox({ variant = "compact" }) {
       </label>
       <label className="flex flex-col gap-1.5" style={{ ...TYPE.label, color: COLORS.inkMuted }}>
         Feedback
-        <textarea value={message} onChange={(event) => setMessage(event.target.value)} required rows={variant === "full" ? 4 : 3} placeholder="Tell us what happened or what you'd like to see…" style={{ ...inputStyle(), resize: "vertical", minHeight: 88 }} />
+        <textarea value={message} onChange={(event) => setMessage(event.target.value)} required rows={variant === "full" ? 4 : 3} placeholder="Describe what happened or what you would change…" style={{ ...inputStyle(), resize: "vertical", minHeight: 88 }} />
       </label>
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <Status status={status} fallbackHref={fallbackHref} />

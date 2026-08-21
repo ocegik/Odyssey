@@ -1,9 +1,12 @@
 # Odyssey
-# CAT Mock Score Tracker & Visualizer — Project Scope & Requirements
 
-**Purpose:** Track sectional CAT mock performance (VARC / DILR / Quant) across a 4-month prep window to identify which subject is lagging, and whether the gap is an accuracy problem or an attempt-rate problem, and whether it's specifically MCQ or TITA.
+Odyssey is a personal workspace for CAT preparation. Use it to log mock results, review performance across VARC, DILR, and Quant, track syllabus coverage, and plan revision work.
 
-**Owner's context:** Full-time CAT prep, ~4 months to exam. Strength order: VARC > DILR > Quant. Quant is weakest and being rebuilt from fundamentals.
+The app works from the information you enter. Its charts and insights describe recorded patterns; they do not predict official CAT results, admission outcomes, or guaranteed percentiles. Reported percentiles remain tied to the test series and mock in which they were earned.
+
+## Project reference
+
+The remaining sections describe the application’s data model, feature scope, and implementation decisions for contributors and maintainers. They are not end-user guidance.
 
 ---
 

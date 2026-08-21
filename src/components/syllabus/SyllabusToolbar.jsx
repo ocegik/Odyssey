@@ -44,7 +44,7 @@ export default function SyllabusToolbar({ filters, onSearchChange, onStatusChang
             type="text"
             value={filters.search}
             onChange={(ev) => onSearchChange(ev.target.value)}
-            placeholder="Search topics or question types…"
+            placeholder="Search topics or question types"
             className="w-full text-sm"
             style={{
               background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 8,

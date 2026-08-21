@@ -34,10 +34,10 @@ export function buildTargetRows(sectionStats, settings) {
 export function targetGapSummary(rows) {
   const withCurrent = rows.filter((row) => row.gap !== null);
   if (rows.length === 0) return "Set section targets in Account";
-  if (withCurrent.length === 0) return "No scored mocks yet";
+  if (withCurrent.length === 0) return "No scored mocks logged yet";
   const worst = withCurrent.reduce((acc, row) => (row.gap < acc.gap ? row : acc));
-  if (worst.gap >= 0) return "All targeted sections are at or above target";
-  return `${worst.section} is ${fmtNum(Math.abs(worst.gap), 1)} marks short`;
+  if (worst.gap >= 0) return "Every targeted section is at or above its target";
+  return `${worst.section} is ${fmtNum(Math.abs(worst.gap), 1)} marks below target`;
 }
 
 export default function SectionTargetPanel({ rows }) {
@@ -51,7 +51,7 @@ export default function SectionTargetPanel({ rows }) {
       <span className="text-xs" style={{ color: COLORS.inkMuted }}>
         {totalCurrent !== null
           ? `Rolling 5-mock average — ${fmtNum(totalCurrent, 0)} / ${fmtNum(totalTarget, 0)} across targeted sections`
-          : "Rolling 5-mock average vs your Account targets"}
+          : "Your rolling 5-mock average against section targets"}
       </span>
 
       <div className="flex flex-col gap-3.5">
@@ -75,7 +75,7 @@ export default function SectionTargetPanel({ rows }) {
               </div>
               <ProgressBar percent={percent} color={met ? COLORS.good : meta.color} />
               {row.current === null && (
-                <span className="text-xs" style={{ color: COLORS.inkMuted }}>No scored mock in this section yet.</span>
+                <span className="text-xs" style={{ color: COLORS.inkMuted }}>No scored mock has been logged for this section.</span>
               )}
             </div>
           );

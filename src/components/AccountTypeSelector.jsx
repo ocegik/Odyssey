@@ -6,12 +6,12 @@ const ACCOUNT_TYPES = [
   {
     value: "community",
     label: "Community",
-    description: "Appear on community leaderboards.",
+    description: "Share your mock activity in the community view.",
   },
   {
     value: "personal",
     label: "Personal",
-    description: "Keep your progress off leaderboards.",
+    description: "Keep your preparation activity out of the community view.",
   },
 ];
 
@@ -25,7 +25,7 @@ export default function AccountTypeSelector({ value = "community", onChange, com
     try {
       await onChange(nextValue);
     } catch (err) {
-      setError(err.message || "Could not update your account type. Please try again.");
+      setError(err.message || "The account type could not be updated. Try again.");
     }
   };
 

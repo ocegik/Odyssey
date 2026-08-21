@@ -175,9 +175,9 @@ function generateSetPatternInsights(setRecords, topicAccuracyMap) {
           section: set.section,
           tone: "negative",
           significance: Math.min(1, gap / 0.6),
-          title: "Strong start, poor finish",
-          text: `In ${label}, you opened strong (${fmtPct(set.firstHalfAccuracy)} on the first half) but faded to ${fmtPct(set.secondHalfAccuracy)} by the end — that reads as fatigue or rushing late in the set, not a knowledge gap.`,
-          recommendation: `Practice full-length ${set.topic || set.section} sets to build stamina through the back half, not just the opening questions.`,
+          title: "Accuracy fell late in the set",
+          text: `${label}: accuracy moved from ${fmtPct(set.firstHalfAccuracy)} in the first half to ${fmtPct(set.secondHalfAccuracy)} in the second. The pattern points to late-set pacing or fatigue rather than a clear knowledge gap.`,
+          recommendation: `Practise full-length ${set.topic || set.section} sets and review how your pace changes in the second half.`,
         });
       } else if (-gap >= HALF_SPLIT_GAP) {
         insights.push({
@@ -185,9 +185,9 @@ function generateSetPatternInsights(setRecords, topicAccuracyMap) {
           section: set.section,
           tone: "positive",
           significance: Math.min(1, -gap / 0.6),
-          title: "Poor start, strong recovery",
-          text: `In ${label}, you struggled early (${fmtPct(set.firstHalfAccuracy)}) but recovered to ${fmtPct(set.secondHalfAccuracy)} — you likely needed a question or two to find the set's pattern before it clicked.`,
-          recommendation: `Skim the whole set before answering to find the easiest entry point sooner, instead of solving strictly in question order.`,
+          title: "Accuracy improved within the set",
+          text: `${label}: accuracy rose from ${fmtPct(set.firstHalfAccuracy)} in the first half to ${fmtPct(set.secondHalfAccuracy)} in the second. You may be spending too long finding an entry point.`,
+          recommendation: `Scan the full set before committing to a question so you can choose an entry point sooner.`,
         });
       }
     }
@@ -199,8 +199,8 @@ function generateSetPatternInsights(setRecords, topicAccuracyMap) {
           section: set.section,
           tone: "positive",
           significance: set.accuracy,
-          title: "Complete set success",
-          text: `${label} was a clean sweep — ${fmtPct(set.accuracy)} accuracy across ${set.attempted}/${set.total} questions attempted.`,
+          title: "Strong set conversion",
+          text: `${label}: ${fmtPct(set.accuracy)} accuracy across ${set.attempted} of ${set.total} questions attempted.`,
         });
       } else if (set.accuracy <= 0.3) {
         insights.push({
@@ -208,9 +208,9 @@ function generateSetPatternInsights(setRecords, topicAccuracyMap) {
           section: set.section,
           tone: "negative",
           significance: 1 - set.accuracy,
-          title: "Complete set failure",
-          text: `${label} didn't pay off — only ${fmtPct(set.accuracy)} accuracy despite attempting ${set.attempted}/${set.total} questions.`,
-          recommendation: `If a set like this repeats, cut losses earlier — attempt 1-2 questions to gauge difficulty before committing to the whole set.`,
+          title: "Low return from this set",
+          text: `${label}: ${fmtPct(set.accuracy)} accuracy after attempting ${set.attempted} of ${set.total} questions.`,
+          recommendation: `If this repeats, test the set with one or two questions before committing more time to it.`,
         });
       }
     }
@@ -223,9 +223,9 @@ function generateSetPatternInsights(setRecords, topicAccuracyMap) {
           section: set.section,
           tone: "negative",
           significance: Math.min(1, overRatio),
-          title: "Poor time return",
-          text: `${label} took ${fmtNum(set.totalTime, 0)}s against a ${fmtNum(set.totalBenchmark, 0)}s benchmark, but returned only ${fmtPct(set.accuracy)} accuracy — the extra time didn't convert into marks.`,
-          recommendation: `Set a hard time cap for sets like this and bail early if it's not clicking, rather than over-investing.`,
+          title: "Time did not convert into marks",
+          text: `${label} took ${fmtNum(set.totalTime, 0)}s against a ${fmtNum(set.totalBenchmark, 0)}s benchmark, with ${fmtPct(set.accuracy)} accuracy.`,
+          recommendation: `Set a time limit for similar sets and move on if the approach is not becoming clear.`,
         });
       } else if (overRatio <= -SET_TIME_OVER_RATIO && set.accuracy !== null && set.accuracy >= 0.75) {
         insights.push({
@@ -234,7 +234,7 @@ function generateSetPatternInsights(setRecords, topicAccuracyMap) {
           tone: "positive",
           significance: Math.min(1, -overRatio),
           title: "Efficient set",
-          text: `${label} was fast and accurate — ${fmtNum(set.totalTime, 0)}s vs a ${fmtNum(set.totalBenchmark, 0)}s benchmark, still landing ${fmtPct(set.accuracy)} accuracy.`,
+          text: `${label}: ${fmtNum(set.totalTime, 0)}s against a ${fmtNum(set.totalBenchmark, 0)}s benchmark, with ${fmtPct(set.accuracy)} accuracy.`,
         });
       }
     }
@@ -248,8 +248,8 @@ function generateSetPatternInsights(setRecords, topicAccuracyMap) {
           tone: "negative",
           significance: historicalAcc,
           title: "Set selection",
-          text: `You fully skipped ${label} (${set.topic}), but you average ${fmtPct(historicalAcc)} on ${set.topic} when you do attempt it — this may have been a set worth picking.`,
-          recommendation: `Scan skipped sets by topic before finalizing your attempt order — don't skip topics you're historically strong in.`,
+          text: `You skipped ${label} (${set.topic}), although your recorded accuracy for ${set.topic} is ${fmtPct(historicalAcc)} when attempted. This set may have been worth considering.`,
+          recommendation: `Before finalising your attempt order, review skipped sets in topics where your recorded accuracy is stronger.`,
         });
       }
     }
@@ -286,9 +286,9 @@ function generateRecurringSetPatternInsights(setRecords) {
       tone: pattern === "fade" ? "negative" : "neutral",
       significance: Math.min(1, sets.length / 5),
       title: "Recurring set pattern",
-      text: `This isn't a one-off — you've shown a pattern of ${label} in ${topic} sets across ${sets.length} mocks (${sets.map((s) => s.mockLabel).join(", ")}).`,
+      text: `This pattern appears in ${topic} sets across ${sets.length} mocks (${sets.map((s) => s.mockLabel).join(", ")}). You are ${label}.`,
       recommendation: pattern === "fade"
-        ? `Since this repeats specifically in ${topic}, build targeted stamina practice for ${topic} sets rather than general pacing drills.`
+        ? `Build targeted stamina practice for ${topic} sets and track whether the late-set drop narrows.`
         : null,
     });
   });
@@ -313,9 +313,9 @@ function generateTopicInsights(topicRecords) {
           section: t.section,
           tone: "negative",
           significance: t.guessShare,
-          title: "Confidence vs accuracy mismatch",
-          text: `${t.topic} shows ${fmtPct(t.accuracy)} accuracy, but ${fmtPct(t.guessShare)} of your correct answers there came from guessing, not solving — the score looks stronger than the underlying mastery.`,
-          recommendation: `Re-attempt ${t.topic} questions untimed and without guessing to get an honest read on where you actually stand.`,
+          title: "Accuracy depends heavily on guesses",
+          text: `${t.topic} shows ${fmtPct(t.accuracy)} accuracy, but ${fmtPct(t.guessShare)} of correct answers were marked as guesses. The score may overstate how reliably you can solve these questions.`,
+          recommendation: `Re-attempt ${t.topic} questions untimed and without guessing to assess the underlying method.`,
         });
       } else if (t.accuracy >= 0.7 && t.guessShare <= LOW_GUESS_SHARE) {
         insights.push({
@@ -323,8 +323,8 @@ function generateTopicInsights(topicRecords) {
           section: t.section,
           tone: "positive",
           significance: t.accuracy,
-          title: "Genuine strength",
-          text: `${t.topic} is a real strength — ${fmtPct(t.accuracy)} accuracy, and almost none of it from guessing.`,
+          title: "Reliable topic strength",
+          text: `${t.topic}: ${fmtPct(t.accuracy)} accuracy, with very few correct answers marked as guesses.`,
         });
       }
     }
@@ -337,8 +337,8 @@ function generateTopicInsights(topicRecords) {
           tone: "negative",
           significance: t.conceptShare,
           title: "Conceptual gap",
-          text: `${fmtPct(t.conceptShare)} of your wrong answers in ${t.topic} are concept errors, not slips — this reads as a knowledge gap, not a speed problem.`,
-          recommendation: `Revisit the core theory for ${t.topic} before drilling more questions — more practice won't fix a concept you haven't learned yet.`,
+          text: `${fmtPct(t.conceptShare)} of wrong answers in ${t.topic} are recorded as concept errors. The data points to a knowledge gap more than a pace issue.`,
+          recommendation: `Revisit the core concepts for ${t.topic}, then use practice questions to check whether the gap has closed.`,
         });
       } else if (t.conceptShare <= LOW_CONCEPT_SHARE) {
         insights.push({
@@ -347,8 +347,8 @@ function generateTopicInsights(topicRecords) {
           tone: "negative",
           significance: 1 - t.conceptShare,
           title: "Execution slips, not concepts",
-          text: `Your ${t.topic} mistakes are mostly calculation slips, misreads, or time pressure — not concept gaps. You understand it; you're rushing or slipping under time.`,
-          recommendation: `Slow down and double-check ${t.topic} questions rather than re-studying the concept — the issue is execution, not understanding.`,
+          text: `Most ${t.topic} mistakes are recorded as calculation slips, misreads, or time pressure rather than concept errors. The issue appears to be execution.`,
+          recommendation: `Use a timed review routine for ${t.topic}: check the reading of the question, calculations, and final selection before submitting.`,
         });
       }
     }
@@ -362,7 +362,7 @@ function generateTopicInsights(topicRecords) {
           tone: "negative",
           significance: Math.min(1, ratio),
           title: "Time overinvestment",
-          text: `You spend ${fmtNum(t.avgTime, 0)}s per ${t.topic} question on average, vs a ${fmtNum(t.avgBenchmark, 0)}s benchmark — accuracy there is ${fmtPct(t.accuracy)}, so the extra time isn't clearly paying off.`,
+          text: `You spend ${fmtNum(t.avgTime, 0)}s per ${t.topic} question on average, against a ${fmtNum(t.avgBenchmark, 0)}s benchmark. Recorded accuracy is ${fmtPct(t.accuracy)}.`,
           recommendation: `Practice ${t.topic} with a visible timer to recalibrate your internal pace.`,
         });
       }
@@ -376,8 +376,8 @@ function generateTopicInsights(topicRecords) {
           tone: "negative",
           significance: t.skipRate,
           title: "Avoidance pattern",
-          text: `You skip ${fmtPct(t.skipRate)} of ${t.topic} questions, yet score ${fmtPct(t.accuracy)} on the ones you do attempt — this looks like a confidence issue more than an ability gap.`,
-          recommendation: `Commit to attempting at least one ${t.topic} question per set before deciding to skip — your track record says it's usually worth it.`,
+          text: `You skip ${fmtPct(t.skipRate)} of ${t.topic} questions, but record ${fmtPct(t.accuracy)} accuracy on those you attempt. Your selection may be more cautious than your results support.`,
+          recommendation: `Before skipping the topic, test one ${t.topic} question and use the initial approach to decide whether to continue.`,
         });
       } else if (t.accuracy !== null) {
         insights.push({
@@ -386,7 +386,7 @@ function generateTopicInsights(topicRecords) {
           tone: "neutral",
           significance: t.skipRate * 0.6,
           title: "Skip strategy looks calibrated",
-          text: `You skip ${fmtPct(t.skipRate)} of ${t.topic} questions, and accuracy stays low (${fmtPct(t.accuracy)}) even when you do attempt them — skipping these looks like the right call for now.`,
+          text: `You skip ${fmtPct(t.skipRate)} of ${t.topic} questions, and accuracy is ${fmtPct(t.accuracy)} when attempted. Current selection appears consistent with your recorded results.`,
         });
       }
     }
@@ -399,8 +399,8 @@ function generateTopicInsights(topicRecords) {
           tone: "negative",
           significance: t.accuracy,
           title: "Reconsider skip strategy",
-          text: `You've strategically skipped ${t.topic} questions ${t.strategicSkipCount} times, but you score ${fmtPct(t.accuracy)} on the ones you attempt — those skips are likely costing you marks you could get.`,
-          recommendation: `Attempt ${t.topic} before falling back to a strategic skip — your accuracy there doesn't justify avoiding it.`,
+          text: `You have marked ${t.strategicSkipCount} ${t.topic} questions as strategic skips, while recording ${fmtPct(t.accuracy)} accuracy when attempting the topic. Some of these skips may be costing marks.`,
+          recommendation: `Review ${t.topic} before applying a strategic skip; your recorded accuracy supports attempting it more often.`,
         });
       } else if (t.accuracy < 0.4) {
         insights.push({
@@ -409,7 +409,7 @@ function generateTopicInsights(topicRecords) {
           tone: "positive",
           significance: 1 - t.accuracy,
           title: "Skip strategy validated",
-          text: `Your strategic skips on ${t.topic} are well-calibrated — accuracy stays at ${fmtPct(t.accuracy)} even when you attempt it, so passing is the right instinct.`,
+          text: `Your strategic skips on ${t.topic} align with the ${fmtPct(t.accuracy)} accuracy recorded when you attempt it.`,
         });
       }
     }
@@ -430,7 +430,7 @@ function generateTopicInsights(topicRecords) {
             significance: Math.min(1, Math.abs(delta) / 0.4),
             title: delta > 0 ? "Improving over time" : "Declining over time",
             text: `${t.topic} accuracy has moved from ${fmtPct(earlierAvg)} to ${fmtPct(laterAvg)} across your logged mocks.`,
-            recommendation: delta < 0 ? `${t.topic} is trending down — revisit it soon before the gap widens.` : null,
+            recommendation: delta < 0 ? `Schedule a focused review of ${t.topic} and use the next few mocks to check whether accuracy stabilises.` : null,
           });
         }
       }
@@ -446,7 +446,7 @@ function generateTopicInsights(topicRecords) {
           tone: "neutral",
           significance: Math.min(1, sd / 0.35),
           title: "Inconsistent performance",
-          text: `${t.topic} accuracy swings widely mock to mock (±${fmtNum(sd * 100, 0)}%) — this reads as inconsistent execution, not a stable skill gap.`,
+          text: `${t.topic} accuracy varies by ±${fmtNum(sd * 100, 0)}% across mocks. The result is not yet stable enough to describe as a consistent strength or gap.`,
         });
       }
     }
