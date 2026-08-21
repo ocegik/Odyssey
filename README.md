@@ -28,7 +28,7 @@
 
 | Field | Type | Notes |
 |---|---|---|
-| Overall Percentile | number | Required, reported percentile in that mock's student pool |
+| Overall Percentile | number \| null | Optional reported percentile in that mock's student pool |
 | Section Percentile | number \| null | Optional reported percentile for that section |
 
 ### 1.3 Detailed Analysis (optional, separate workflow, progressive)
@@ -62,7 +62,7 @@
 
   The three always sum exactly to `ceiling − marks`. `negativeCost` is derived from the **entered score**, so it needs no assumption about which wrong answers were MCQ vs TITA — the paper's real marking is already baked into the score you logged. Requires `totalQuestions`, `attempted`, `correct` and a score on the same section; it reports nothing rather than guessing from a partial row.
 
-**Overall percentile is always reported.** Percentiles are ranks, so the app records the actual overall percentile from the mock report and never derives it by averaging section percentiles. `latestKnownPercentile` walks back to the latest mock that has one so legacy records without it do not blank the college comparison.
+**Overall percentile is optional.** When reported, the app records the actual overall percentile from the mock report and never derives it by averaging section percentiles. `latestKnownPercentile` walks back to the latest mock that has one so mocks without it do not blank the college comparison.
 
 **Rule:** Any chart/stat depending on an optional field simply skips data points where that field is missing — it never blocks rendering of the rest of the dashboard.
 

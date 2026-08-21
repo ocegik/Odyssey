@@ -133,8 +133,8 @@ export function validateMockForm(form) {
   const errors = [];
   if (!form.date) errors.push("Enter the mock date.");
   if (!form.source.trim()) errors.push("Enter the mock or exam name.");
-  if (!Number.isFinite(Number(form.overallPercentile)) || form.overallPercentile === "" || Number(form.overallPercentile) < 0 || Number(form.overallPercentile) > 100) {
-    errors.push("Enter the overall percentile as a number between 0 and 100.");
+  if (form.overallPercentile !== "" && (!Number.isFinite(Number(form.overallPercentile)) || Number(form.overallPercentile) < 0 || Number(form.overallPercentile) > 100)) {
+    errors.push("Overall percentile must be a number between 0 and 100.");
   }
   form.sections.forEach((section) => {
     const score = Number(section.score);
@@ -182,7 +182,7 @@ export function mockFormToPayload(form) {
     date: form.date,
     source: form.source.trim(),
     totalMarks: sections.reduce((sum, section) => sum + section.manualTotalMarks, 0),
-    overallPercentile: Number(form.overallPercentile),
+    overallPercentile: form.overallPercentile === "" ? undefined : Number(form.overallPercentile),
     sections,
   };
 }

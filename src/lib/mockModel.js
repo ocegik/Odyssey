@@ -402,8 +402,9 @@ function normalizeImportMock(raw, idx) {
   if (!raw.date) throw new Error(`${label}: missing "date".`);
   if (!raw.source) throw new Error(`${label}: missing "source".`);
 
-  const overallPercentile = Number(raw.overallPercentile);
-  if (raw.overallPercentile === "" || !Number.isFinite(overallPercentile) || overallPercentile < 0 || overallPercentile > 100) {
+  const hasOverallPercentile = raw.overallPercentile !== undefined && raw.overallPercentile !== null && raw.overallPercentile !== "";
+  const overallPercentile = hasOverallPercentile ? Number(raw.overallPercentile) : undefined;
+  if (hasOverallPercentile && (!Number.isFinite(overallPercentile) || overallPercentile < 0 || overallPercentile > 100)) {
     throw new Error(`${label}: "overallPercentile" must be a number between 0 and 100.`);
   }
 

@@ -2,12 +2,13 @@ import { describe, expect, it } from "vitest";
 import { emptyMockForm, mockFormToPayload, validateMockForm } from "../mockFormModel";
 
 describe("overall percentile form input", () => {
-  it("requires a reported overall percentile", () => {
+  it("allows a mock to be saved without an overall percentile", () => {
     const form = emptyMockForm();
     form.source = "SIMCAT 6";
     form.sections.forEach((section) => { section.score = "20"; });
 
-    expect(validateMockForm(form)).toContain("Enter the overall percentile as a number between 0 and 100.");
+    expect(validateMockForm(form)).toEqual([]);
+    expect(mockFormToPayload(form).overallPercentile).toBeUndefined();
   });
 
   it("persists the reported overall percentile at mock level", () => {

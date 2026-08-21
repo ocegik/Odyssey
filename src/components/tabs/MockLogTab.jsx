@@ -220,8 +220,8 @@ export default function MockLogTab({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Overall percentile</label>
-              <input type="number" min="0" max="100" step="0.01" required placeholder="e.g. 92.4" value={mockForm.overallPercentile} onChange={setField("overallPercentile")} style={{ ...inputStyle(false), height: 46 }} />
+              <label style={{ ...TYPE.label, color: COLORS.inkMuted }}>Overall percentile <span style={{ opacity: 0.6 }}>(optional)</span></label>
+              <input type="number" min="0" max="100" step="0.01" placeholder="e.g. 92.4" value={mockForm.overallPercentile} onChange={setField("overallPercentile")} style={{ ...inputStyle(false), height: 46 }} />
             </div>
           </div>
 
