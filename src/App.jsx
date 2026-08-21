@@ -23,6 +23,7 @@ import AuthLanding from "./components/AuthLanding";
 import Homepage from "./components/Homepage";
 import Onboarding from "./components/Onboarding";
 import LegalPage, { LegalLinks } from "./components/LegalPage";
+import FeedbackBox from "./components/FeedbackBox";
 
 /* Overview is the landing tab and stays in the main bundle. Everything else
    is split out: the heavy chart/analysis tabs used to force every visitor to
@@ -575,6 +576,8 @@ export default function CATMockTracker() {
           setTheme((current) => (current === "dark" ? "light" : "dark"))
         }
       />
+
+      {["overview", "trends", "mocks"].includes(activeTab) && <FeedbackBox variant="compact" />}
 
       <Toast toast={toast} />
 

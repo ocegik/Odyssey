@@ -16,6 +16,7 @@ import { buildPersonalCommunityStats, normalizeCommunityDashboard } from "../../
 import { computeSyllabusStats } from "../../lib/syllabusModel";
 import { normalizeQuickMathProgress } from "../../lib/quickMath";
 import AccountTypeSelector from "../AccountTypeSelector";
+import FeedbackBox from "../FeedbackBox";
 
 const numberFormatter = new Intl.NumberFormat("en-IN");
 
@@ -200,6 +201,8 @@ export default function CommunityTab({ mocks, syllabusProgress, quickMathProgres
         </div>
         <div className="mt-4 max-w-3xl"><AccountTypeSelector value={accountType} onChange={onUpdateAccountType} compact /></div>
       </Card>
+
+      <FeedbackBox variant="full" />
 
     </div>
   );
