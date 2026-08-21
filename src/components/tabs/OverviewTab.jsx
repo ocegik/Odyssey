@@ -1,5 +1,5 @@
-import { Suspense, lazy, useMemo } from "react";
-import { ArrowRight, ClipboardCheck, Flame, Lightbulb, Sparkles } from "lucide-react";
+import { Suspense, lazy, useMemo, useState } from "react";
+import { ArrowRight, ClipboardCheck, Download, Flame, Lightbulb, Sparkles } from "lucide-react";
 import { COLORS, SECTIONS, SHADOW, TYPE } from "../../constants";
 import { fmtDate, fmtNum, fmtPct } from "../../lib/format";
 import { computePacing, mockTotalMarks, computeAdaptiveTarget, avgOfLastN, bestMarks } from "../../lib/compute";
@@ -15,6 +15,7 @@ import SectionTargetPanel, { buildTargetRows, targetGapSummary } from "../Sectio
 import Disclosure from "../ui/Disclosure";
 import { QUICK_MATH_LEVELS, accuracy, getLevelProgress, isLevelUnlocked, normalizeQuickMathProgress } from "../../lib/quickMath";
 import { catExamDateForYear } from "../../lib/dateMath";
+import { downloadMockMarksTrendImage } from "../../lib/shareImage";
 
 const OverallMarksChart = lazy(() => import("../charts/OverallMarksChart"));
 
@@ -165,6 +166,7 @@ function QuickMathCard({ progress: rawProgress, onOpenQuickMath }) {
 }
 
 export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionStats, settings, syllabusProgress, onOpenSyllabus, onOpenQuickMath }) {
+  const [isDownloadingTrend, setIsDownloadingTrend] = useState(false);
   const graphData = buildOverallMarksData(mocks);
   const latestMock = mocks.length > 0 ? mocks[mocks.length - 1] : null;
   const catTargetDate = catExamDateForYear(settings?.catTargetYear);
@@ -179,6 +181,19 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionS
   const leastCompletedMacroTopics = useMemo(() => getLeastCompletedMacroTopics(syllabusStats, 4), [syllabusStats]);
 
   const targetRows = useMemo(() => buildTargetRows(sectionStats, settings), [sectionStats, settings]);
+  const handleDownloadTrend = async () => {
+    setIsDownloadingTrend(true);
+    try {
+      await downloadMockMarksTrendImage({
+        data: graphData,
+        studentName: settings?.studentName,
+        latestMarks: lastMarks,
+        bestMarks: bestMarksValue,
+      });
+    } finally {
+      setIsDownloadingTrend(false);
+    }
+  };
   return (
     <div className="flex flex-col gap-4">
       <CountdownHero
@@ -236,9 +251,23 @@ export default function OverviewTab({ mocks, insights, weakestAnalysis, sectionS
           {graphData.length === 0 ? (
             <p className="text-sm" style={{ color: COLORS.inkMuted }}>No scored mocks have been logged yet.</p>
           ) : (
-            <Suspense fallback={<div style={{ height: 280 }} aria-busy="true" />}>
-              <OverallMarksChart data={graphData} />
-            </Suspense>
+            <>
+              <div className="mb-3 flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleDownloadTrend}
+                  disabled={isDownloadingTrend}
+                  className="theme-hover inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs disabled:cursor-wait disabled:opacity-60"
+                  style={{ background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 7, color: COLORS.inkMuted, fontFamily: "'Inter', sans-serif", fontWeight: 600 }}
+                >
+                  <Download size={14} />
+                  {isDownloadingTrend ? "Preparing…" : "Share"}
+                </button>
+              </div>
+              <Suspense fallback={<div style={{ height: 280 }} aria-busy="true" />}>
+                <OverallMarksChart data={graphData} />
+              </Suspense>
+            </>
           )}
         </div>
       </Disclosure>
