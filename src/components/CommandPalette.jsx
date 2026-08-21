@@ -118,14 +118,14 @@ export default function CommandPalette(props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center p-4"
+      className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:p-4"
       style={{ background: "rgba(0,0,0,0.4)" }}
       onClick={() => setOpen(false)}
       role="presentation"
     >
       <div
-        className="animate-scale-in w-full max-w-lg mt-[12vh] overflow-hidden"
-        style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: "var(--shadow-floating)" }}
+        className="animate-scale-in mt-[8vh] flex w-full max-w-lg flex-col overflow-hidden sm:mt-[12vh]"
+        style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: "var(--shadow-floating)", maxHeight: "calc(100dvh - 2rem)" }}
         onClick={(ev) => ev.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -150,7 +150,7 @@ export default function CommandPalette(props) {
         {results.length === 0 ? (
           <p className="px-4 py-6 text-sm text-center" style={{ color: COLORS.inkMuted }}>No matches.</p>
         ) : (
-          <ul className="py-1.5">
+          <ul className="max-h-[min(24rem,calc(100dvh-10rem))] overflow-y-auto py-1.5">
             {results.map((command, index) => {
               const Icon = command.icon;
               const active = index === cursor;

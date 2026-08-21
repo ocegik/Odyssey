@@ -4,7 +4,7 @@ import EmptyState from "../ui/EmptyState";
 
 export default function ChartFrame({ title, icon: Icon, note, children, empty }) {
   return (
-    <div className="p-5 flex flex-col gap-3" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
+    <div className="chart-card p-5 flex flex-col gap-3" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
       <div className="flex items-baseline justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           {Icon && <Icon size={15} style={{ color: COLORS.inkMuted }} />}

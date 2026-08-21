@@ -376,12 +376,12 @@ export default function CATMockTracker() {
         color: COLORS.ink,
         fontFamily: "'Inter', sans-serif",
       }}
-      className="w-full"
+      className="app-root w-full"
     >
       <GlobalThemeStyles />
 
       <div
-        className="mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6"
+        className="app-shell mx-auto w-full px-4 py-5 sm:px-6 sm:py-6 flex flex-col gap-6"
         style={{
           maxWidth:
             LAYOUT_WIDTH_OPTIONS.find((opt) => opt.key === settings.layoutWidth)
@@ -578,7 +578,7 @@ export default function CATMockTracker() {
 
       <Toast toast={toast} />
 
-      <footer className="mx-auto flex w-full items-center justify-between gap-4 px-4 pb-6 sm:px-6" style={{ maxWidth: LAYOUT_WIDTH_OPTIONS.find((opt) => opt.key === settings.layoutWidth)?.px ?? LAYOUT_WIDTH_OPTIONS[1].px }}>
+      <footer className="app-footer mx-auto flex w-full items-center justify-between gap-4 px-4 pb-6 sm:px-6" style={{ maxWidth: LAYOUT_WIDTH_OPTIONS.find((opt) => opt.key === settings.layoutWidth)?.px ?? LAYOUT_WIDTH_OPTIONS[1].px }}>
         <span className="text-xs" style={{ color: COLORS.inkMuted }}>Odyssey · CAT Mock Tracker</span>
         <LegalLinks compact />
       </footer>

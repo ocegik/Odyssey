@@ -46,11 +46,11 @@ export default function Homepage({ isSignedIn = false }) {
           <Logo />
           <div className="flex items-center gap-3">
             {!isSignedIn && (
-              <a href="#/login" className="hidden rounded-lg px-3 py-2 text-sm font-semibold sm:inline-flex" style={{ color: COLORS.ink }}>
+              <a href="#/login" className="mobile-tap-target hidden rounded-lg px-3 py-2 text-sm font-semibold sm:inline-flex" style={{ color: COLORS.ink }}>
                 Sign in
               </a>
             )}
-            <a href={accountHref} className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2.5 text-sm font-semibold" style={{ background: COLORS.primary, color: COLORS.onPrimary }}>
+            <a href={accountHref} className="mobile-tap-target inline-flex items-center gap-2 rounded-lg px-3.5 py-2.5 text-sm font-semibold" style={{ background: COLORS.primary, color: COLORS.onPrimary }}>
               {accountLabel} <ArrowRight size={16} />
             </a>
           </div>
@@ -71,11 +71,11 @@ export default function Homepage({ isSignedIn = false }) {
               It is not affiliated with the CAT examination, IIMs, or any coaching or test-series provider.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href={accountHref} className="inline-flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold" style={{ background: COLORS.primary, color: COLORS.onPrimary }}>
+              <a href={accountHref} className="mobile-tap-target inline-flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold" style={{ background: COLORS.primary, color: COLORS.onPrimary }}>
                 {accountLabel} <ArrowRight size={16} />
               </a>
               {!isSignedIn && (
-                <a href="#/login" className="inline-flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold" style={{ borderColor: COLORS.border, background: COLORS.surface, color: COLORS.ink }}>
+                <a href="#/login" className="mobile-tap-target inline-flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold" style={{ borderColor: COLORS.border, background: COLORS.surface, color: COLORS.ink }}>
                   Sign in
                 </a>
               )}

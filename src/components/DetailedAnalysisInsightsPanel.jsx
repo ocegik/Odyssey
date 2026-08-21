@@ -34,7 +34,7 @@ function ReasonList({ entries, total }) {
 
 export function SectionReasonTable({ rows }) {
   return (
-    <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
+    <div className="table-scroll" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
       <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 860 }}>
         <thead>
           <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>
@@ -62,7 +62,7 @@ export function SectionReasonTable({ rows }) {
 
 export function TimingTable({ rows }) {
   return (
-    <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
+    <div className="table-scroll" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
       <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 700 }}>
         <thead>
           <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>
@@ -122,7 +122,7 @@ export function TopicAccuracyTable({ rows }) {
     return <p className="text-sm" style={{ color: COLORS.inkMuted }}>Add topics or passage domains to view this breakdown.</p>;
   }
   return (
-    <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
+    <div className="table-scroll" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
       <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 560 }}>
         <thead>
           <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>

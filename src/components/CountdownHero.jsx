@@ -193,7 +193,7 @@ export function QuickStatsCard({ mocksLogged, latestMarks, avgLast3, bestMarksVa
 
   return (
     <CardShell icon={ClipboardList} label="Quick Stats" accent={COLORS.ink}>
-      <div className="flex flex-wrap justify-between gap-y-4">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3 lg:grid-cols-5">
         {stats.map((stat) => (
           <StatItem key={stat.label} {...stat} />
         ))}

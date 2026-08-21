@@ -73,7 +73,7 @@ function RowActionsMenu({ mockSource, hasAnalysis, onOpenAnalysis, onEdit, onDel
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={`Actions for ${mockSource}`}
-        className="theme-hover inline-flex items-center justify-center"
+        className="mobile-tap-target theme-hover inline-flex items-center justify-center"
         style={{ width: 32, height: 32, border: `1px solid ${COLORS.border}`, borderRadius: 8, background: COLORS.surface, color: COLORS.inkMuted }}
       >
         <MoreVertical size={15} />
@@ -129,6 +129,74 @@ function RowActionsMenu({ mockSource, hasAnalysis, onOpenAnalysis, onEdit, onDel
   );
 }
 
+function MobileMockCard({ mock, onOpenAnalysis, onEdit, onDelete }) {
+  const sectionNames = SECTIONS.filter((section) => mock[section]);
+  const sectionMarks = sectionNames.reduce(
+    (sum, section) => sum + (mock[section]?.totalMarks || 0),
+    0,
+  );
+  const totalMarks = mock.manualTotalMarks ?? sectionMarks;
+  const hasAnalysis = Boolean(mock.analysis);
+  const status = analysisStatus(mock.analysis);
+  const StatusIcon = status.Icon;
+
+  const handleDelete = () => {
+    if (window.confirm(`Delete "${mock.source}" (${fmtDate(mock.date)})? This can't be undone.`)) {
+      onDelete(mock.id);
+    }
+  };
+
+  return (
+    <article
+      className="interactive-row flex flex-col gap-3 p-3"
+      role="link"
+      tabIndex={0}
+      aria-label={`Open analysis for ${mock.source}, ${fmtDate(mock.date)}`}
+      onClick={() => onOpenAnalysis(mock.id)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") onOpenAnalysis(mock.id);
+      }}
+      style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 10, boxShadow: SHADOW.card, cursor: "pointer" }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="truncate text-sm" style={{ color: COLORS.ink, fontWeight: 650 }}>{mock.source}</div>
+          <div className="mt-0.5 text-xs" style={{ color: COLORS.inkMuted, fontFamily: "'JetBrains Mono', monospace" }}>{fmtDate(mock.date)}</div>
+        </div>
+        <div onClick={(event) => event.stopPropagation()}>
+          <RowActionsMenu
+            mockSource={mock.source}
+            hasAnalysis={hasAnalysis}
+            onOpenAnalysis={() => onOpenAnalysis(mock.id)}
+            onEdit={() => onEdit(mock)}
+            onDelete={handleDelete}
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-x-3 gap-y-2">
+        {sectionNames.map((section) => (
+          <span key={section} className="inline-flex items-center gap-1.5 text-xs">
+            <SectionBadge section={section} size="sm" />
+            <span style={{ color: COLORS.ink, fontFamily: "'JetBrains Mono', monospace", fontWeight: 650 }}>{fmtNum(mock[section]?.totalMarks, 0)}</span>
+          </span>
+        ))}
+        <span className="ml-auto text-sm" style={{ color: COLORS.ink, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}>{fmtNum(totalMarks, 0)}</span>
+      </div>
+
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <span className="inline-flex min-w-0 items-center gap-1" style={{ color: status.tone }}>
+          <StatusIcon size={12} className="shrink-0" />
+          <span className="truncate">{status.label}</span>
+        </span>
+        <span className="inline-flex shrink-0 items-center gap-0.5" style={{ color: COLORS.inkMuted, fontWeight: 600 }}>
+          Open <ChevronRight size={13} />
+        </span>
+      </div>
+    </article>
+  );
+}
+
 function MockLogTable({
   mocks,
   onOpenAnalysis,
@@ -173,14 +241,15 @@ function MockLogTable({
         <span className="text-xs" style={{ color: COLORS.inkMuted }}>
           {searchQuery ? `${rows.length} of ${mocks.length} mocks match` : `${rows.length} mock${rows.length === 1 ? "" : "s"} logged`}
         </span>
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <Search size={13} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", color: COLORS.inkMuted, pointerEvents: "none" }} />
           <input
             type="text"
             value={searchQuery}
             onChange={(ev) => setSearchQuery(ev.target.value)}
             placeholder="Filter by source or date"
-            style={{ ...inputStyle(false), height: 32, paddingLeft: 28, paddingTop: 6, paddingBottom: 6, fontSize: 12.5, width: 190 }}
+            className="w-full sm:w-[190px]"
+            style={{ ...inputStyle(false), height: 36, paddingLeft: 28, paddingTop: 6, paddingBottom: 6, fontSize: 12.5 }}
           />
         </div>
       </div>
@@ -190,7 +259,19 @@ function MockLogTable({
           No mocks match "{searchQuery}".
         </div>
       ) : (
-      <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
+      <>
+      <div className="flex flex-col gap-2 sm:hidden">
+        {rows.map((mock) => (
+          <MobileMockCard
+            key={mock.id}
+            mock={mock}
+            onOpenAnalysis={onOpenAnalysis}
+            onEdit={onEditMock}
+            onDelete={onDeleteMock}
+          />
+        ))}
+      </div>
+      <div className="table-scroll hidden sm:block" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
         <table className="w-full text-sm" style={{ borderCollapse: "collapse", tableLayout: "fixed", minWidth: 640 }}>
           <thead>
             <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>
@@ -278,6 +359,7 @@ function MockLogTable({
           </tbody>
         </table>
       </div>
+      </>
       )}
     </div>
   );

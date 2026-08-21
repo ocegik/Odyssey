@@ -288,7 +288,7 @@ export default function MockLogTab({
                 )}
 
                 {showStructure && (
-                <div className="animate-fade-up overflow-x-auto rounded-lg p-2" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}` }}>
+                <div className="table-scroll animate-fade-up rounded-lg p-2" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}` }}>
                   <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 620 }}>
                     <colgroup>
                       <col style={{ width: "18%" }} />

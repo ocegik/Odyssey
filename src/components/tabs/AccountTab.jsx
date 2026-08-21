@@ -26,7 +26,7 @@ function scheduleWindowLabel(entry, fmtDate) {
 function Panel({ title, children, action }) {
   return (
     <div className="p-5 flex flex-col gap-4" style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: SHADOW.card }}>
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 style={TYPE.panelTitle}>{title}</h2>
         {action}
       </div>
@@ -452,7 +452,7 @@ export default function AccountTab({
           <EmptyState icon={Upload} title="No scheduled mocks" body="Add a mock or import your schedule." />
         ) : (
           <>
-            <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
+            <div className="table-scroll" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
               <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>

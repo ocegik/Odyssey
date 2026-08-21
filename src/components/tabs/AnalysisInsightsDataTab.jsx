@@ -96,8 +96,8 @@ function MockRangeSelector({ mocks, rangeMode, onRangeModeChange, specificMockId
   );
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Mock range">
+    <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+      <div className="mobile-inline-scroll flex flex-wrap gap-1.5" role="group" aria-label="Mock range">
         {RANGE_OPTIONS.map((option) => {
           const active = rangeMode === option.key;
           return (
@@ -105,7 +105,7 @@ function MockRangeSelector({ mocks, rangeMode, onRangeModeChange, specificMockId
               key={option.key}
               type="button"
               onClick={() => onRangeModeChange(option.key)}
-              className="px-3 py-1.5 text-sm hover:opacity-90"
+              className="mobile-tap-target shrink-0 px-3 py-1.5 text-sm hover:opacity-90"
               style={{
                 borderRadius: 8,
                 border: `1px solid ${active ? COLORS.primary : COLORS.border}`,
@@ -124,7 +124,8 @@ function MockRangeSelector({ mocks, rangeMode, onRangeModeChange, specificMockId
         <select
           value={specificMockId || ""}
           onChange={(ev) => onSpecificMockChange(ev.target.value)}
-          style={{ ...selectStyle(false), fontFamily: "'Inter', sans-serif", minWidth: 220, width: "auto" }}
+          className="w-full sm:w-auto"
+          style={{ ...selectStyle(false), fontFamily: "'Inter', sans-serif", minWidth: 0 }}
         >
           {pickerMocks.map((mock) => (
             <option key={mock.id} value={mock.id}>

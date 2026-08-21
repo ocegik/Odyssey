@@ -6,10 +6,54 @@ html, body, #root {
   height: 100%;
 }
 
+html {
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* Keep wide tables, charts, and long user-entered labels from widening the
+   document. Individual table wrappers may still scroll horizontally where
+   that is the least lossy way to expose dense data. */
+#root {
+  min-width: 0;
+  overflow-x: clip;
+}
+
+img,
+svg,
+canvas {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+}
+
+.app-shell,
+.app-shell * {
+  min-width: 0;
+}
+
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+}
+
+.table-scroll > table {
+  margin-bottom: 1px;
 }
 
 /* ------------------------------------------------------------------ */
@@ -78,6 +122,93 @@ button:active:not(:disabled) {
 button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+/* Compact phones are not scaled desktop views. These rules retain the visual
+   language while making navigation, controls, and dense content comfortable
+   to use with a thumb. */
+@media (max-width: 639px) {
+  .app-shell {
+    padding: 1rem 0.75rem 1.5rem !important;
+    gap: 1.25rem !important;
+  }
+
+  .app-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0 0.75rem 1.25rem;
+  }
+
+  .tab-nav {
+    width: 100% !important;
+    max-width: 100%;
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    scrollbar-width: none;
+  }
+
+  .tab-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-nav > * {
+    flex: 0 0 auto;
+    min-height: 42px;
+  }
+
+  .mobile-tap-target {
+    min-height: 42px;
+    min-width: 42px;
+  }
+
+  button,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    min-height: 42px;
+  }
+
+  .mobile-control-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mobile-control-row > * {
+    width: 100%;
+  }
+
+  .mobile-inline-scroll {
+    flex-wrap: nowrap !important;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+  }
+
+  .mobile-inline-scroll > * {
+    flex: 0 0 auto;
+  }
+
+  .compact-card {
+    padding: 1rem !important;
+  }
+
+  .chart-card {
+    padding: 1rem !important;
+  }
+
+  .toast-message {
+    bottom: 1rem;
+    left: 0.75rem;
+    right: 0.75rem;
+    max-width: none;
+    transform: none !important;
+  }
 }
 
 input:disabled,

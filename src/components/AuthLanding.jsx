@@ -59,7 +59,7 @@ export default function AuthLanding({ auth }) {
     <main className="min-h-screen px-4 py-6 sm:px-6 sm:py-10" style={{ background: COLORS.bg, color: COLORS.ink }}>
       <div className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-6xl items-center gap-10 lg:grid-cols-[1.12fr_.88fr]">
         <section className="max-w-xl">
-          <a href="#/home" className="mb-8 flex w-fit items-center gap-2.5 rounded-lg focus:outline-none">
+          <a href="#/home" className="mobile-tap-target mb-8 flex w-fit items-center gap-2.5 rounded-lg focus:outline-none">
             <div className="grid h-10 w-10 place-items-center rounded-xl" style={{ background: COLORS.primary, color: COLORS.onPrimary }}>
               <Sparkles size={20} />
             </div>

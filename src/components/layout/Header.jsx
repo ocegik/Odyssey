@@ -17,17 +17,17 @@ export default function Header({ theme, onToggleTheme, syncStatuses, auth, onSig
   const ThemeIcon = theme === "dark" ? Sun : Moon;
   return (
     <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-      <div className="flex flex-col gap-0.5">
+      <div className="flex min-w-0 flex-col gap-0.5">
         <div className="flex items-center gap-2.5">
           <LogoMark />
-          <div className="flex items-baseline gap-2">
+          <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <h1 style={TYPE.pageTitle}>Odyssey</h1>
             <span className="text-xs" style={{ color: COLORS.inkMuted, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>CAT Mock Tracker</span>
           </div>
         </div>
         <p className="text-sm" style={{ color: COLORS.inkMuted }}>Sectional performance across VARC · DILR · Quant</p>
       </div>
-      <div className="flex gap-2 flex-wrap items-center">
+      <div className="flex w-full gap-2 flex-wrap items-center sm:w-auto sm:flex-nowrap">
         <SyncBadge statuses={syncStatuses} />
         <AuthControl auth={auth} onSignedOut={onSignedOut} />
         <button onClick={onToggleTheme} className="theme-hover flex items-center gap-1.5 px-3 py-2 text-sm"

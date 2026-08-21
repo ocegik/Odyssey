@@ -9,7 +9,7 @@ export default function SyllabusDashboard({ stats, topicMetrics, revisionQueue }
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard label="Overall completion" value={`${overall.percent}%`} sub={`${overall.completed} of ${overall.total} micro topics`} accent={COLORS.primary} />
         <StatCard label="Topics completed" value={overall.completed} sub={`${overall.total - overall.completed} remaining`} accent={COLORS.good} />
         <StatCard label="Sections" value={SYLLABUS_TREE.length} sub="VARC · DILR · QA" accent={COLORS.info} />

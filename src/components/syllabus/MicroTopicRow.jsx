@@ -13,8 +13,8 @@ export default function MicroTopicRow({ microTopic, isCompleted, isExpanded, onT
           checked={isCompleted}
           onChange={() => onToggleComplete(microTopic.id)}
           aria-label={`Mark "${microTopic.name}" as ${isCompleted ? "incomplete" : "complete"}`}
-          className="mt-0.5 shrink-0"
-          style={{ width: 16, height: 16, accentColor: COLORS.good, cursor: "pointer" }}
+          className="mt-0.5 h-5 w-5 shrink-0"
+          style={{ accentColor: COLORS.good, cursor: "pointer" }}
         />
 
         <button

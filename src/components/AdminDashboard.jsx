@@ -110,7 +110,7 @@ export default function AdminDashboard() {
           <div className="px-4 py-3" style={{ borderBottom: `1px solid ${COLORS.border}` }}>
             <h2 style={TYPE.panelTitle}>Users</h2>
           </div>
-          <div className="overflow-x-auto">
+          <div className="table-scroll">
             <table className="w-full text-sm" style={{ minWidth: 620 }}>
               <thead style={{ background: COLORS.surface2 }}>
                 <tr>

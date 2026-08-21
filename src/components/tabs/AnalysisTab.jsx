@@ -848,7 +848,7 @@ export default function AnalysisTab({ mock: selectedMock, mocks, settings, onSav
                         </div>
                       </div>
 
-                      <div className="overflow-x-auto" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
+                      <div className="table-scroll" style={{ border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
                         <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 860 }}>
                           <thead>
                             <tr style={{ background: COLORS.surface2, borderBottom: `1px solid ${COLORS.border}` }}>
