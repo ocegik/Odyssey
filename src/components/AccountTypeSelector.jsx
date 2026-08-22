@@ -4,20 +4,20 @@ import { COLORS } from "../constants";
 
 const ACCOUNT_TYPES = [
   {
-    value: "community",
-    label: "Community",
-    description: "Share your mock activity in the community view.",
-  },
-  {
     value: "personal",
     label: "Personal",
     description: "Keep your preparation activity out of the community view.",
   },
+  {
+    value: "community",
+    label: "Community",
+    description: "Share your mock activity in the community view.",
+  },
 ];
 
-export default function AccountTypeSelector({ value = "community", onChange, compact = false }) {
+export default function AccountTypeSelector({ value = "personal", onChange, compact = false }) {
   const [error, setError] = useState("");
-  const selectedValue = value === "personal" ? "personal" : "community";
+  const selectedValue = value === "community" ? "community" : "personal";
 
   const selectAccountType = async (nextValue) => {
     if (nextValue === selectedValue) return;

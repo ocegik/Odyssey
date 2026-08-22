@@ -14,7 +14,7 @@ alter table public.profiles
 alter table public.profiles
   add column if not exists age smallint;
 alter table public.profiles
-  add column if not exists account_type text not null default 'community';
+  add column if not exists account_type text not null default 'personal';
 
 alter table public.profiles
   drop constraint if exists profiles_cat_target_year_check;

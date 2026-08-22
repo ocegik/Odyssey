@@ -199,18 +199,18 @@ function PrivacyPolicy() {
       <Section title="5. Community visibility">
         <p>
           New accounts start in{" "}
-          <strong style={{ color: COLORS.ink }}>Community</strong> mode. In this
-          mode, the leaderboard shows your display name, the number of mocks
-          you've logged in the last 30 days, and your latest score to other
-          signed-in users. The community dashboard also shows platform-wide
-          aggregate counts.
+          <strong style={{ color: COLORS.ink }}>Personal</strong> mode, so their
+          activity is not included in the community leaderboard. The community
+          dashboard also shows platform-wide aggregate counts.
         </p>
         <p>
           You can switch to{" "}
-          <strong style={{ color: COLORS.ink }}>Personal</strong> mode at any
-          time in Account → Account type to exclude your account from future
-          leaderboard results. We recommend choosing a display name that does
-          not reveal information you'd prefer to keep private.
+          <strong style={{ color: COLORS.ink }}>Community</strong> mode at any
+          time in Account → Account type. In this mode, the leaderboard shows
+          your display name, the number of mocks you've logged in the last 30
+          days, and your latest score to other signed-in users. We recommend
+          choosing a display name that does not reveal information you'd prefer
+          to keep private.
         </p>
       </Section>
 
@@ -353,8 +353,8 @@ function TermsOfService() {
         <p>
           The Community account type shares your display name, recent mock
           count, and latest score on a leaderboard visible to other signed-in
-          users. New accounts start in Community mode; switch to Personal mode
-          at any time in Account → Account type to exclude yourself from future
+          users. New accounts start in Personal mode; switch to Community mode
+          at any time in Account → Account type to include yourself in future
           leaderboard results.
         </p>
         <p>

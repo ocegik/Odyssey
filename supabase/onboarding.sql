@@ -35,13 +35,13 @@ set onboarding_completed = true
 where onboarding_completed is null;
 
 update public.profiles
-set account_type = 'community'
+set account_type = 'personal'
 where account_type is null;
 
 alter table public.profiles
   alter column onboarding_completed set default false,
   alter column onboarding_completed set not null,
-  alter column account_type set default 'community',
+  alter column account_type set default 'personal',
   alter column account_type set not null;
 
 -- Keep users limited to their own profile while allowing this one persistence

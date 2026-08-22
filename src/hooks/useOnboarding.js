@@ -5,7 +5,7 @@ import { CURRENT_STATUS_OPTIONS, GENDER_OPTIONS, TEST_SERIES_OPTIONS } from "./u
 const ACCOUNT_TYPES = ["community", "personal"];
 
 function normalizeAccountType(value) {
-  return ACCOUNT_TYPES.includes(value) ? value : "community";
+  return ACCOUNT_TYPES.includes(value) ? value : "personal";
 }
 
 const initialState = (userId) => {
@@ -71,7 +71,7 @@ export function useOnboarding(userId) {
     const hasAge = age !== "" && age !== null && age !== undefined;
     const normalizedAge = hasAge ? Number(age) : null;
     const targetYear = Number(catTargetYear);
-    const normalizedAccountType = "community";
+    const normalizedAccountType = "personal";
     if (!normalizedName) throw new Error("Please enter your name.");
     if (!Number.isInteger(targetYear) || targetYear < 2020 || targetYear > 2100) {
       throw new Error("Please choose your CAT target year.");

@@ -36,7 +36,7 @@ create table if not exists public.profiles (
   display_name text not null default '',
   age smallint check (age is null or age between 1 and 120),
   cat_target_year smallint check (cat_target_year between 2020 and 2100),
-  account_type text not null default 'community' check (account_type in ('community', 'personal')),
+  account_type text not null default 'personal' check (account_type in ('community', 'personal')),
   timezone text not null default 'UTC',
   onboarding_completed boolean not null default false,
   created_at timestamptz not null default timezone('utc', now()),
