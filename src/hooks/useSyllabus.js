@@ -135,9 +135,9 @@ function emptyState() {
   };
 }
 
-function loadState() {
+function loadState(storageKey = STORAGE_KEY) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey);
     return raw ? normalizeLearningState(JSON.parse(raw)) : emptyState();
   } catch {
     return emptyState();

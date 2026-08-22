@@ -46,9 +46,14 @@ export async function saveRemoteValue(key, value) {
  */
 export async function fetchRemoteSettings() {
   if (!supabase) return null;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
   const { data, error } = await supabase
     .from("settings")
     .select("overall_target_marks, overall_target_percentile, section_target_marks, mock_schedule, layout_width, preferences")
+    .eq("user_id", user.id)
     .maybeSingle();
 
   if (error) {
@@ -202,9 +207,14 @@ export function learningStateToSyllabusRows(value, userId) {
  */
 export async function fetchRemoteSyllabus() {
   if (!supabase) return null;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
   const { data, error } = await supabase
     .from("syllabus")
-    .select("topic_id, completion_status, completed_at, notes, resources, revision_history, metrics");
+    .select("topic_id, completion_status, completed_at, notes, resources, revision_history, metrics")
+    .eq("user_id", user.id);
 
   if (error) {
     console.error("Supabase fetch failed for syllabus:", error.message);
@@ -391,9 +401,14 @@ function mockToSectionRows(mock, databaseMockId, userId) {
  */
 export async function fetchRemoteMocks() {
   if (!supabase) return null;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
   const { data, error } = await supabase
     .from("mocks")
     .select("id, legacy_mock_id, mock_date, source, manual_total_marks, overall_percentile, created_at, sections(id, section_name, attempted, correct, total_questions, percentile, manual_total_marks, question_set_count, question_blocks, notes, created_at), analysis(id, schema_version, source_format, overall_reflection, structure_text, document, summary, created_at, updated_at)")
+    .eq("user_id", user.id)
     .order("mock_date", { ascending: true })
     .order("created_at", { ascending: true });
 
@@ -427,7 +442,8 @@ export async function saveRemoteMocks(value) {
   // delete remove stale parents. The database FK handles their sections.
   const { data: existingMocks, error: existingError } = await supabase
     .from("mocks")
-    .select("id, legacy_mock_id");
+    .select("id, legacy_mock_id")
+    .eq("user_id", user.id);
   if (existingError) {
     console.error("Supabase fetch failed before saving mocks:", existingError.message);
     return false;
@@ -467,7 +483,8 @@ export async function saveRemoteMocks(value) {
       const { error: removedAnalysisError } = await supabase
         .from("analysis")
         .delete()
-        .eq("mock_id", parent.id);
+        .eq("mock_id", parent.id)
+        .eq("user_id", user.id);
       if (removedAnalysisError) {
         console.error("Supabase cleanup failed for mock analysis:", removedAnalysisError.message);
         return false;
@@ -481,6 +498,7 @@ export async function saveRemoteMocks(value) {
         .from("sections")
         .delete()
         .eq("mock_id", parent.id)
+        .eq("user_id", user.id)
         .in("section_name", removedNames);
       if (removedSectionsError) {
         console.error("Supabase cleanup failed for mock sections:", removedSectionsError.message);
@@ -494,6 +512,7 @@ export async function saveRemoteMocks(value) {
     const { error: removedMocksError } = await supabase
       .from("mocks")
       .delete()
+      .eq("user_id", user.id)
       .in("id", removedParentIds);
     if (removedMocksError) {
       console.error("Supabase delete failed for mocks:", removedMocksError.message);

@@ -27,9 +27,9 @@ const fetchMocksFromTables = () => fetchRemoteMocks();
 const saveMocksToTables = (_remoteKey, value) => saveRemoteMocks(value);
 const emptyMocks = () => [];
 
-function loadStoredMocks() {
+function loadStoredMocks(storageKey = STORAGE_KEY) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey);
     if (!raw) return [];
     return normalizeStoredMocks(JSON.parse(raw));
   } catch {

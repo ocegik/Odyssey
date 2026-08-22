@@ -183,9 +183,9 @@ export function normalizeSettings(raw) {
   };
 }
 
-function loadSettings() {
+function loadSettings(storageKey = STORAGE_KEY) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey);
     return raw ? normalizeSettings(JSON.parse(raw)) : EMPTY_SETTINGS;
   } catch {
     return EMPTY_SETTINGS;
