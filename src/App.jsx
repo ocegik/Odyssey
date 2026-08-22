@@ -329,6 +329,18 @@ export default function CATMockTracker() {
     });
   };
 
+  const handleUpdateProfile = (patch) => {
+    updateProfile(patch);
+    const personalDetails = {};
+    if (patch.gender !== undefined) personalDetails.gender = patch.gender;
+    if (patch.testSeries !== undefined) personalDetails.testSeries = patch.testSeries;
+    if (Object.keys(personalDetails).length) {
+      onboarding.updatePersonalDetails(personalDetails).catch((error) => {
+        console.error("Could not save profile details:", error.message);
+      });
+    }
+  };
+
   if (activeTab === "privacy" || activeTab === "terms") {
     return (
       <>
@@ -551,7 +563,7 @@ export default function CATMockTracker() {
                 userEmail={auth.user?.email}
                 accountType={onboarding.profile?.account_type}
                 onUpdateAccountType={onboarding.updateAccountType}
-                onUpdateProfile={updateProfile}
+                onUpdateProfile={handleUpdateProfile}
                 onUpdateSectionTarget={updateSectionTarget}
                 onAddScheduleEntry={addScheduleEntry}
                 onUpdateScheduleEntry={updateScheduleEntry}

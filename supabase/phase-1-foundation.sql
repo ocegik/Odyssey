@@ -35,6 +35,8 @@ create table if not exists public.profiles (
   role text not null default 'user' check (role in ('user', 'admin')),
   display_name text not null default '',
   age smallint check (age is null or age between 1 and 120),
+  gender text check (gender is null or gender in ('female', 'male', 'non_binary', 'prefer_not_to_say')),
+  test_series text[] not null default '{}'::text[],
   cat_target_year smallint check (cat_target_year between 2020 and 2100),
   account_type text not null default 'personal' check (account_type in ('community', 'personal')),
   timezone text not null default 'UTC',
@@ -277,4 +279,4 @@ grant select, insert, update, delete on public.mocks, public.sections,
 -- creates profiles; signed-in people may change only their display metadata.
 revoke insert, update, delete on public.profiles from authenticated;
 grant select on public.profiles to authenticated;
-grant update (display_name, age, cat_target_year, account_type, timezone, onboarding_completed) on public.profiles to authenticated;
+grant update (display_name, age, gender, test_series, cat_target_year, account_type, timezone, onboarding_completed) on public.profiles to authenticated;

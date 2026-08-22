@@ -10,6 +10,10 @@ alter table public.profiles
 alter table public.profiles
   add column if not exists age smallint;
 alter table public.profiles
+  add column if not exists gender text;
+alter table public.profiles
+  add column if not exists test_series text[] not null default '{}'::text[];
+alter table public.profiles
   add column if not exists account_type text;
 
 alter table public.profiles
@@ -23,6 +27,12 @@ alter table public.profiles
 alter table public.profiles
   add constraint profiles_age_check
   check (age is null or age between 1 and 120);
+
+alter table public.profiles
+  drop constraint if exists profiles_gender_check;
+alter table public.profiles
+  add constraint profiles_gender_check
+  check (gender is null or gender in ('female', 'male', 'non_binary', 'prefer_not_to_say'));
 
 alter table public.profiles
   drop constraint if exists profiles_account_type_check;
@@ -46,4 +56,4 @@ alter table public.profiles
 
 -- Keep users limited to their own profile while allowing this one persistence
 -- field alongside their existing display metadata columns.
-grant update (display_name, age, cat_target_year, account_type, timezone, onboarding_completed) on public.profiles to authenticated;
+grant update (display_name, age, gender, test_series, cat_target_year, account_type, timezone, onboarding_completed) on public.profiles to authenticated;

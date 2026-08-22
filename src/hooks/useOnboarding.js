@@ -36,7 +36,7 @@ export function useOnboarding(userId) {
     setState({ status: "loading", completed: false, profile: null, error: "" });
     supabase
       .from("profiles")
-      .select("onboarding_completed, display_name, age, cat_target_year, account_type")
+      .select("onboarding_completed, display_name, age, cat_target_year, account_type, gender, test_series")
       .eq("id", userId)
       .maybeSingle()
       .then(({ data, error }) => {
@@ -99,6 +99,8 @@ export function useOnboarding(userId) {
         age: normalizedAge,
         cat_target_year: targetYear,
         account_type: normalizedAccountType,
+        gender: gender || null,
+        test_series: testSeries,
         onboarding_completed: true,
       })
       .eq("id", userId);
@@ -114,6 +116,8 @@ export function useOnboarding(userId) {
         age: normalizedAge,
         cat_target_year: targetYear,
         account_type: normalizedAccountType,
+        gender: gender || null,
+        test_series: testSeries,
       },
       error: "",
     });
@@ -135,5 +139,39 @@ export function useOnboarding(userId) {
     }));
   }, [userId]);
 
-  return { ...state, complete, updateAccountType };
+  const updatePersonalDetails = useCallback(async ({ gender, testSeries }) => {
+    if (!userId || !supabase) return;
+
+    const update = {};
+    if (gender !== undefined) {
+      if (gender && !GENDER_OPTIONS.some((option) => option.value === gender)) {
+        throw new Error("Please choose a valid gender option.");
+      }
+      update.gender = gender || null;
+    }
+    if (testSeries !== undefined) {
+      if (!Array.isArray(testSeries) || testSeries.some((series) => !TEST_SERIES_OPTIONS.includes(series))) {
+        throw new Error("Please choose valid test series options.");
+      }
+      update.test_series = testSeries;
+    }
+    if (!Object.keys(update).length) return;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update(update)
+      .eq("id", userId);
+    if (error) throw error;
+
+    setState((current) => ({
+      ...current,
+      profile: {
+        ...(current.profile || {}),
+        ...(update.gender !== undefined ? { gender: update.gender } : {}),
+        ...(update.test_series !== undefined ? { test_series: update.test_series } : {}),
+      },
+    }));
+  }, [userId]);
+
+  return { ...state, complete, updateAccountType, updatePersonalDetails };
 }
